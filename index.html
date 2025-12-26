@@ -4,40 +4,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logic Circuit Simulator - Start</title>
+    <title>Logic Simulator - 논리 회로 시뮬레이션</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --bg-dark: #0f172a;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        /* Animated Background Grid */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.5;
+            z-index: 0;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+
+        .content {
+            z-index: 10;
+            padding: 0 20px;
+            max-width: 800px;
+            animation: fadeUp 1s ease-out;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+        }
+
+        p {
+            font-size: 1.25rem;
+            color: var(--text-sub);
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #0f172a;
+            border: 1px solid white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            background: #f8fafc;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Feature Cards */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+            text-align: left;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px 0;
+            color: white;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-sub);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+    </style>
 </head>
 
-<body class="landing">
+<body>
 
-    <div class="hero-container">
-        <h1>Logic Circuit Simulator</h1>
-        <p class="subtitle">
-            디지털 논리 회로를 웹에서 쉽고 강력하게 설계하세요.<br>
-            드래그 앤 드롭으로 회로를 구성하고 시뮬레이션 할 수 있습니다.
-        </p>
+    <div class="hero">
+        <div class="content">
+            <h1>Logic Simulator</h1>
+            <p>
+                웹 브라우저에서 바로 실행하는 강력한 논리 회로 시뮬레이터.<br>
+                복잡한 회로를 설계하고, 실시간으로 시뮬레이션하세요.
+            </p>
 
-        <a href="login.html" class="btn-start">시작하기 (Get Started)</a>
-
-        <div class="feature-grid">
-            <div class="feature-card">
-                <span class="feature-icon">⚡</span>
-                <h3>Real-time</h3>
-                <p>실시간 동작 시뮬레이션</p>
+            <div class="cta-buttons" id="auth-buttons">
+                <!-- 로그인 상태에 따라 JS로 버튼이 변경됩니다 -->
+                <a href="simulator.html" class="btn btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    바로 시작하기
+                </a>
+                <a href="login.html" class="btn btn-secondary">로그인</a>
             </div>
-            <div class="feature-card">
-                <span class="feature-icon">💾</span>
-                <h3>Save & Load</h3>
-                <p>작업물 클라우드 저장</p>
-            </div>
-            <div class="feature-card">
-                <span class="feature-icon">🎨</span>
-                <h3>Design</h3>
-                <p>직관적인 UI/UX</p>
+
+            <div class="features">
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>실시간 시뮬레이션</h3>
+                    <p>회로를 수정하는 즉시 결과가 반영되는 초고속 엔진.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💾</div>
+                    <h3>클라우드 저장</h3>
+                    <p>Supabase 연동으로 언제 어디서나 프로젝트를 저장하고 불러오세요.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🔧</div>
+                    <h3>다양한 컴포넌트</h3>
+                    <p>기본 게이트부터 트랜지스터, 커스텀 패키지까지 지원합니다.</p>
+                </div>
             </div>
         </div>
+
+        <footer>
+            Built with ❤️ by Ace06 | Powered by Supabase & Vercel
+        </footer>
     </div>
 
+    <!-- 로직 스크립트 연결 -->
+    <script src="js/modules/SupabaseClient.js"></script>
+    <script>
+        // 로그인 상태 체크하여 버튼 변경
+        document.addEventListener('DOMContentLoaded', async () => {
+            // SupabaseClient.js 로드 대기
+            setTimeout(async () => {
+                if (typeof getCurrentUser === 'function') {
+                    const user = await getCurrentUser();
+                    if (user) {
+                        // 로그인 됨
+                        const authBtns = document.getElementById('auth-buttons');
+                        authBtns.innerHTML = `
+                             <a href="simulator.html" class="btn btn-primary">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                이어서 하기
+                            </a>
+                            <a href="dashboard.html" class="btn btn-secondary">내 대시보드</a>
+                        `;
+                    }
+                }
+            }, 300);
+        });
+    </script>
 </body>
 
 </html>

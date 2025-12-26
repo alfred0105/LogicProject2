@@ -235,18 +235,18 @@
             justify-content: center;
         }
     </style>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>`n</head>
 
 <body>
     <div class="package-designer">
         <header class="designer-header">
             <div class="designer-title">
                 Package Designer
-                <small>트랜지스터 회로를 깔끔한 컴포넌트로 추상화</small>
+                <small>?�랜지?�터 ?�로�?깔끔??컴포?�트�?추상??/small>
             </div>
             <div class="designer-actions">
                 <button class="designer-btn cancel" onclick="cancelPackage()">취소</button>
-                <button class="designer-btn save" onclick="savePackage()">패키지 생성</button>
+                <button class="designer-btn save" onclick="savePackage()">?�키지 ?�성</button>
             </div>
         </header>
 
@@ -254,23 +254,23 @@
             <!-- Left Panel: Circuit Info -->
             <div class="designer-panel">
                 <div class="panel-section">
-                    <div class="panel-section-title">패키지 정보</div>
+                    <div class="panel-section-title">?�키지 ?�보</div>
                     <div class="form-group">
-                        <label class="form-label">이름</label>
-                        <input type="text" class="form-input" id="pkg-name" placeholder="예: NAND_Gate"
+                        <label class="form-label">?�름</label>
+                        <input type="text" class="form-input" id="pkg-name" placeholder="?? NAND_Gate"
                             value="MyPackage">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">설명</label>
-                        <input type="text" class="form-input" id="pkg-desc" placeholder="예: 2-input NAND gate">
+                        <label class="form-label">?�명</label>
+                        <input type="text" class="form-input" id="pkg-desc" placeholder="?? 2-input NAND gate">
                     </div>
                 </div>
 
                 <div class="panel-section">
-                    <div class="panel-section-title">내부 회로</div>
+                    <div class="panel-section-title">?��? ?�로</div>
                     <div id="circuit-summary" style="font-size: 12px; color: var(--text-secondary);">
-                        <p>📦 컴포넌트: <span id="comp-count">0</span>개</p>
-                        <p>🔌 연결: <span id="wire-count">0</span>개</p>
+                        <p>?�� 컴포?�트: <span id="comp-count">0</span>�?/p>
+                        <p>?�� ?�결: <span id="wire-count">0</span>�?/p>
                     </div>
                 </div>
             </div>
@@ -289,29 +289,29 @@
             <!-- Right Panel: Pin Configuration -->
             <div class="designer-panel">
                 <div class="panel-section">
-                    <div class="panel-section-title">입력 핀</div>
+                    <div class="panel-section-title">?�력 ?�</div>
                     <div class="pin-list" id="input-pins">
                         <!-- Input pins will be dynamically added -->
                     </div>
-                    <button class="add-pin-btn" onclick="addInputPin()">+ 입력 핀 추가</button>
+                    <button class="add-pin-btn" onclick="addInputPin()">+ ?�력 ?� 추�?</button>
                 </div>
 
                 <div class="panel-section">
-                    <div class="panel-section-title">출력 핀</div>
+                    <div class="panel-section-title">출력 ?�</div>
                     <div class="pin-list" id="output-pins">
                         <!-- Output pins will be dynamically added -->
                     </div>
-                    <button class="add-pin-btn" onclick="addOutputPin()">+ 출력 핀 추가</button>
+                    <button class="add-pin-btn" onclick="addOutputPin()">+ 출력 ?� 추�?</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 부모 창에서 전달받은 회로 데이터
+        // 부�?창에???�달받�? ?�로 ?�이??
         let circuitData = null;
 
-        // 창이 열릴 때 부모로부터 데이터 받기
+        // 창이 ?�릴 ??부모로부???�이??받기
         window.addEventListener('message', (event) => {
             if (event.data.type === 'CIRCUIT_DATA') {
                 circuitData = event.data.data;
@@ -325,7 +325,7 @@
             document.getElementById('comp-count').textContent = circuitData.components.length;
             document.getElementById('wire-count').textContent = circuitData.wires.length;
 
-            // 자동으로 입출력 핀 생성
+            // ?�동?�로 ?�출???� ?�성
             circuitData.inputs.forEach((input, i) => {
                 addInputPin(input.label);
             });
@@ -342,7 +342,7 @@
                 <div class="pin-color input"></div>
                 <div class="pin-info">
                     <div class="pin-name">${label}</div>
-                    <div class="pin-desc">입력 핀</div>
+                    <div class="pin-desc">?�력 ?�</div>
                 </div>
             `;
             document.getElementById('input-pins').appendChild(pin);
@@ -356,7 +356,7 @@
                 <div class="pin-color output"></div>
                 <div class="pin-info">
                     <div class="pin-name">${label}</div>
-                    <div class="pin-desc">출력 핀</div>
+                    <div class="pin-desc">출력 ?�</div>
                 </div>
             `;
             document.getElementById('output-pins').appendChild(pin);
@@ -385,12 +385,12 @@
                 circuit: circuitData,
                 inputs: inputs,
                 outputs: outputs,
-                // 블랙박스 크기 계산
+                // 블랙박스 ?�기 계산
                 width: Math.max(160, Math.max(inputs.length, outputs.length) * 50),
                 height: Math.max(100, Math.max(inputs.length, outputs.length) * 40 + 40)
             };
 
-            // 부모 창으로 패키지 데이터 전송
+            // 부�?창으�??�키지 ?�이???�송
             window.opener.postMessage({
                 type: 'PACKAGE_CREATED',
                 data: pkgData
@@ -403,7 +403,7 @@
             window.close();
         }
 
-        // 부모에게 준비 완료 신호
+        // 부모에�?준�??�료 ?�호
         if (window.opener) {
             window.opener.postMessage({ type: 'DESIGNER_READY' }, '*');
         }

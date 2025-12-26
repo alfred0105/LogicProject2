@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logic Circuit Simulator</title>
-    <meta name="description" content="교육용 디지털 논리 회로 시뮬레이터">
+    <meta name="description" content="교육???��????�리 ?�로 ?��??�이??>
     <link rel="stylesheet" href="css/simulator.css">
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2358a6ff' d='M13 3L4 14h7v7l9-11h-7V3z'/%3E%3C/svg%3E">
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>`n</head>
 
 <body>
     <!-- SVG Icon Definitions -->
@@ -226,7 +226,7 @@
         <header class="header">
             <div class="brand">
                 <a href="index.html" class="icon-btn" style="width: 32px; height: 32px; min-width: auto; padding: 0;"
-                    title="홈으로">
+                    title="?�으�?>
                     <svg>
                         <use href="#icon-home" />
                     </svg>
@@ -243,23 +243,23 @@
 
             <!-- File -->
             <div class="toolbar-group">
-                <button class="icon-btn" onclick="sim.newProject()" title="새 프로젝트 (N)">
+                <button class="icon-btn" onclick="sim.newProject()" title="???�로?�트 (N)">
                     <svg>
                         <use href="#icon-file" />
                     </svg>
-                    <span class="btn-text">새 파일</span>
+                    <span class="btn-text">???�일</span>
                 </button>
-                <button class="icon-btn" onclick="sim.saveProject()" title="파이 저장 (S)">
+                <button class="icon-btn" onclick="sim.saveProject()" title="?�이 ?�??(S)">
                     <svg>
                         <use href="#icon-save" />
                     </svg>
-                    <span class="btn-text">저장</span>
+                    <span class="btn-text">?�??/span>
                 </button>
-                <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
+                <button class="icon-btn" onclick="sim.exportProject()" title="JSON ?�보?�기">
                     <svg>
                         <use href="#icon-export" />
                     </svg>
-                    <span class="btn-text">내보내기</span>
+                    <span class="btn-text">?�보?�기</span>
                 </button>
             </div>
 
@@ -267,13 +267,13 @@
 
             <!-- Edit -->
             <div class="toolbar-group">
-                <button class="icon-btn" onclick="sim.undo()" title="실행 취소 (Ctrl+Z)">
+                <button class="icon-btn" onclick="sim.undo()" title="?�행 취소 (Ctrl+Z)">
                     <svg>
                         <use href="#icon-undo" />
                     </svg>
                     <span class="btn-text">취소</span>
                 </button>
-                <button class="icon-btn" onclick="sim.redo()" title="다시 실행 (Ctrl+Y)">
+                <button class="icon-btn" onclick="sim.redo()" title="?�시 ?�행 (Ctrl+Y)">
                     <svg>
                         <use href="#icon-redo" />
                     </svg>
@@ -286,17 +286,17 @@
                     </svg>
                     <span class="btn-text">복사</span>
                 </button>
-                <button class="icon-btn" onclick="sim.pasteFromClipboard()" title="붙여넣기 (Ctrl+V)">
+                <button class="icon-btn" onclick="sim.pasteFromClipboard()" title="붙여?�기 (Ctrl+V)">
                     <svg>
                         <use href="#icon-paste" />
                     </svg>
-                    <span class="btn-text">붙여넣기</span>
+                    <span class="btn-text">붙여?�기</span>
                 </button>
-                <button class="icon-btn" onclick="sim.deleteSelected()" title="삭제 (Del)">
+                <button class="icon-btn" onclick="sim.deleteSelected()" title="??�� (Del)">
                     <svg>
                         <use href="#icon-trash" />
                     </svg>
-                    <span class="btn-text">삭제</span>
+                    <span class="btn-text">??��</span>
                 </button>
             </div>
 
@@ -306,13 +306,13 @@
             <div class="toolbar-group">
                 <!-- Tool Buttons Removed (Integrated functionality)
                 <div class="tool-toggle">
-                    <button class="icon-btn active" id="btn-select" onclick="sim.setMode('edit')" title="선택 도구 (V)">
+                    <button class="icon-btn active" id="btn-select" onclick="sim.setMode('edit')" title="?�택 ?�구 (V)">
                         <svg>
                             <use href="#icon-select" />
                         </svg>
-                        <span class="tool-label">선택</span>
+                        <span class="tool-label">?�택</span>
                     </button>
-                    <button class="icon-btn" id="btn-pan" onclick="sim.setMode('pan')" title="화면 이동 (H)">
+                    <button class="icon-btn" id="btn-pan" onclick="sim.setMode('pan')" title="?�면 ?�동 (H)">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 2 L12 22 M2 12 L22 12" stroke="currentColor" stroke-width="2" fill="none"
                                 stroke-linecap="round" />
@@ -325,7 +325,7 @@
                             <path d="M22 12 L18 8 M22 12 L18 16" stroke="currentColor" stroke-width="2" fill="none"
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <span class="tool-label">이동</span>
+                        <span class="tool-label">?�동</span>
                     </button>
                 </div>
                 -->
@@ -333,11 +333,11 @@
                 <!-- Grid & Wire Mode -->
                 <div class="edit-options">
                     <button class="icon-btn small" id="btn-grid-snap" onclick="sim.toggleGridSnap()"
-                        title="그리드 스냅 ON/OFF">
-                        <span>📐</span>
+                        title="그리???�냅 ON/OFF">
+                        <span>?��</span>
                     </button>
-                    <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="와이어 연결 모드">
-                        🔌 핀
+                    <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="?�?�어 ?�결 모드">
+                        ?�� ?�
                     </button>
                 </div>
             </div>
@@ -346,19 +346,19 @@
 
             <!-- Simulation -->
             <div class="toolbar-group">
-                <button class="icon-btn" id="btn-run" onclick="sim.toggleSimulation()" title="시뮬레이션 시작/정지">
+                <button class="icon-btn" id="btn-run" onclick="sim.toggleSimulation()" title="?��??�이???�작/?��?">
                     <svg>
                         <use href="#icon-play" />
                     </svg>
-                    <span class="btn-text">실행</span>
+                    <span class="btn-text">?�행</span>
                 </button>
-                <button class="icon-btn" onclick="sim.stepSimulation()" title="한 단계 실행">
+                <button class="icon-btn" onclick="sim.stepSimulation()" title="???�계 ?�행">
                     <svg>
                         <use href="#icon-step" />
                     </svg>
-                    <span class="btn-text">스텝</span>
+                    <span class="btn-text">?�텝</span>
                 </button>
-                <button class="icon-btn" onclick="sim.resetSimulation()" title="시뮬레이션 초기화">
+                <button class="icon-btn" onclick="sim.resetSimulation()" title="?��??�이??초기??>
                     <svg>
                         <use href="#icon-reset" />
                     </svg>
@@ -368,7 +368,7 @@
 
             <!-- Speed Control -->
             <div class="speed-control">
-                <label class="speed-label">⚡ 속도</label>
+                <label class="speed-label">???�도</label>
                 <input type="range" class="speed-slider" id="speed-slider" min="0.1" max="5" step="0.1" value="1"
                     oninput="sim.updateSpeedLabel(parseFloat(this.value))"
                     onchange="sim.setSimulationSpeed(parseFloat(this.value), true)">
@@ -390,7 +390,7 @@
                         <use href="#icon-zoom-in" />
                     </svg>
                 </button>
-                <button class="icon-btn" onclick="sim.resetZoom()" title="화면 맞춤">
+                <button class="icon-btn" onclick="sim.resetZoom()" title="?�면 맞춤">
                     <svg>
                         <use href="#icon-zoom-fit" />
                     </svg>
@@ -400,30 +400,30 @@
             <div class="toolbar-divider"></div>
 
             <!-- Selection Indicator -->
-            <span class="selection-indicator" id="selection-count" style="display: none;">선택: 0개</span>
+            <span class="selection-indicator" id="selection-count" style="display: none;">?�택: 0�?/span>
 
             <div class="toolbar-divider"></div>
 
             <!-- Utils -->
             <div class="toolbar-group">
-                <button class="icon-btn" onclick="sim.showTruthTable()" title="진리표 생성">
+                <button class="icon-btn" onclick="sim.showTruthTable()" title="진리???�성">
                     <svg>
                         <use href="#icon-chart" />
                     </svg>
-                    <span class="btn-text">진리표</span>
+                    <span class="btn-text">진리??/span>
                 </button>
-                <button class="icon-btn" onclick="sim.showHelp()" title="도움말">
+                <button class="icon-btn" onclick="sim.showHelp()" title="?��?�?>
                     <svg>
                         <use href="#icon-help" />
                     </svg>
-                    <span class="btn-text">도움말</span>
+                    <span class="btn-text">?��?�?/span>
                 </button>
             </div>
         </header>
 
         <!-- ======== Sidebar ======== -->
         <aside class="sidebar" id="sidebar">
-            <button class="sidebar-toggle-btn" onclick="sim.toggleSidebar()" title="사이드바 열기/닫기">
+            <button class="sidebar-toggle-btn" onclick="sim.toggleSidebar()" title="?�이?�바 ?�기/?�기">
                 <svg width="12" height="12" viewBox="0 0 12 12">
                     <path d="M8 2 L4 6 L8 10" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" />
@@ -433,7 +433,7 @@
             <div class="sidebar-content">
                 <!-- Account Status -->
                 <div class="account-section">
-                    <div class="account-avatar">👤</div>
+                    <div class="account-avatar">?��</div>
                     <div class="account-info">
                         <span class="account-name" id="account-name">Guest</span>
                         <span class="account-plan">Free Plan</span>
@@ -447,7 +447,7 @@
                             <svg class="section-arrow">
                                 <use href="#icon-chevron-down" />
                             </svg>
-                            입출력
+                            ?�출??
                         </span>
                     </div>
                     <div class="section-content">
@@ -463,7 +463,7 @@
                                             stroke-linecap="round" />
                                     </svg>
                                 </div>
-                                <span class="name">스위치</span>
+                                <span class="name">?�위�?/span>
                             </button>
                             <button class="comp-btn io" onclick="sim.addModule('LED')"
                                 onmouseenter="sim.showTooltip('LED'); sim.positionTooltip(event)"
@@ -487,7 +487,7 @@
                                             fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="miter" />
                                     </svg>
                                 </div>
-                                <span class="name">클럭</span>
+                                <span class="name">?�럭</span>
                             </button>
                         </div>
                     </div>
@@ -500,7 +500,7 @@
                             <svg class="section-arrow">
                                 <use href="#icon-chevron-down" />
                             </svg>
-                            논리 게이트
+                            ?�리 게이??
                         </span>
                         <span class="section-count">7</span>
                     </div>
@@ -634,7 +634,7 @@
                             <div class="icon"><svg>
                                     <use href="#icon-plus" />
                                 </svg></div>
-                            <span class="name">새 모듈 만들기</span>
+                            <span class="name">??모듈 만들�?/span>
                         </button>
                     </div>
                 </section>
@@ -688,7 +688,7 @@
                                 onmouseleave="sim.hideTooltip()">
                                 <div class="icon">
                                     <svg viewBox="0 0 44 40">
-                                        <!-- VCC: 화살표 오른쪽, 선 왼쪽 -->
+                                        <!-- VCC: ?�살???�른�? ???�쪽 -->
                                         <line x1="0" y1="20" x2="24" y2="20" stroke="#ef4444" stroke-width="3" />
                                         <polygon points="40,20 24,10 24,30" fill="#ef4444" stroke="#ef4444"
                                             stroke-width="2" stroke-linejoin="round" />
@@ -701,7 +701,7 @@
                                 onmouseleave="sim.hideTooltip()">
                                 <div class="icon">
                                     <svg viewBox="0 0 44 40">
-                                        <!-- GND: 선 왼쪽, 접지 심볼 오른쪽 -->
+                                        <!-- GND: ???�쪽, ?��? ?�볼 ?�른�?-->
                                         <line x1="0" y1="20" x2="24" y2="20" stroke="#94a3b8" stroke-width="3" />
                                         <line x1="24" y1="6" x2="24" y2="34" stroke="#94a3b8" stroke-width="3" />
                                         <line x1="32" y1="10" x2="32" y2="30" stroke="#94a3b8" stroke-width="2.5" />
@@ -721,13 +721,13 @@
             <!-- Tab Bar -->
             <div class="workspace-tabs" id="workspace-tabs">
                 <div class="tab active" data-tab="main" onclick="sim.switchTab('main')">
-                    <span class="tab-icon">🔧</span>
-                    <span class="tab-title">메인 회로</span>
+                    <span class="tab-icon">?��</span>
+                    <span class="tab-title">메인 ?�로</span>
                 </div>
                 <div class="tab" data-tab="module" id="module-tab" style="display: none;"
                     onclick="sim.switchTab('module')">
-                    <span class="tab-icon">📦</span>
-                    <span class="tab-title" id="module-tab-title">모듈 편집</span>
+                    <span class="tab-icon">?��</span>
+                    <span class="tab-title" id="module-tab-title">모듈 ?�집</span>
                     <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTab()">×</button>
                 </div>
             </div>
@@ -741,20 +741,20 @@
             <div id="module-workspace" class="workspace-content module-editor" style="display: none;">
                 <div class="module-editor-header">
                     <div class="module-info">
-                        <input type="text" class="module-name-input" id="editing-module-name" value="새 모듈"
-                            placeholder="모듈 이름 입력">
-                        <span class="module-desc">소자를 배치하고 입출력 포트를 연결하세요</span>
+                        <input type="text" class="module-name-input" id="editing-module-name" value="??모듈"
+                            placeholder="모듈 ?�름 ?�력">
+                        <span class="module-desc">?�자�?배치?�고 ?�출???�트�??�결?�세??/span>
                     </div>
                     <div class="module-actions">
                         <button class="btn-module-action save" id="btn-save-as-new" onclick="sim.saveAsNewModule()">
-                            📦 모듈로 저장
+                            ?�� 모듈�??�??
                         </button>
                         <button class="btn-module-action" id="btn-save-changes" onclick="sim.saveModuleChanges()"
                             style="display: none;">
-                            💾 변경사항 저장
+                            ?�� 변경사???�??
                         </button>
                         <button class="btn-module-action secondary" onclick="sim.closeModuleTab()">
-                            ↩️ 닫기
+                            ?�️ ?�기
                         </button>
                     </div>
                 </div>
@@ -763,44 +763,44 @@
                     <!-- Component Palette for Module -->
                     <div class="module-palette">
                         <div class="palette-section">
-                            <h5>📥 입출력</h5>
+                            <h5>?�� ?�출??/h5>
                             <div class="palette-grid">
                                 <button class="palette-btn input" onclick="sim.addModuleComponent('PORT_IN')"
-                                    title="입력 포트">
-                                    <span class="icon">→</span>
-                                    <span class="label">입력</span>
+                                    title="?�력 ?�트">
+                                    <span class="icon">??/span>
+                                    <span class="label">?�력</span>
                                 </button>
                                 <button class="palette-btn output" onclick="sim.addModuleComponent('PORT_OUT')"
-                                    title="출력 포트">
-                                    <span class="icon">→</span>
+                                    title="출력 ?�트">
+                                    <span class="icon">??/span>
                                     <span class="label">출력</span>
                                 </button>
                             </div>
                         </div>
                         <div class="palette-section">
-                            <h5>⚡ 게이트</h5>
+                            <h5>??게이??/h5>
                             <div class="palette-grid">
                                 <button class="palette-btn" onclick="sim.addModuleComponent('AND')"
-                                    title="AND 게이트">AND</button>
+                                    title="AND 게이??>AND</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('OR')"
-                                    title="OR 게이트">OR</button>
+                                    title="OR 게이??>OR</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('NOT')"
-                                    title="NOT 게이트">NOT</button>
+                                    title="NOT 게이??>NOT</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('NAND')"
-                                    title="NAND 게이트">NAND</button>
+                                    title="NAND 게이??>NAND</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('NOR')"
-                                    title="NOR 게이트">NOR</button>
+                                    title="NOR 게이??>NOR</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('XOR')"
-                                    title="XOR 게이트">XOR</button>
+                                    title="XOR 게이??>XOR</button>
                                 <button class="palette-btn" onclick="sim.addModuleComponent('XNOR')"
-                                    title="XNOR 게이트">XNOR</button>
+                                    title="XNOR 게이??>XNOR</button>
                             </div>
                         </div>
                         <div class="palette-section">
-                            <h5>📊 현재 모듈 정보</h5>
+                            <h5>?�� ?�재 모듈 ?�보</h5>
                             <div class="module-stats">
                                 <div class="stat-row">
-                                    <span>입력:</span>
+                                    <span>?�력:</span>
                                     <span id="module-input-count">0</span>
                                 </div>
                                 <div class="stat-row">
@@ -808,20 +808,20 @@
                                     <span id="module-output-count">0</span>
                                 </div>
                                 <div class="stat-row">
-                                    <span>게이트:</span>
+                                    <span>게이??</span>
                                     <span id="module-gate-count">0</span>
                                 </div>
                             </div>
                         </div>
                         <div class="palette-section">
-                            <h5>📐 패키지 크기</h5>
+                            <h5>?�� ?�키지 ?�기</h5>
                             <div class="size-inputs">
                                 <div class="size-row">
-                                    <label>너비:</label>
+                                    <label>?�비:</label>
                                     <input type="number" id="module-width" value="90" min="60" max="200" step="10">
                                 </div>
                                 <div class="size-row">
-                                    <label>높이:</label>
+                                    <label>?�이:</label>
                                     <input type="number" id="module-height" value="60" min="40" max="200" step="10">
                                 </div>
                             </div>
@@ -837,16 +837,16 @@
                 <!-- Module I/O Summary Panel -->
                 <div class="module-io-panel">
                     <div class="io-section">
-                        <h4>📥 입력 포트</h4>
+                        <h4>?�� ?�력 ?�트</h4>
                         <div id="module-inputs" class="io-list"></div>
                     </div>
                     <div class="io-section">
-                        <h4>📤 출력 포트</h4>
+                        <h4>?�� 출력 ?�트</h4>
                         <div id="module-outputs" class="io-list"></div>
                     </div>
                     <div class="io-section wide">
-                        <h4>ℹ️ 도움말</h4>
-                        <p class="io-help">입력/출력 포트를 배치하고 게이트로 연결하세요. 핀을 클릭하여 와이어를 연결합니다.</p>
+                        <h4>?�️ ?��?�?/h4>
+                        <p class="io-help">?�력/출력 ?�트�?배치?�고 게이?�로 ?�결?�세?? ?�???�릭?�여 ?�?�어�??�결?�니??</p>
                     </div>
                 </div>
             </div>
@@ -856,29 +856,29 @@
             </div>
         </main>
 
-        <!-- Selection Box (body 직접 자식으로 이동 - transform containing block 문제 해결) -->
+        <!-- Selection Box (body 직접 ?�식?�로 ?�동 - transform containing block 문제 ?�결) -->
         <div id="selection-box"></div>
 
-        <!-- Component Info Panel (좌측 상단 - 독립적 위치) -->
+        <!-- Component Info Panel (좌측 ?�단 - ?�립???�치) -->
         <div id="component-info-panel" class="component-info-panel hidden">
             <div class="info-header">
-                <span class="info-type-icon">🔌</span>
+                <span class="info-type-icon">?��</span>
                 <span class="info-type-name">Component</span>
             </div>
-            <!-- 애니메이션 영역 -->
+            <!-- ?�니메이???�역 -->
             <div class="info-animation" id="info-animation">
-                <!-- SVG 애니메이션이 여기에 삽입됨 -->
+                <!-- SVG ?�니메이?�이 ?�기???�입??-->
             </div>
             <div class="info-body">
-                <p class="info-description">소자를 선택하면 여기에 설명이 표시됩니다.</p>
-                <!-- 사용법 영역 -->
+                <p class="info-description">?�자�??�택?�면 ?�기???�명???�시?�니??</p>
+                <!-- ?�용�??�역 -->
                 <div class="info-usage" id="info-usage-section">
-                    <div class="info-usage-title">💡 사용법</div>
+                    <div class="info-usage-title">?�� ?�용�?/div>
                     <p class="info-usage-content" id="info-usage"></p>
                 </div>
                 <div class="info-details">
                     <div class="info-row">
-                        <span class="info-label">입력:</span>
+                        <span class="info-label">?�력:</span>
                         <span class="info-value" id="info-inputs">-</span>
                     </div>
                     <div class="info-row">
@@ -887,7 +887,7 @@
                     </div>
                 </div>
                 <div class="info-truth-table" id="info-truth-table" style="display: none;">
-                    <span class="info-label">진리표:</span>
+                    <span class="info-label">진리??</span>
                     <table class="truth-table"></table>
                 </div>
             </div>
@@ -919,7 +919,7 @@
             <svg>
                 <use href="#icon-paste" />
             </svg>
-            붙여넣기
+            붙여?�기
             <span class="shortcut">Ctrl+V</span>
         </div>
         <div class="ctx-item" onclick="sim.duplicateSelection()">
@@ -932,19 +932,19 @@
         <div class="ctx-sep"></div>
         <!-- LED Color Options -->
         <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('red')">
-            <span style="color:#ef4444;">●</span> 빨강 LED
+            <span style="color:#ef4444;">??/span> 빨강 LED
         </div>
         <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('green')">
-            <span style="color:#22c55e;">●</span> 초록 LED
+            <span style="color:#22c55e;">??/span> 초록 LED
         </div>
         <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('blue')">
-            <span style="color:#3b82f6;">●</span> 파랑 LED
+            <span style="color:#3b82f6;">??/span> ?�랑 LED
         </div>
         <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('yellow')">
-            <span style="color:#eab308;">●</span> 노랑 LED
+            <span style="color:#eab308;">??/span> ?�랑 LED
         </div>
         <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('white')">
-            <span style="color:#f8fafc;">●</span> 흰색 LED
+            <span style="color:#f8fafc;">??/span> ?�색 LED
         </div>
         <div class="ctx-sep ctx-led-only"></div>
         <!-- Alignment Tools -->
@@ -953,20 +953,20 @@
                 <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2" />
                 <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" />
             </svg>
-            수평 정렬
+            ?�평 ?�렬
         </div>
         <div class="ctx-item" onclick="sim.alignSelectedVertical()">
             <svg viewBox="0 0 24 24">
                 <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" />
                 <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2" />
             </svg>
-            수직 정렬
+            ?�직 ?�렬
         </div>
         <div class="ctx-item" onclick="sim.distributeHorizontal()">
-            ⬌ 수평 균등
+            �??�평 균등
         </div>
         <div class="ctx-item" onclick="sim.distributeVertical()">
-            ⬍ 수직 균등
+            �??�직 균등
         </div>
         <div class="ctx-sep"></div>
         <!-- Rotate & Flip -->
@@ -976,21 +976,21 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor"
                     stroke-width="2" fill="none" />
             </svg>
-            회전
+            ?�전
             <span class="shortcut">R</span>
         </div>
         <div class="ctx-item" onclick="sim.flipHorizontal()">
-            ↔️ 좌우 반전
+            ?�️ 좌우 반전
         </div>
         <div class="ctx-item" onclick="sim.flipVertical()">
-            ↕️ 상하 반전
+            ?�️ ?�하 반전
         </div>
         <div class="ctx-sep"></div>
         <div class="ctx-item danger" onclick="sim.deleteSelected()">
             <svg>
                 <use href="#icon-trash" />
             </svg>
-            삭제
+            ??��
             <span class="shortcut">Del</span>
         </div>
     </div>
@@ -1010,7 +1010,7 @@
         <div class="tooltip-content">
             <div id="tooltip-desc" class="tooltip-desc"></div>
             <div class="tooltip-usage">
-                <div class="tooltip-usage-title">💡 사용법</div>
+                <div class="tooltip-usage-title">?�� ?�용�?/div>
                 <div id="tooltip-usage" class="tooltip-usage-content"></div>
             </div>
             <div class="tooltip-shortcuts" id="tooltip-shortcuts"></div>
@@ -1123,7 +1123,7 @@
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown Script';
-            var message = "⚠️ 오류 발생 [" + fileName + ":" + lineNo + "] " + msg;
+            var message = "?�️ ?�류 발생 [" + fileName + ":" + lineNo + "] " + msg;
 
             console.error(message, error);
 
@@ -1145,7 +1145,7 @@
 
         window.onunhandledrejection = function (event) {
             var msg = event.reason ? event.reason.message : 'Unknown Async Error';
-            var message = "⚠️ 비동기 오류: " + msg;
+            var message = "?�️ 비동�??�류: " + msg;
             if (window.sim && window.sim.showToast) {
                 window.sim.showToast(message, 'error');
             } else {
@@ -1168,8 +1168,6 @@
     <script src="js/modules/UIManager.js"></script>
     <script src="js/modules/HistoryManager.js"></script>
     <script src="js/modules/Oscilloscope.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/modules/SupabaseClient.js"></script>
     <script src="js/modules/Main.js"></script>
 </body>
 
