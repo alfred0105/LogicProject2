@@ -141,6 +141,13 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     updateCircuit() {
+        // 최적화된 엔진이 있으면 우선 사용 (PerformanceOptimizer.js)
+        if (typeof this.updateCircuitOptimized === 'function') {
+            this.updateCircuitOptimized();
+            return;
+        }
+
+        // Fallback: 기본 DOM 기반 엔진
         let changed = false;
         let limit = 50;
 

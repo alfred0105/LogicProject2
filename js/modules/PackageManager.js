@@ -378,6 +378,27 @@ Object.assign(CircuitSimulator.prototype, {
         const pkg = this.userPackages[index];
         if (!pkg) return;
 
+        // === 순환 참조 방지 (Circular Reference Prevention) ===
+        // 모듈 편집 중일 때, 추가하려는 패키지가 현재 편집 중인 모듈을 포함하면 차단
+        if (this.currentTab && this.currentTab.startsWith('module_') && this.currentModuleTabId) {
+            const tabState = this.moduleTabs[this.currentModuleTabId];
+            if (tabState && tabState.moduleType === 'PACKAGE') {
+                const editingPkgId = tabState.moduleComp?.getAttribute('data-package-id');
+                if (editingPkgId !== null && editingPkgId !== undefined) {
+                    // 추가하려는 패키지가 현재 편집 중인 모듈을 참조하는지 재귀 검사
+                    if (this.hasCircularReference(index, parseInt(editingPkgId), new Set())) {
+                        this.showToast('⚠️ 순환 참조 감지: 이 모듈은 현재 편집 중인 모듈을 포함하고 있어 추가할 수 없습니다.', 'error');
+                        return;
+                    }
+                    // 자기 자신 추가 방지
+                    if (parseInt(editingPkgId) === index) {
+                        this.showToast('⚠️ 모듈은 자기 자신을 포함할 수 없습니다.', 'error');
+                        return;
+                    }
+                }
+            }
+        }
+
         const scale = this.scale || 1.0;
         const panX = this.panX || 0;
         const panY = this.panY || 0;
@@ -790,5 +811,42 @@ Object.assign(CircuitSimulator.prototype, {
             }
         };
         window.addEventListener('message', messageHandler);
+    },
+
+    /**
+     * 순환 참조 감지 (Circular Reference Detection)
+     * @param {number} pkgIndex - 검사할 패키지 인덱스
+     * @param {number} targetPkgId - 찾으려는 패키지 ID (현재 편집 중인 모듈)
+     * @param {Set} visited - 이미 방문한 패키지 ID 집합 (무한 루프 방지)
+     * @returns {boolean} - 순환 참조 발견 시 true
+     */
+    hasCircularReference(pkgIndex, targetPkgId, visited) {
+        // 이미 방문한 패키지면 순환 발생 방지 (깊이 제한)
+        if (visited.has(pkgIndex)) return false;
+        visited.add(pkgIndex);
+
+        const pkg = this.userPackages[pkgIndex];
+        if (!pkg || !pkg.circuit || !pkg.circuit.components) return false;
+
+        // 내부 회로의 모든 컴포넌트 검사
+        for (const comp of pkg.circuit.components) {
+            // PACKAGE 타입 컴포넌트인 경우
+            if (comp.type === 'PACKAGE') {
+                const nestedPkgId = comp.packageId;
+                if (nestedPkgId === undefined || nestedPkgId === null) continue;
+
+                // 목표 패키지 ID와 일치하면 순환 참조 발견
+                if (parseInt(nestedPkgId) === targetPkgId) {
+                    return true;
+                }
+
+                // 재귀적으로 내부 패키지 검사
+                if (this.hasCircularReference(parseInt(nestedPkgId), targetPkgId, visited)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 });

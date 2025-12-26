@@ -33,16 +33,13 @@ class CloudManager {
      * 변경 사항이 발생했을 때 호출
      */
     async triggerAutoSave() {
-        // 로그인 상태 재확인
+        // 로그인 상태 백그라운드 확인
         if (!this.user) {
-            await this.checkLoginStatus();
+            this.checkLoginStatus().catch(() => { });
         }
 
-        if (!this.user) {
-            console.warn('Auto-save skipped: Not logged in');
-            this.updateSaveStatusUI('error', '저장 실패: 로그인 필요');
-            return;
-        }
+        // 사전 차단 제거: saveProjectToCloud 내부에서 최종 확인하므로 여기서는 진행시킴
+        // if (!this.user) return; (Deleted)
 
         // console.log('Auto-save triggered...'); 
         this.updateSaveStatusUI('pending', '변경사항 저장 대기 중...');
