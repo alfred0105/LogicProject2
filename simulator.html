@@ -238,7 +238,16 @@
                         <path d="M13 3L4 14h7v7l9-11h-7V3z" />
                     </svg>
                 </div>
-                <span class="brand-text">Logic Sim</span>
+                <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 8px;">
+                    <input type="text" id="project-name-input"
+                        style="background: transparent; border: 1px solid transparent; color: white; font-size: 1rem; font-weight: bold; padding: 2px 5px; border-radius: 4px; width: 200px; outline: none; transition: 0.2s;"
+                        value="Logic Sim"
+                        onchange="if(window.sim && window.sim.updateProjectName) window.sim.updateProjectName(this.value)"
+                        onfocus="this.style.borderColor='#3b82f6'; this.style.background='#1e293b'"
+                        onblur="this.style.borderColor='transparent'; this.style.background='transparent'">
+                    <span id="save-status"
+                        style="font-size: 0.75rem; color: #94a3b8; padding-left: 5px; height: 14px; line-height: 14px;"></span>
+                </div>
             </div>
 
             <!-- File -->
@@ -255,12 +264,7 @@
                     </svg>
                     <span class="btn-text">저장</span>
                 </button>
-                <button class="icon-btn"
-                    onclick="if(sim.cloud) sim.cloud.saveProjectToCloud(prompt('프로젝트 이름을 입력하세요:', sim.currentProjectName));"
-                    title="클라우드 저장" style="color: #64b5f6;">
-                    <span style="font-size: 1.2rem; margin-right:4px;">☁️</span>
-                    <span class="btn-text">CLOUD</span>
-                </button>
+
                 <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
                     <svg>
                         <use href="#icon-export" />

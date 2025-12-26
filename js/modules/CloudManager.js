@@ -6,6 +6,8 @@
 class CloudManager {
     constructor(simulator) {
         this.sim = simulator;
+        this.autoSaveTimer = null;
+        this.lastSavedTime = null;
         this.checkLoginStatus();
     }
 
@@ -17,6 +19,9 @@ class CloudManager {
             this.user = user;
             if (user) {
                 console.log('Cloud: Logged in as', user.email);
+                this.updateSaveStatusUI('ready', '저장 준비됨');
+            } else {
+                this.updateSaveStatusUI('offline', '오프라인 (로그인 필요)');
             }
         } catch (e) {
             console.error('Cloud: Auth check failed', e);
@@ -24,22 +29,72 @@ class CloudManager {
     }
 
     /**
-     * 현재 프로젝트를 Supabase에 저장 (Update or Insert)
+     * 자동 저장 트리거 (Debounce)
+     * 변경 사항이 발생했을 때 호출
      */
-    async saveProjectToCloud(projectName) {
+    triggerAutoSave() {
+        if (!this.user) return; // 로그인이 안 되어 있으면 자동저장 안 함
+
+        this.updateSaveStatusUI('pending', '변경사항 저장 대기 중...');
+
+        if (this.autoSaveTimer) {
+            clearTimeout(this.autoSaveTimer);
+        }
+
+        // 3초 후 저장
+        this.autoSaveTimer = setTimeout(() => {
+            this.saveProjectToCloud(null, true); // silent=true
+        }, 3000);
+    }
+
+    /**
+     * 저장 상태 UI 업데이트
+     */
+    updateSaveStatusUI(status, message) {
+        const statusEl = document.getElementById('save-status');
+        if (!statusEl) return;
+
+        statusEl.textContent = message;
+
+        switch (status) {
+            case 'saving':
+                statusEl.style.color = '#facc15'; // Yellow
+                break;
+            case 'saved':
+                statusEl.style.color = '#4ade80'; // Green
+                break;
+            case 'error':
+                statusEl.style.color = '#f87171'; // Red
+                break;
+            case 'pending':
+                statusEl.style.color = '#94a3b8'; // Gray
+                break;
+            default:
+                statusEl.style.color = '#94a3b8';
+        }
+    }
+
+    /**
+     * 현재 프로젝트를 Supabase에 저장 (Update or Insert)
+     * @param {string} [projectName] - 프로젝트 이름 (생략 시 현재 이름)
+     * @param {boolean} [silent] - 알림창 표시 여부 (true면 표시 안 함)
+     */
+    async saveProjectToCloud(projectName, silent = false) {
         if (!window.sb) {
-            alert('오류: Supabase가 연결되지 않았습니다.');
+            if (!silent) alert('오류: Supabase가 연결되지 않았습니다.');
             return;
         }
 
         // 로그인 확인
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) {
-            if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동하시겠습니까?')) {
+            if (!silent && confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동하시겠습니까?')) {
                 window.location.href = 'login.html';
             }
             return;
         }
+
+        this.updateSaveStatusUI('saving', '저장 중...');
 
         // 저장할 데이터 준비
         const projectData = this.sim.exportProjectData(); // 시뮬레이터에서 JSON 데이터 추출
@@ -60,14 +115,12 @@ class CloudManager {
                         updated_at: now
                     })
                     .eq('id', this.sim.currentCloudId)
-                    .select(); // 업데이트된 데이터 반환
+                    .select();
 
                 data = result.data;
                 error = result.error;
             } else {
                 // 새 프로젝트 생성 (Insert)
-                // 만약 현재 프로젝트 ID가 UUID 형식(Supabase ID)이라면 해당 ID로 Insert 시도해볼 수 있음 (복구 등)
-                // 하지만 안전하게 새 ID 생성
                 console.log('Creating new cloud project');
                 const result = await window.sb
                     .from('projects')
@@ -91,27 +144,34 @@ class CloudManager {
             if (data && data.length > 0) {
                 const savedProject = data[0];
                 this.sim.currentCloudId = savedProject.id;
-                this.sim.currentProjectId = savedProject.id; // 로컬 ID도 동기화
+                this.sim.currentProjectId = savedProject.id;
                 this.sim.currentProjectName = savedProject.title;
 
-                alert(`클라우드에 저장되었습니다! (${savedProject.title})`);
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                this.lastSavedTime = timeStr;
+                this.updateSaveStatusUI('saved', `저장됨 (${timeStr})`);
+
+                if (!silent) alert(`저장되었습니다!`);
                 console.log('Project saved:', savedProject);
 
-                // URL 업데이트 (새로 만든 경우 ID 반영)
+                // URL 업데이트
                 const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('id', savedProject.id);
-                newUrl.searchParams.delete('new'); // new 플래그 제거
-                window.history.replaceState({}, '', newUrl);
+                if (newUrl.searchParams.get('id') !== savedProject.id) {
+                    newUrl.searchParams.set('id', savedProject.id);
+                    newUrl.searchParams.delete('new');
+                    window.history.replaceState({}, '', newUrl);
+                }
             }
 
         } catch (e) {
             console.error('Save failed:', e);
-            alert('저장 실패: ' + e.message);
+            this.updateSaveStatusUI('error', '저장 실패');
+            if (!silent) alert('저장 실패: ' + e.message);
         }
     }
 
     /**
-     * 프로젝트 불러오기 (index.html?id=... 로 진입했을 때 사용)
+     * 프로젝트 불러오기
      */
     async loadProjectFromCloud(projectId) {
         if (!window.sb) return;
@@ -126,22 +186,22 @@ class CloudManager {
             if (error) throw error;
 
             if (data && data.data) {
-                this.sim.importProjectData(data.data); // 시뮬레이터에 데이터 로드
+                this.sim.importProjectData(data.data);
 
-                // 클라우드 ID 설정 (중요: 다음 저장 시 업데이트로 처리됨)
                 this.sim.currentCloudId = data.id;
                 this.sim.currentProjectId = data.id;
                 this.sim.currentProjectName = data.title;
 
+                // UI 업데이트
+                const nameInput = document.getElementById('project-name-input');
+                if (nameInput) nameInput.value = data.title;
+
+                this.updateSaveStatusUI('saved', '불러오기 완료');
                 console.log('Project loaded from Cloud:', data.title);
-                if (this.sim.showToast) this.sim.showToast(`☁️ 프로젝트 로드됨: ${data.title}`, 'success');
             }
         } catch (e) {
             console.error('Load failed:', e);
-            // 로컬 스토리지에 있을 수 있으므로 조용히 실패하거나 경고
-            if (!localStorage.getItem(projectId)) {
-                alert('프로젝트를 불러오지 못했습니다. (클라우드/로컬 없음)');
-            }
+            this.updateSaveStatusUI('error', '불러오기 실패');
         }
     }
 }

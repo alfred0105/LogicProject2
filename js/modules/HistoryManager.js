@@ -29,6 +29,9 @@ Object.assign(CircuitSimulator.prototype, {
             this.history.shift();
             this.historyIndex--;
         }
+
+        // 상태 변경 시 자동 저장 트리거
+        if (this.cloud) this.cloud.triggerAutoSave();
     },
 
     undo() {
@@ -42,6 +45,9 @@ Object.assign(CircuitSimulator.prototype, {
         this.historyIndex--;
         this.restoreState(JSON.parse(this.history[this.historyIndex]));
         this.showToast('실행 취소', 'info');
+
+        // Undo 시 자동 저장 트리거
+        if (this.cloud) this.cloud.triggerAutoSave();
     },
 
     redo() {
@@ -55,6 +61,9 @@ Object.assign(CircuitSimulator.prototype, {
         this.historyIndex++;
         this.restoreState(JSON.parse(this.history[this.historyIndex]));
         this.showToast('다시 실행', 'info');
+
+        // Redo 시 자동 저장 트리거
+        if (this.cloud) this.cloud.triggerAutoSave();
     },
 
     restoreState(state) {

@@ -67,6 +67,14 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
+     * 프로젝트 이름 업데이트 (UI에서 호출)
+     */
+    updateProjectName(newName) {
+        this.currentProjectName = newName || "Untitled Project";
+        if (this.cloud) this.cloud.triggerAutoSave();
+    },
+
+    /**
      * 프로젝트 데이터를 JSON 객체로 반환 (중요: CloudManager에서 사용)
      */
     exportProjectData() {
@@ -140,6 +148,9 @@ Object.assign(CircuitSimulator.prototype, {
         }
 
         if (!silent) this.showToast(`✓ 프로젝트 저장됨 (로컬)`, 'success');
+
+        // 클라우드 자동 저장 트리거
+        if (this.cloud) this.cloud.triggerAutoSave();
     },
 
     /**
