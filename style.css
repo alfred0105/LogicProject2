@@ -1,0 +1,1237 @@
+/* === [기본 설정] === */
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #2c3e50;
+    font-family: 'Segoe UI', sans-serif;
+    user-select: none;
+}
+
+/* === [1. 도구 상자] === */
+#toolbox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100vh;
+    background: #34495e;
+    color: white;
+    padding: 20px;
+    box-sizing: border-box;
+    border-right: 4px solid #1abc9c;
+    z-index: 20;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    transition: width 0.3s;
+}
+
+#toolbox.collapsed {
+    width: 60px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+/* Hide text in collapsed mode */
+#toolbox.collapsed .tool-btn {
+    text-align: center;
+    font-size: 0;
+    /* Hide text */
+    padding: 10px 0;
+}
+
+#toolbox.collapsed .tool-btn::before {
+    font-size: 16px;
+    content: attr(data-icon);
+    /* Ideally we'd add icons. For now, let's just accept button shrinks. 
+       Or hiding category text. */
+}
+
+#toolbox.collapsed .category,
+#toolbox.collapsed h2,
+#toolbox.collapsed .lang-selector,
+#toolbox.collapsed .ad-sidebar,
+#toolbox.collapsed hr {
+    display: none;
+}
+
+#toolbox.collapsed #btn-collapse {
+    transform: rotate(180deg);
+}
+
+.toggle-btn {
+    position: absolute;
+    top: 10px;
+    right: -15px;
+    /* Overlap border */
+    width: 30px;
+    height: 30px;
+    background: #34495e;
+    color: white;
+    border: 1px solid #1abc9c;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 25;
+    outline: none;
+}
+
+#toolbox.collapsed .toggle-btn {
+    right: 15px;
+}
+
+#toolbox::-webkit-scrollbar {
+    width: 8px;
+}
+
+#toolbox::-webkit-scrollbar-thumb {
+    background: #1abc9c;
+    border-radius: 4px;
+}
+
+#toolbox::-webkit-scrollbar-track {
+    background: #2c3e50;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.category {
+    font-size: 12px;
+    color: #95a5a6;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.tool-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #2c3e50;
+    border: 1px solid #1abc9c;
+    color: #1abc9c;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: left;
+    transition: 0.2s;
+}
+
+.tool-btn:hover {
+    background: #1abc9c;
+    color: white;
+    transform: translateX(3px);
+}
+
+.tool-btn.half {
+    width: 48%;
+    display: inline-block;
+    text-align: center;
+    padding: 8px 0;
+}
+
+.tool-btn.active {
+    background: #e67e22;
+    color: white;
+    border-color: #d35400;
+}
+
+#zoom-level {
+    text-align: center;
+    color: #bdc3c7;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* 패키지 버튼 스타일 */
+.pkg-btn {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+    background: #34495e !important;
+    border-color: #5d6d7e !important;
+}
+
+.pkg-btn:hover {
+    background: #5d6d7e !important;
+}
+
+.package-list {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.package-comp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === [2. 작업 공간] === */
+#workspace {
+    position: absolute;
+    top: 0;
+    left: 220px;
+    width: calc(100vw - 220px);
+    height: 100vh;
+    background-color: #ecf0f1;
+    background-image: radial-gradient(#bdc3c7 15%, transparent 15%);
+    background-size: 20px 20px;
+    transform-origin: 0 0;
+    transition: left 0.3s, width 0.3s;
+}
+
+#workspace.collapsed {
+    left: 60px;
+    width: calc(100vw - 60px);
+}
+
+body.mode-pan #workspace {
+    cursor: grab;
+}
+
+body.mode-pan #workspace:active {
+    cursor: grabbing;
+}
+
+#wire-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    /* Lowest priority */
+}
+
+/* === [3. 부품] === */
+.component {
+    position: absolute;
+    width: 80px;
+    height: 50px;
+    background: #2980b9;
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: grab;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+    /* Higher priority than wires */
+    font-size: 12px;
+}
+
+.component:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.component.selected {
+    outline: 2px solid #f1c40f;
+    box-shadow: 0 0 15px #f1c40f;
+}
+
+/* 선택 강조 */
+.comp-clock {
+    background: #8e44ad !important;
+    border: 2px solid #9b59b6;
+}
+
+.comp-label {
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* === [4. 핀 (Pin)] === */
+.pin {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #7f8c8d;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: crosshair;
+    transition: 0.2s;
+    z-index: 60;
+    /* Higher than component body */
+}
+
+.pin:hover {
+    transform: scale(1.4);
+    background: #f1c40f;
+}
+
+/* 핀 위치 - 게이트 대칭 정렬 */
+/* 입력 핀 1: 왼쪽 상단 (게이트 높이의 1/3 지점) */
+.pin.in-1 {
+    left: -8px;
+    top: 33%;
+    transform: translateY(-50%);
+}
+
+/* 입력 핀 2: 왼쪽 하단 (게이트 높이의 2/3 지점) */
+.pin.in-2 {
+    left: -8px;
+    top: 67%;
+    transform: translateY(-50%);
+}
+
+/* 출력 핀: 오른쪽 중앙 */
+.pin.out {
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ★ 핀 중앙 정렬 (단일 입출력용) ★ */
+.pin.center {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* === [5. 전선] === */
+line {
+    stroke: #7f8c8d;
+    stroke-width: 4;
+    stroke-linecap: round;
+    cursor: pointer;
+    transition: stroke 0.1s;
+}
+
+line:hover {
+    stroke-width: 8;
+    stroke: #f39c12;
+    opacity: 0.7;
+}
+
+line.on {
+    stroke: #e74c3c;
+    stroke-width: 5;
+}
+
+/* === [6. 툴팁] === */
+.tooltip-box {
+    position: fixed;
+    bottom: 20px;
+    left: 240px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+}
+
+.tooltip-box.show {
+    opacity: 1;
+}
+
+/* === [7. 우클릭 컨텍스트 메뉴 (새로 추가됨)] === */
+.context-menu {
+    position: fixed;
+    display: none;
+    background: #34495e;
+    border: 1px solid #2c3e50;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    padding: 5px 0;
+    border-radius: 4px;
+}
+
+.context-menu-item {
+    padding: 8px 20px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    width: 160px;
+}
+
+.context-menu-item:hover {
+    background: #1abc9c;
+}
+
+.context-menu-shortcut {
+    color: #95a5a6;
+    font-size: 11px;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background: #7f8c8d;
+    margin: 4px 0;
+}
+
+/* === [8. 선택 박스 (새로 추가됨)] === */
+.selection-box {
+    position: absolute;
+    border: 1px dashed #3498db;
+    background: rgba(52, 152, 219, 0.2);
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+}
+
+/* === [9. 설정 팝업창 (새로 추가됨)] === */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-window {
+    background: white;
+    width: 350px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+
+.key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.key-row span {
+    font-weight: bold;
+    color: #34495e;
+    font-size: 14px;
+}
+
+.key-input {
+    width: 50px;
+    padding: 5px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: #f9f9f9;
+    color: #e67e22;
+}
+
+.modal-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.modal-btn:hover {
+    background: #34495e;
+}
+
+/* 1. 광고 배너 영역 (상단) */
+.ad-banner-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background: #ecf0f1;
+    border-bottom: 1px solid #bdc3c7;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #95a5a6;
+    font-weight: bold;
+}
+
+/* 2. 도구 상자 위치 수정 (광고 높이만큼 아래로) */
+#toolbox {
+    top: 90px;
+    /* 광고 높이만큼 내림 */
+    height: calc(100vh - 90px);
+    /* 높이 줄임 */
+    /* 나머지는 기존 유지 */
+}
+
+/* 3. 작업 공간 위치 수정 (광고 높이만큼 아래로) */
+#workspace {
+    top: 90px;
+    /* 광고 높이만큼 내림 */
+    height: calc(100vh - 90px);
+    /* 높이 줄임 */
+    /* 나머지는 기존 유지 */
+}
+
+/* 4. 도구 상자 내부 광고 (사이드바 하단) */
+.ad-sidebar {
+    width: 100%;
+    height: 250px;
+    background: #2c3e50;
+    border: 1px dashed #7f8c8d;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7f8c8d;
+    font-size: 12px;
+}
+
+/* === [10. Landing Page Styles (From index.html)] === */
+body.landing {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+    color: white;
+    text-align: center;
+    overflow: hidden;
+    /* Prevent scrollbars on landing */
+}
+
+.hero-container {
+    max-width: 800px;
+    padding: 40px;
+    animation: fadeIn 1.5s ease-out;
+}
+
+.hero-container h1 {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #1abc9c, #3498db);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(26, 188, 156, 0.3);
+}
+
+p.subtitle {
+    font-size: 1.5rem;
+    color: #bdc3c7;
+    margin-bottom: 50px;
+    line-height: 1.6;
+}
+
+.btn-start {
+    padding: 18px 50px;
+    font-size: 1.5rem;
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 10px 30px rgba(26, 188, 156, 0.4);
+    font-weight: bold;
+}
+
+.btn-start:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(26, 188, 156, 0.6);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feature-grid {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 60px;
+}
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 200px;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* === [11. New Project Modal Styles] === */
+.modal-input-group {
+    margin-bottom: 20px;
+}
+
+.modal-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #34495e;
+    font-weight: bold;
+}
+
+.modal-text-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+}
+
+.modal-row {
+    display: flex;
+    gap: 10px;
+}
+
+/* Language Selector */
+.lang-selector {
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.lang-select {
+    background: #2c3e50;
+    color: #bdc3c7;
+    border: 1px solid #7f8c8d;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* === [12. Oscilloscope (Bottom Panel)] === */
+#oscilloscope-panel {
+    position: absolute;
+    bottom: 0;
+    left: 220px;
+    width: calc(100vw - 220px);
+    height: 150px;
+    background: #222;
+    border-top: 2px solid #555;
+    z-index: 30;
+    display: none;
+    /* Hidden by default */
+    flex-direction: column;
+}
+
+#oscilloscope-header {
+    height: 25px;
+    background: #333;
+    color: #ddd;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    justify-content: space-between;
+    border-bottom: 1px solid #444;
+}
+
+#oscilloscope-canvas {
+    width: 100%;
+    height: calc(100% - 25px);
+    background: #000;
+}
+
+/* === [13. Expert Mode Theme (Minimalist / Schematic)] === */
+body.expert-mode {
+    background-color: #ffffff;
+    color: #000;
+}
+
+body.expert-mode #toolbox {
+    background: #f0f0f0;
+    color: #333;
+    border-right: 1px solid #ccc;
+}
+
+body.expert-mode .tool-btn {
+    background: #fff;
+    border: 1px solid #333;
+    color: #333;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+body.expert-mode .tool-btn:hover {
+    background: #333;
+    color: #fff;
+}
+
+body.expert-mode #workspace {
+    background-color: #fff;
+    background-image:
+        linear-gradient(#eee 1px, transparent 1px),
+        linear-gradient(90deg, #eee 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+body.expert-mode .component {
+    border-radius: 0;
+    border: 2px solid #000;
+    background: transparent;
+    color: #000;
+    box-shadow: none;
+}
+
+body.expert-mode .component.selected {
+    outline: 2px dashed #000;
+    box-shadow: none;
+}
+
+body.expert-mode line {
+    stroke: #000;
+    stroke-width: 2;
+}
+
+body.expert-mode line.on {
+    stroke: #e74c3c;
+    stroke-width: 3;
+}
+
+body.expert-mode .pin {
+    border-radius: 0;
+    border: 1px solid #000;
+    background: #fff;
+}
+
+/* Back Button */
+.back-btn {
+    position: fixed;
+    top: 10px;
+    right: 240px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    border: none;
+}
+
+.back-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+body.expert-mode .back-btn {
+    background: #eee;
+    color: #333;
+    border: 1px solid #999;
+}
+
+/* Joint (Wire Node) */
+.component[data-type="JOINT"] {
+    width: 14px;
+    height: 14px;
+    background: #34495e;
+    /* Default wire status color */
+    border-radius: 50%;
+    border: none;
+    box-shadow: none;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    /* Below gates but above wires */
+}
+
+.component[data-type="JOINT"] .comp-label {
+    display: none;
+}
+
+.component[data-type="JOINT"] .pin {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    margin: 0;
+    left: 0;
+    top: 0;
+    pointer-events: all;
+    /* Ensure click capture */
+}
+
+.component[data-type="JOINT"].selected {
+    outline: 2px solid #f1c40f;
+    box-shadow: 0 0 5px #f1c40f;
+}
+
+/* Expert mode overriding for joint */
+body.expert-mode .component[data-type="JOINT"] {
+    background: #000;
+    border: none;
+}
+
+body.expert-mode .component[data-type="JOINT"][data-value="1"] {
+    background: #e74c3c;
+    /* Active logic color */
+}
+
+/* Transistor (Expert Mode) */
+/* Transistor (Expert Mode) - NPN Style Symbol */
+.component[data-type="TRANSISTOR"] {
+    width: 60px;
+    height: 60px;
+    background: transparent;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    /* SVG: NPN Transistor. Thicker lines. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60' fill='none' stroke='black' stroke-width='4'%3E%3Ccircle cx='30' cy='30' r='26' fill='white' stroke='black' stroke-width='3'/%3E%3Cline x1='18' y1='15' x2='18' y2='45' stroke-width='6'/%3E%3Cline x1='18' y1='30' x2='5' y2='30' stroke-width='4'/%3E%3Cline x1='18' y1='25' x2='42' y2='8' /%3E%3Cline x1='18' y1='35' x2='42' y2='52' /%3E%3Cpolygon points='36,46 44,52 34,55' fill='black' stroke='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.component[data-type="PMOS"] {
+    width: 60px;
+    height: 60px;
+    background: transparent;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    /* SVG: PMOS/PNP (Bubble on Gate + Arrow In inverted logic visually or just Bubble). Logic simulation is PMOS. Circle on gate is standard for PMOS. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60' fill='none' stroke='black' stroke-width='4'%3E%3Ccircle cx='30' cy='30' r='26' fill='white' stroke='black' stroke-width='3'/%3E%3Cline x1='18' y1='15' x2='18' y2='45' stroke-width='6'/%3E%3Cline x1='12' y1='30' x2='5' y2='30' stroke-width='4'/%3E%3Ccircle cx='15' cy='30' r='4' fill='white' stroke='black' stroke-width='3'/%3E%3Cline x1='18' y1='25' x2='42' y2='8' /%3E%3Cline x1='18' y1='35' x2='42' y2='52' /%3E%3Cpolygon points='28,32 23,40 32,38' fill='black' stroke='none' transform='translate(0,0)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* === DISTINCTIVE LOGIC GATE SHAPES === */
+
+/* General Gate Reset */
+.component[data-type="AND"],
+.component[data-type="OR"],
+.component[data-type="NOT"],
+.component[data-type="NAND"],
+.component[data-type="NOR"],
+.component[data-type="XOR"],
+.component[data-type="XNOR"] {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    /* Hide text */
+}
+
+/* Hide Labels for Gates too */
+.component[data-type="AND"] .comp-label,
+.component[data-type="OR"] .comp-label,
+.component[data-type="NOT"] .comp-label,
+.component[data-type="NAND"] .comp-label,
+.component[data-type="NOR"] .comp-label,
+.component[data-type="XOR"] .comp-label,
+.component[data-type="XNOR"] .comp-label {
+    display: none;
+}
+
+/* ===== 게이트 디자인 (IEC/직사각형 표준 스타일) ===== */
+/* 컴포넌트 크기: 80px x 50px */
+
+/* AND Gate: & 기호 */
+.component[data-type="AND"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='50' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='40' y='32' font-size='18' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E%26%3C/text%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='65' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* OR Gate: ≥1 기호 */
+.component[data-type="OR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='50' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='40' y='32' font-size='14' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E≥1%3C/text%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='65' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* NOT Gate: 1 + 반전 버블 */
+.component[data-type="NOT"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='40' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='35' y='32' font-size='16' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E1%3C/text%3E%3Ccircle cx='62' cy='25' r='5' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='25' x2='15' y2='25' stroke='%23333' stroke-width='2'/%3E%3Cline x1='67' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* NAND Gate: & + 반전 버블 */
+.component[data-type="NAND"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='40' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='35' y='32' font-size='18' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E%26%3C/text%3E%3Ccircle cx='62' cy='25' r='5' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='67' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* NOR Gate: ≥1 + 반전 버블 */
+.component[data-type="NOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='40' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='35' y='32' font-size='12' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E≥1%3C/text%3E%3Ccircle cx='62' cy='25' r='5' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='67' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* XOR Gate: =1 기호 */
+.component[data-type="XOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='50' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='40' y='32' font-size='14' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E=1%3C/text%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='65' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* XNOR Gate: =1 + 반전 버블 */
+.component[data-type="XNOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='40' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='35' y='32' font-size='12' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E=1%3C/text%3E%3Ccircle cx='62' cy='25' r='5' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='15' x2='15' y2='15' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='35' x2='15' y2='35' stroke='%23333' stroke-width='2'/%3E%3Cline x1='67' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* ===== 게이트별 핀 위치 정밀 조정 ===== */
+/* 새 SVG 디자인은 컴포넌트 가장자리까지 전선이 그려져 있음 */
+/* 핀 위치: 왼쪽 끝 (x=0), 오른쪽 끝 (x=100) */
+
+/* 모든 2입력 게이트: 입력핀은 왼쪽 가장자리, y=33% 및 y=67% */
+.component[data-type="AND"] .pin.in-1,
+.component[data-type="AND"] .pin.in-2,
+.component[data-type="NAND"] .pin.in-1,
+.component[data-type="NAND"] .pin.in-2,
+.component[data-type="OR"] .pin.in-1,
+.component[data-type="OR"] .pin.in-2,
+.component[data-type="NOR"] .pin.in-1,
+.component[data-type="NOR"] .pin.in-2,
+.component[data-type="XOR"] .pin.in-1,
+.component[data-type="XOR"] .pin.in-2,
+.component[data-type="XNOR"] .pin.in-1,
+.component[data-type="XNOR"] .pin.in-2 {
+    left: -6px;
+}
+
+/* 모든 게이트: 출력핀은 오른쪽 가장자리 중앙 */
+.component[data-type="AND"] .pin.out,
+.component[data-type="NAND"] .pin.out,
+.component[data-type="OR"] .pin.out,
+.component[data-type="NOR"] .pin.out,
+.component[data-type="XOR"] .pin.out,
+.component[data-type="XNOR"] .pin.out,
+.component[data-type="NOT"] .pin.out {
+    right: -6px;
+}
+
+/* NOT 게이트: 단일 입력, 중앙 */
+.component[data-type="NOT"] .pin.in-1 {
+    left: -6px;
+    top: 50%;
+}
+
+/* Hide Labels */
+.component[data-type="TRANSISTOR"] .comp-label,
+.component[data-type="PMOS"] .comp-label,
+.component[data-type="JOINT"] .comp-label {
+    display: none;
+}
+
+/* ===== 트랜지스터 디자인 (IEC 스타일) ===== */
+/* NPN Transistor */
+.component[data-type="TRANSISTOR"] {
+    width: 60px;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cline x1='0' y1='30' x2='15' y2='30' stroke='%23333' stroke-width='2'/%3E%3Cline x1='15' y1='15' x2='15' y2='45' stroke='%23333' stroke-width='3'/%3E%3Cline x1='15' y1='20' x2='35' y2='8' stroke='%23333' stroke-width='2'/%3E%3Cline x1='35' y1='8' x2='35' y2='0' stroke='%23333' stroke-width='2'/%3E%3Cline x1='15' y1='40' x2='35' y2='52' stroke='%23333' stroke-width='2'/%3E%3Cline x1='35' y1='52' x2='35' y2='60' stroke='%23333' stroke-width='2'/%3E%3Cpolygon points='28,46 35,52 30,52' fill='%23333'/%3E%3Ccircle cx='25' cy='30' r='18' fill='none' stroke='%23333' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* PMOS Transistor */
+.component[data-type="PMOS"] {
+    width: 60px;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cline x1='0' y1='30' x2='12' y2='30' stroke='%23333' stroke-width='2'/%3E%3Ccircle cx='15' cy='30' r='3' fill='none' stroke='%23333' stroke-width='1.5'/%3E%3Cline x1='18' y1='15' x2='18' y2='45' stroke='%23333' stroke-width='3'/%3E%3Cline x1='18' y1='20' x2='38' y2='8' stroke='%23333' stroke-width='2'/%3E%3Cline x1='38' y1='8' x2='38' y2='0' stroke='%23333' stroke-width='2'/%3E%3Cline x1='18' y1='40' x2='38' y2='52' stroke='%23333' stroke-width='2'/%3E%3Cline x1='38' y1='52' x2='38' y2='60' stroke='%23333' stroke-width='2'/%3E%3Cpolygon points='22,38 18,40 22,45' fill='%23333'/%3E%3Ccircle cx='28' cy='30' r='18' fill='none' stroke='%23333' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* JOINT - 전선 연결점 */
+.component[data-type="JOINT"] {
+    width: 14px;
+    height: 14px;
+    background: #333;
+    border-radius: 50%;
+    border: 2px solid #666 !important;
+    box-shadow: none !important;
+}
+
+/* Pin Positions for Transistors */
+/* Base: Left Center */
+.component[data-type="TRANSISTOR"] .pin.base,
+.component[data-type="PMOS"] .pin.base {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Collector: Top */
+.component[data-type="TRANSISTOR"] .pin.col,
+.component[data-type="PMOS"] .pin.col {
+    left: 50%;
+    top: -6px;
+    transform: translateX(-50%);
+}
+
+/* Emitter: Bottom */
+.component[data-type="TRANSISTOR"] .pin.emit,
+.component[data-type="PMOS"] .pin.emit {
+    left: 50%;
+    bottom: -6px;
+    top: auto;
+    transform: translateX(-50%);
+}
+
+/* Hover effects for Transistor Pins */
+.component[data-type="TRANSISTOR"] .pin:hover,
+.component[data-type="PMOS"] .pin:hover {
+    background: #f1c40f;
+}
+
+/* === [14. Expert Mode Only Elements] === */
+.expert-only {
+    display: none !important;
+}
+
+body.expert-mode .expert-only {
+    display: block !important;
+}
+
+/* ===== 전문가 모드 테마 - 엔지니어링 툴 스타일 ===== */
+body.expert-mode {
+    background: #2d3436;
+}
+
+/* 작업 공간 - 눈에 잘 보이는 그리드 */
+body.expert-mode #workspace {
+    background:
+        /* 주 그리드 (20px) - 진하게 */
+        linear-gradient(#4a5568 1px, transparent 1px),
+        linear-gradient(90deg, #4a5568 1px, transparent 1px),
+        /* 보조 그리드 (100px) - 더 진하게 */
+        linear-gradient(#5a6a7a 2px, transparent 2px),
+        linear-gradient(90deg, #5a6a7a 2px, transparent 2px),
+        /* 배경색 */
+        #2d3748;
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+}
+
+/* 툴박스 - 깔끔한 다크 테마 */
+body.expert-mode #toolbox {
+    background: #1a202c;
+    border-right: 2px solid #4a5568;
+}
+
+body.expert-mode .category {
+    color: #63b3ed;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+body.expert-mode .tool-btn {
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    color: #e2e8f0;
+}
+
+body.expert-mode .tool-btn:hover {
+    background: #4a5568;
+    border-color: #63b3ed;
+    color: white;
+}
+
+/* 컴포넌트 - 심플하고 정갈한 디자인 */
+body.expert-mode .component {
+    background: #1a202c !important;
+    border: 1px solid #4a5568 !important;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 3px !important;
+}
+
+body.expert-mode .component:hover {
+    border-color: #63b3ed !important;
+    box-shadow: 2px 2px 8px rgba(99, 179, 237, 0.3) !important;
+}
+
+body.expert-mode .component.selected {
+    border-color: #48bb78 !important;
+    box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.4) !important;
+}
+
+/* 전문가 모드 게이트 - 청록색 회로도 스타일 */
+body.expert-mode .component[data-type="AND"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='15' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='15' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 15,5 L 50,5 A 25,25 0 0 1 50,55 L 15,55 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='75' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="OR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='22' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='22' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 15,5 Q 30,30 15,55 Q 55,55 85,30 Q 55,5 15,5 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='85' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="NOT"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='30' x2='20' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 20,5 L 20,55 L 70,30 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Ccircle cx='78' cy='30' r='6' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='84' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="NAND"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='15' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='15' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 15,5 L 45,5 A 25,25 0 0 1 45,55 L 15,55 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Ccircle cx='78' cy='30' r='6' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='84' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="NOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='20' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='20' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 12,5 Q 27,30 12,55 Q 50,55 70,30 Q 50,5 12,5 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Ccircle cx='78' cy='30' r='6' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='84' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="XOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='18' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='18' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 8,5 Q 23,30 8,55' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 18,5 Q 33,30 18,55 Q 55,55 85,30 Q 55,5 18,5 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='85' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+body.expert-mode .component[data-type="XNOR"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Cline x1='0' y1='20' x2='16' y2='20' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='0' y1='40' x2='16' y2='40' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 6,5 Q 21,30 6,55' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cpath d='M 16,5 Q 31,30 16,55 Q 50,55 70,30 Q 50,5 16,5 Z' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Ccircle cx='78' cy='30' r='6' fill='none' stroke='%2363b3ed' stroke-width='2'/%3E%3Cline x1='84' y1='30' x2='100' y2='30' stroke='%2363b3ed' stroke-width='2'/%3E%3C/svg%3E") !important;
+    background-size: 100% 100% !important;
+}
+
+/* 핀 스타일 - 차분한 색상 */
+body.expert-mode .pin {
+    background: #2d3748;
+    border: 2px solid #63b3ed;
+}
+
+body.expert-mode .pin:hover {
+    background: #63b3ed;
+    transform: scale(1.2);
+}
+
+/* 전선 - 청록색 */
+body.expert-mode line {
+    stroke: #63b3ed;
+    stroke-width: 2;
+}
+
+body.expert-mode line:hover {
+    stroke: #48bb78;
+    stroke-width: 4;
+}
+
+/* 라벨 - 밝은 회색 */
+body.expert-mode .comp-label {
+    color: #e2e8f0 !important;
+}
+
+/* Ensure expert buttons align properly */
+.tool-btn.expert-only {
+    border-color: #f39c12;
+    background: #fdf5e6;
+    color: #d35400;
+}
+
+.tool-btn.expert-only:hover {
+    background: #f39c12;
+    color: white;
+}
+
+#expert-menu {
+    border: 2px dashed #f39c12;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    background: rgba(243, 156, 18, 0.1);
+}
+
+#expert-menu .category {
+    color: #d35400;
+}
+
+/* Remove Right Sidebar */
+/* Remove Floating Window */
+
+
+
+/* Back Button in Sidebar (redesigned) */
+#btn-back-parent {
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Back Button in Right Sidebar */
+.nav-btn {
+    width: 100%;
+    padding: 10px;
+    background: #34495e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.nav-btn:hover {
+    background: #2c3e50;
+}

@@ -1,0 +1,4574 @@
+/**
+ * CircuitSimulator v3.5 (Integrated)
+ * 기능: 드래그/줌/팬, 전선 연결, 로직 시뮬레이션
+ * 고급: 우클릭 메뉴, 다중 선택, 복사/붙여넣기, 단축키 설정, 핀 중앙 정렬
+ * 추가: 프로젝트 저장/불러오기 기능 (localStorage), 다국어 지원, 모달 UI
+ */
+
+const TRANSLATIONS = {
+    ko: {
+        component: "⚡ 부품",
+        save: "💾 저장",
+        exit: "🚪 나가기",
+        edit: "👆 편집",
+        pan: "✋ 이동",
+        zoomIn: "🔍 확대",
+        zoomOut: "🔍 축소",
+        shortcut: "⚙️ 단축키 설정",
+        inputOutput: "입력 / 출력",
+        logicGates: "논리 게이트",
+        settings: "설정",
+        modeEasy: "🎓 모드: 이지 (Easy)",
+        modeExpert: "🔧 모드: 전문가 (Expert)",
+        expertAlert: "전문가 모드 활성화!\n부품을 더블 클릭하여 지연 시간과 트랜지스터 수를 수정할 수 있습니다.",
+        easyAlert: "이지 모드로 전환되었습니다.",
+        saveAlert: "프로젝트가 저장되었습니다!",
+        shortcutSaved: "단축키가 저장되었습니다!",
+        copy: "복사",
+        paste: "붙여넣기",
+        delete: "삭제",
+        descSwitch: '클릭하여 ON/OFF를 전환하는 입력 스위치입니다.',
+        descLed: '전기가 흐르면 불이 켜지는 출력 장치입니다.',
+        descClock: '1초마다 신호가 바뀌는 펄스 생성기입니다.',
+        descAnd: '모든 입력이 1일 때만 1을 출력합니다.',
+        descOr: '입력 중 하나라도 1이면 1을 출력합니다.',
+        descNot: '입력 값을 반대로 뒤집습니다.',
+        descXor: '입력 값이 서로 다를 때만 1을 출력합니다.',
+        descNand: 'AND 게이트의 반대입니다. 모든 입력이 1일 때만 0을 출력합니다.',
+        descNor: 'OR 게이트의 반대입니다. 입력 중 하나라도 1이면 0을 출력합니다.',
+        descXnor: 'XOR 게이트의 반대입니다. 입력 값이 서로 같을 때 1을 출력합니다.',
+        // Gate Names
+        gateAnd: "AND 게이트",
+        gateOr: "OR 게이트",
+        gateNot: "NOT 게이트",
+        gateXor: "XOR 게이트",
+        gateNand: "NAND 게이트",
+        gateNor: "NOR 게이트",
+        gateXnor: "XNOR 게이트",
+        gateSwitch: "스위치",
+        gateLed: "LED 전구",
+        gateClock: "클럭 (펄스)",
+        gateTr: "NPN 트랜지스터",
+        gatePmos: "PMOS 트랜지스터",
+        gateVcc: "VCC (전원)",
+        gateGnd: "GND (접지)",
+        compLib: "📚 부품 라이브러리"
+    },
+    en: {
+        component: "⚡ Components",
+        save: "💾 Save",
+        exit: "🚪 Exit",
+        edit: "👆 Edit",
+        pan: "✋ Pan",
+        zoomIn: "🔍 Zoom In",
+        zoomOut: "🔍 Zoom Out",
+        shortcut: "⚙️ Shortcuts",
+        inputOutput: "Input / Output",
+        logicGates: "Logic Gates",
+        settings: "Settings",
+        modeEasy: "🎓 Mode: Easy",
+        modeExpert: "🔧 Mode: Expert",
+        expertAlert: "Expert Mode Enabled!\nDouble-click components to edit Delay and Transistors.",
+        easyAlert: "Switched to Easy Mode.",
+        saveAlert: "Project Saved!",
+        shortcutSaved: "Shortcuts Saved!",
+        copy: "Copy",
+        paste: "Paste",
+        delete: "Delete",
+        descSwitch: 'A switch that toggles ON/OFF when clicked.',
+        descLed: 'Output device that lights up when powered.',
+        descClock: 'Pulse generator that changes signal every second.',
+        descAnd: 'Outputs 1 only if all inputs are 1.',
+        descOr: 'Outputs 1 if at least one input is 1.',
+        descNot: 'Inverts the input value.',
+        descXor: 'Outputs 1 only if inputs are different.',
+        descNand: 'Opposite of AND. Outputs 0 only if all inputs are 1.',
+        descNor: 'Opposite of OR. Outputs 0 if at least one input is 1.',
+        descXnor: 'Opposite of XOR. Outputs 1 if inputs are same.',
+        // Gate Names
+        gateAnd: "AND Gate",
+        gateOr: "OR Gate",
+        gateNot: "NOT Gate",
+        gateXor: "XOR Gate",
+        gateNand: "NAND Gate",
+        gateNor: "NOR Gate",
+        gateXnor: "XNOR Gate",
+        gateSwitch: "Switch",
+        gateLed: "LED",
+        gateClock: "Clock",
+        gateTr: "NPN Transistor",
+        gatePmos: "PMOS Transistor",
+        gateVcc: "VCC (1)",
+        gateGnd: "GND (0)",
+        compLib: "📚 Component Library"
+    },
+    es: {
+        component: "⚡ Componentes",
+        save: "💾 Guardar",
+        exit: "🚪 Salir",
+        edit: "👆 Editar",
+        pan: "✋ Mover",
+        zoomIn: "🔍 Acercar",
+        zoomOut: "🔍 Alejar",
+        shortcut: "⚙️ Atajos",
+        inputOutput: "Entrada / Salida",
+        logicGates: "Puertas Lógicas",
+        settings: "Ajustes",
+        modeEasy: "🎓 Modo: Fácil",
+        modeExpert: "🔧 Modo: Experto",
+        expertAlert: "¡Modo Experto Activado!\nDoble clic en componentes para editar Retardo y Transistores.",
+        easyAlert: "Cambiado a Modo Fácil.",
+        saveAlert: "¡Proyecto Guardado!",
+        shortcutSaved: "¡Atajos Guardados!",
+        copy: "Copiar",
+        paste: "Pegar",
+        delete: "Eliminar",
+        descSwitch: 'Un interruptor que cambia ON/OFF al hacer clic.',
+        descLed: 'Dispositivo de salida que se ilumina con energía.',
+        descClock: 'Generador de pulsos que cambia señal cada segundo.',
+        descAnd: 'Salida 1 solo si todas las entradas son 1.',
+        descOr: 'Salida 1 si al menos una entrada es 1.',
+        descNot: 'Invierte el valor de entrada.',
+        descXor: 'Salida 1 solo si las entradas son diferentes.',
+        descNand: 'Opuesto a AND. Salida 0 solo si todas las entradas son 1.',
+        descNor: 'Opuesto a OR. Salida 0 si al menos una entrada es 1.',
+        descXnor: 'Opuesto a XOR. Salida 1 si las entradas son iguales.'
+    }
+};
+
+// Global Error Handler for Debugging
+window.onerror = function (msg, url, line, col, error) {
+    // 사용자 언어 설정 불러오기
+    const savedSettings = JSON.parse(localStorage.getItem('logic_sim_settings')) || {};
+    const lang = savedSettings.language || 'ko';
+
+    const errorMessages = {
+        ko: {
+            title: '⚠️ 시뮬레이터 오류',
+            line: '위치',
+            message: '오류 내용',
+            suggestion: '페이지를 새로고침하거나 개발자 도구 콘솔(F12)을 확인하세요.'
+        },
+        en: {
+            title: '⚠️ Simulator Error',
+            line: 'Line',
+            message: 'Error',
+            suggestion: 'Please refresh the page or check the developer console (F12).'
+        },
+        es: {
+            title: '⚠️ Error del Simulador',
+            line: 'Línea',
+            message: 'Error',
+            suggestion: 'Por favor, actualice la página o revise la consola del desarrollador (F12).'
+        }
+    };
+
+    const t = errorMessages[lang] || errorMessages.ko;
+
+    console.error('Simulator Error:', { msg, url, line, col, error });
+
+    alert(`${t.title}\n\n${t.line}: ${line}\n${t.message}: ${msg}\n\n${t.suggestion}`);
+
+    return false;
+};
+
+
+
+const GATE_SCHEMATICS = {
+    'AND': {
+        parts: [
+            { type: 'TRANSISTOR', x: 100, y: 100, id: 't1' }, // NMOS 1
+            { type: 'TRANSISTOR', x: 200, y: 100, id: 't2' }, // NMOS 2
+            { type: 'VCC', x: 50, y: 50, id: 'vcc' },
+            { type: 'PORT_IN', x: 50, y: 100, label: 'A', id: 'in_1' },
+            { type: 'PORT_IN', x: 150, y: 100, label: 'B', id: 'in_2' },
+            { type: 'PORT_OUT', x: 300, y: 100, label: 'Out', id: 'out' }
+        ],
+        // Simple Series Logic (Pass Transistor Logic)
+        wires: [
+            { from: 'vcc.out', to: 't1.col' },
+            { from: 'in_1.out', to: 't1.base' },
+            { from: 't1.emit', to: 't2.col' },
+            { from: 'in_2.out', to: 't2.base' },
+            { from: 't2.emit', to: 'out.in' }
+        ]
+    },
+    'OR': {
+        parts: [
+            { type: 'TRANSISTOR', x: 150, y: 50, id: 't1' },
+            { type: 'TRANSISTOR', x: 150, y: 150, id: 't2' },
+            { type: 'VCC', x: 50, y: 100, id: 'vcc' },
+            { type: 'PORT_IN', x: 50, y: 50, label: 'A', id: 'in_1' },
+            { type: 'PORT_IN', x: 50, y: 150, label: 'B', id: 'in_2' },
+            { type: 'PORT_OUT', x: 300, y: 100, label: 'Out', id: 'out' }
+        ],
+        wires: [
+            { from: 'vcc.out', to: 't1.col' },
+            { from: 'vcc.out', to: 't2.col' },
+            { from: 'in_1.out', to: 't1.base' },
+            { from: 'in_2.out', to: 't2.base' },
+            { from: 't1.emit', to: 'out.in' },
+            { from: 't2.emit', to: 'out.in' }
+        ]
+    },
+    'NOT': {
+        parts: [
+            { type: 'PMOS', x: 150, y: 100, id: 't1' },
+            { type: 'VCC', x: 50, y: 50, id: 'vcc' },
+            { type: 'GND', x: 150, y: 200, id: 'gnd' }, // Pull-down (Resistor-like or NMOS? Simplified)
+            // Ideally CMOS needs NMOS pull-down too.
+            // Let's implement full CMOS Inverter: PMOS (Top) + NMOS (Bottom)
+            { type: 'TRANSISTOR', x: 150, y: 200, id: 't2' }, // NMOS
+            { type: 'PORT_IN', x: 50, y: 150, label: 'In', id: 'in_1' },
+            { type: 'PORT_OUT', x: 300, y: 150, label: 'Out', id: 'out' }
+        ],
+        wires: [
+            // PMOS Source connected to VCC
+            { from: 'vcc.out', to: 't1.col' }, // PMOS: col=Source, emit=Drain (simplified pin names)
+            // NMOS Source (Emit) to GND (Wait, NMOS emit is output? standard NMOS: Drain->Source. Switch: Col->Emit)
+            // Let's assume Col is High-side, Emit is Low-side.
+            // NMOS: Col connected to Output, Emit connected to GND.
+            { from: 'gnd.out', to: 't2.emit' },
+
+            // Gates connected to Input
+            { from: 'in_1.out', to: 't1.base' },
+            { from: 'in_1.out', to: 't2.base' },
+
+            // Drains connected to Output
+            // PMOS Emit -> Out
+            { from: 't1.emit', to: 'out.in' },
+            // NMOS Col -> Out
+            { from: 't2.col', to: 'out.in' }
+
+            // Note: This matches CMOS Inverter topology.
+            // PMOS (Top): on when Low. Passes VCC to Out.
+            // NMOS (Bottom): on when High. Passes GND (Low) to Out?
+            // Wait, NMOS Pass Logic: If Base=1, Col->Emit.
+            // If we want to pull down to GND, we need GND at Col and connect Emit to Out? 
+            // Or Col at Out and Emit at GND? If Base=1, current flows Col->Emit.
+            // If Out is effectively Col, and GND is Emit. If Base=1, Out connects to GND. Yes.
+        ]
+    },
+    'NAND': {
+        parts: [
+            { type: 'VCC', x: 150, y: 50, id: 'vcc' },
+            { type: 'GND', x: 150, y: 300, id: 'gnd' },
+
+            // Parallel PMOS (Pull-up)
+            { type: 'PMOS', x: 100, y: 100, id: 'p1', label: 'P1' },
+            { type: 'PMOS', x: 200, y: 100, id: 'p2', label: 'P2' },
+
+            // Series NMOS (Pull-down)
+            { type: 'TRANSISTOR', x: 150, y: 200, id: 'n1', label: 'N1' },
+            { type: 'TRANSISTOR', x: 150, y: 250, id: 'n2', label: 'N2' },
+
+            { type: 'PORT_IN', x: 50, y: 150, label: 'A', id: 'in_1' },
+            { type: 'PORT_IN', x: 250, y: 150, label: 'B', id: 'in_2' },
+            { type: 'PORT_OUT', x: 300, y: 200, label: 'Out', id: 'out' }
+        ],
+        wires: [
+            // P1, P2 Sources to VCC
+            { from: 'vcc.out', to: 'p1.col' },
+            { from: 'vcc.out', to: 'p2.col' },
+
+            // P1, P2 Drains to Output (and N1 Drain)
+            { from: 'p1.emit', to: 'out.in' },
+            { from: 'p2.emit', to: 'out.in' },
+            { from: 'p1.emit', to: 'n1.col' }, // Connect Pull-up network to Pull-down network node
+
+            // N1, N2 Series
+            { from: 'n1.emit', to: 'n2.col' },
+            { from: 'n2.emit', to: 'gnd.out' }, // N2 Source to GND
+
+            // Inputs to Gates
+            { from: 'in_1.out', to: 'p1.base' },
+            { from: 'in_1.out', to: 'n1.base' },
+            { from: 'in_2.out', to: 'p2.base' },
+            { from: 'in_2.out', to: 'n2.base' }
+        ]
+    },
+    'NOR': {
+        parts: [
+            { type: 'VCC', x: 150, y: 50, id: 'vcc' },
+            { type: 'GND', x: 150, y: 300, id: 'gnd' },
+
+            // Series PMOS (Pull-up)
+            { type: 'PMOS', x: 150, y: 100, id: 'p1', label: 'P1' },
+            { type: 'PMOS', x: 150, y: 150, id: 'p2', label: 'P2' },
+
+            // Parallel NMOS (Pull-down)
+            { type: 'TRANSISTOR', x: 100, y: 250, id: 'n1', label: 'N1' },
+            { type: 'TRANSISTOR', x: 200, y: 250, id: 'n2', label: 'N2' },
+
+            { type: 'PORT_IN', x: 50, y: 125, label: 'A', id: 'in_1' },
+            { type: 'PORT_IN', x: 50, y: 225, label: 'B', id: 'in_2' },
+            { type: 'PORT_OUT', x: 300, y: 200, label: 'Out', id: 'out' }
+        ],
+        wires: [
+            // P1, P2 Series
+            { from: 'vcc.out', to: 'p1.col' },
+            { from: 'p1.emit', to: 'p2.col' },
+
+            // P2 Drain to Output
+            { from: 'p2.emit', to: 'out.in' },
+            { from: 'p2.emit', to: 'n1.col' }, // Join Pull-up/Pull-down
+            { from: 'p2.emit', to: 'n2.col' },
+
+            // N1, N2 Parallel Drains (connected above)
+            // N1, N2 Sources to GND
+            { from: 'n1.emit', to: 'gnd.out' },
+            { from: 'n2.emit', to: 'gnd.out' },
+
+            // Inputs
+            { from: 'in_1.out', to: 'p1.base' },
+            { from: 'in_1.out', to: 'n1.base' },
+            { from: 'in_2.out', to: 'p2.base' },
+            { from: 'in_2.out', to: 'n2.base' }
+        ]
+    }
+};
+
+class CircuitSimulator {
+    constructor() {
+        // [Safety] Global Access
+        window.sim = this;
+
+        // [1] 초기화 및 DOM 요소 가져오기
+        this.workspace = document.getElementById('workspace');
+        this.wireLayer = document.getElementById('wire-layer');
+
+        // Cache Main Workspace references
+        this.mainWorkspace = this.workspace;
+        this.mainWireLayer = this.wireLayer;
+
+        // Internal Editor References
+        this.internalModal = document.getElementById('internal-modal');
+        this.internalWorkspace = document.getElementById('internal-workspace');
+        this.internalWireLayer = document.getElementById('internal-wire-layer');
+        this.internalTitle = document.getElementById('internal-title');
+
+        this.tooltip = document.getElementById('tooltip');
+        this.selectionBox = document.getElementById('selection-box');
+        this.contextMenu = document.getElementById('context-menu');
+
+        // [2] 상태 변수들
+        this.components = []; // 생성된 부품 목록
+        this.wires = [];      // 연결된 전선 목록
+
+        // Scope Stack for Sub-circuits
+        this.scopeStack = []; // [{ components, wires, parentComp }]
+        this.currentScopeComp = null; // The component whose internals we are viewing
+
+        // 패키지 시스템
+        this.userPackages = []; // 사용자 정의 패키지 저장
+
+        // localStorage에서 사용자 패키지 로드
+        this.loadUserPackages();
+
+        // Undo/Redo 히스토리
+        this.history = [];
+        this.historyIndex = -1;
+        this.maxHistory = 50;
+
+        // 시뮬레이션 상태
+        this.isRunning = true;
+        this.simulationSpeed = 100; // ms
+
+        // 줌 & 팬 (화면 이동/확대)
+        this.scale = 1.0;
+
+        this.panX = 0;
+        this.panY = 0;
+        this.mode = 'edit';   // 'edit' 또는 'pan'
+        this.isPanning = false;
+
+        // 드래그 & 선택
+        this.dragTarget = null;
+        this.dragOffset = { x: 0, y: 0 };
+        this.lastMouse = { x: 0, y: 0 };
+        this.gridSize = 20;   // 격자 크기 (Snap to Grid)
+
+        // 다중 선택 & 복사/붙여넣기 변수
+        this.selectedComponents = [];
+        this.clipboard = [];
+        this.isSelecting = false;
+        this.selectionStart = { x: 0, y: 0 };
+
+        // 와이어링 (전선 연결)
+        this.startPin = null;
+        this.tempLine = null;
+
+        // 프로젝트 관리
+        this.currentProjectId = null;
+        this.currentProjectName = 'Untitled Project';
+
+        // [3] 단축키 기본 설정 (커스텀 가능)
+        this.shortcuts = {
+            'A': 'AND', 'O': 'OR', 'N': 'NOT', 'X': 'XOR',
+            'S': 'SWITCH', 'L': 'LED', 'C': 'CLOCK',
+            'DELETE': 'DELETE', 'ESCAPE': 'ESCAPE'
+        };
+
+        // [4-1] 다국어 설정 - 계정 설정에서 불러오기
+        const savedSettings = JSON.parse(localStorage.getItem('logic_sim_settings')) || {};
+        this.currentLang = savedSettings.language || 'ko';
+        this.dict = TRANSLATIONS[this.currentLang] || TRANSLATIONS['ko'];
+        this.showTutorialHints = savedSettings.showTutorials !== false;
+        this.autoSave = savedSettings.autoSave !== false;
+
+        // [4-2] 부품 설명 데이터 (언어별 동적 처리)
+        this.descriptions = {}; // Placeholder - dynamic lookup used
+
+        // [Mode State] - 통합 모드 (모든 기능 활성화)
+        this.userMode = 'expert'; // 모든 기능 항상 활성화
+
+        // [Grid & Snap Settings]
+        this.gridSnap = false; // 그리드 스냅 활성화 여부
+        this.gridSize = 20; // 그리드 크기 (px)
+        this.wireMode = 'pin'; // 'pin' (소자 핀 직접 연결) or 'grid' (격자 기준 연결)
+
+        // [Simulation Settings]
+        this.simulationSpeed = 1.0;
+
+        // [Undo/Redo History System]
+        this.history = [];
+        this.historyIndex = -1;
+        this.maxHistory = 50;  // Maximum undo steps
+
+        // [5] 이벤트 리스너 등록
+        this.initEvents();
+
+        // 1초마다 Clock 작동 (펄스 신호) - Clock component specific tick
+        setInterval(() => this.clockTick(), 1000);
+
+        // [6] 오실로스코프 및 렌더 루프
+        this.oscilloscope = new Oscilloscope(this);
+        this.lastTime = 0;
+        requestAnimationFrame((time) => this.loop(time));
+
+        // 통합 모드: body에 expert-mode 클래스 추가하여 모든 스타일 활성화
+        document.body.classList.add('expert-mode');
+
+        // URL 파라미터 확인 및 로드
+        this.initProject();
+    }
+
+    loop(timestamp) {
+        const dt = timestamp - this.lastTime;
+        if (dt > 100) { // Limit oscilloscope update rate (~10fps is enough for simple graph)
+            this.oscilloscope.update();
+            this.oscilloscope.draw();
+            this.lastTime = timestamp;
+        }
+        requestAnimationFrame((t) => this.loop(t));
+    }
+
+    // =========================================================
+    // [Section 0] 프로젝트 저장 & 불러오기 (New)
+    // =========================================================
+    initProject() {
+        const params = new URLSearchParams(window.location.search);
+        const projectId = params.get('id');
+        const isNew = params.get('new');
+
+        // 기본 ID 설정
+        if (projectId) {
+            this.currentProjectId = projectId;
+        } else {
+            this.currentProjectId = 'temp_' + Date.now();
+        }
+
+        if (isNew === 'true') {
+            // 새 프로젝트 모달 띄우기
+            const modal = document.getElementById('new-project-modal');
+            if (modal) modal.classList.add('show');
+        } else if (projectId) {
+            // 기존 프로젝트 로드
+            this.loadProject(projectId);
+        }
+
+        // 초기 모드 설정
+        this.setMode('edit');
+        this.setUserMode('easy');
+    }
+
+    confirmNewProject() {
+        // 모달에서 값 가져오기 (null-safe)
+        const nameInput = document.getElementById('new-proj-name');
+        const modeInput = document.getElementById('new-proj-mode');
+        const widthInput = document.getElementById('new-proj-width');
+        const heightInput = document.getElementById('new-proj-height');
+
+        const name = nameInput?.value?.trim() || "Untitled Project";
+        const mode = modeInput?.value || 'easy';
+        const w = widthInput ? parseInt(widthInput.value) || 3000 : 3000;
+        const h = heightInput ? parseInt(heightInput.value) || 2000 : 2000;
+
+        // 1. 모드 설정
+        this.setUserMode(mode);
+        if (mode === 'expert') {
+            this.toggleUserMode(); // Expert 모드 UI 활성화
+            this.userMode = 'expert'; // 다시 설정 (toggle이 반전시키므로)
+        }
+
+        // 2. 캔버스 사이즈 설정 (있으면)
+        if (typeof this.resizeCanvas === 'function') {
+            this.resizeCanvas(w, h);
+        }
+
+        // 3. 이름 설정
+        this.currentProjectName = name;
+
+        // 4. 모달 닫기
+        const modal = document.getElementById('new-project-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // =========================================================
+    // [Section 1] 부품(Module) 생성 및 관리
+    // =========================================================
+    addModule(type, x = null, y = null) {
+        let el; // [FIX] try 블록 밖에서 선언하여 return 가능하게
+        try {
+            el = document.createElement('div');
+            el.classList.add('component');
+            el.id = 'comp_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            el.setAttribute('data-type', type);
+            el.setAttribute('data-value', '0');
+
+            // Expert Mode Properties
+            el.setAttribute('data-delay', '10'); // ms (simulation delay) - nominal
+            el.setAttribute('data-transistors', this.getDefaultTransistors(type));
+
+            // 1-1. 이벤트 연결
+            el.onmouseenter = () => this.showTooltip(type);
+            el.onmouseleave = () => this.hideTooltip();
+
+            // ★ [NEW] Component Direct Click Handler
+            el.onmousedown = (e) => this.handleComponentMouseDown(e, el);
+
+            // ★ 중요: 우클릭 시 컨텍스트 메뉴 호출
+            el.oncontextmenu = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // JOINT의 경우 우클릭 시 "추가 전선 연결" 기능 (Expert Mode)
+                if (type === 'JOINT' && this.userMode === 'expert') {
+                    const pin = el.querySelector('.pin');
+                    if (pin) {
+                        this.handlePinClick(pin);
+                        return;
+                    }
+                }
+
+                // 우클릭한 부품도 선택 상태로 만듦
+                if (!this.selectedComponents.includes(el)) {
+                    this.selectComponent(el, false);
+                }
+                this.showContextMenu(e.clientX, e.clientY);
+            };
+
+            // 1-2. 라벨(글자) 생성
+            const label = document.createElement('div');
+            label.classList.add('comp-label');
+            el.appendChild(label);
+
+            // 1-2-1. SVG 심볼 삽입 (ANSI 표준 + IO 심볼)
+            const symbols = {
+                // Logic Gates - ANSI Standard (Pure schematic, no fill)
+                'AND': `<svg viewBox="0 0 72 48"><path d="M12 8 L36 8 A 16 20 0 0 1 36 40 L12 40 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="12" y2="32" stroke="currentColor" stroke-width="2"/><line x1="52" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                'OR': `<svg viewBox="0 0 72 48"><path d="M8 8 Q 18 24 8 40 Q 32 40 52 24 Q 32 8 8 8 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="16" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="16" y2="32" stroke="currentColor" stroke-width="2"/><line x1="52" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                'NOT': `<svg viewBox="0 0 56 40"><path d="M8 4 L40 20 L8 36 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="46" cy="20" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="20" x2="8" y2="20" stroke="currentColor" stroke-width="2"/><line x1="51" y1="20" x2="56" y2="20" stroke="currentColor" stroke-width="2"/></svg>`,
+                'NAND': `<svg viewBox="0 0 72 48"><path d="M10 8 L30 8 A 16 20 0 0 1 30 40 L10 40 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="52" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="10" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="10" y2="32" stroke="currentColor" stroke-width="2"/><line x1="57" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                'NOR': `<svg viewBox="0 0 72 48"><path d="M6 8 Q 16 24 6 40 Q 28 40 44 24 Q 28 8 6 8 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="52" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="14" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="14" y2="32" stroke="currentColor" stroke-width="2"/><line x1="57" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                'XOR': `<svg viewBox="0 0 72 48"><path d="M14 8 Q 24 24 14 40 Q 36 40 54 24 Q 36 8 14 8 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6 8 Q 16 24 6 40" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="18" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="18" y2="32" stroke="currentColor" stroke-width="2"/><line x1="54" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                'XNOR': `<svg viewBox="0 0 72 48"><path d="M14 8 Q 24 24 14 40 Q 34 40 48 24 Q 34 8 14 8 Z" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M6 8 Q 16 24 6 40" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="54" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="18" y2="16" stroke="currentColor" stroke-width="2"/><line x1="0" y1="32" x2="18" y2="32" stroke="currentColor" stroke-width="2"/><line x1="59" y1="24" x2="72" y2="24" stroke="currentColor" stroke-width="2"/></svg>`,
+                // IO Components
+                'SWITCH': `<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" stroke-width="3"/><line x1="22" y1="10" x2="22" y2="22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><line x1="40" y1="22" x2="44" y2="22" stroke="currentColor" stroke-width="2"/></svg>`,
+                'LED': `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="currentFill" stroke="currentColor" stroke-width="2.5"/><line x1="0" y1="16" x2="4" y2="16" stroke="currentColor" stroke-width="2"/></svg>`,
+                'CLOCK': `<svg viewBox="0 0 56 40"><rect x="4" y="6" width="48" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><polyline points="10,26 10,14 18,14 18,26 26,26 26,14 34,14 34,26 42,26 42,14 46,14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="miter"/><line x1="52" y1="20" x2="56" y2="20" stroke="currentColor" stroke-width="2"/></svg>`,
+                'JOINT': `<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="currentColor" stroke="none"/></svg>`,
+                // Expert Mode Components
+                'TRANSISTOR': `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" stroke-width="2"/><line x1="20" y1="16" x2="20" y2="40" stroke="currentColor" stroke-width="3"/><line x1="0" y1="28" x2="20" y2="28" stroke="currentColor" stroke-width="2"/><line x1="20" y1="22" x2="40" y2="10" stroke="currentColor" stroke-width="2"/><line x1="40" y1="10" x2="40" y2="0" stroke="currentColor" stroke-width="2"/><line x1="20" y1="34" x2="40" y2="46" stroke="currentColor" stroke-width="2"/><line x1="40" y1="46" x2="40" y2="56" stroke="currentColor" stroke-width="2"/><polygon points="34,42 40,46 36,48" fill="currentColor"/></svg>`,
+                'PMOS': `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" stroke-width="2"/><line x1="20" y1="16" x2="20" y2="40" stroke="currentColor" stroke-width="3"/><line x1="0" y1="28" x2="14" y2="28" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="28" r="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="20" y1="22" x2="40" y2="10" stroke="currentColor" stroke-width="2"/><line x1="40" y1="10" x2="40" y2="0" stroke="currentColor" stroke-width="2"/><line x1="20" y1="34" x2="40" y2="46" stroke="currentColor" stroke-width="2"/><line x1="40" y1="46" x2="40" y2="56" stroke="currentColor" stroke-width="2"/></svg>`,
+                'VCC': `<svg viewBox="0 0 36 36"><line x1="18" y1="16" x2="18" y2="36" stroke="currentColor" stroke-width="3"/><polygon points="8,16 28,16 18,4" fill="currentColor" stroke="currentColor" stroke-width="2"/></svg>`,
+                'GND': `<svg viewBox="0 0 36 36"><line x1="18" y1="0" x2="18" y2="16" stroke="currentColor" stroke-width="3"/><line x1="6" y1="16" x2="30" y2="16" stroke="currentColor" stroke-width="3"/><line x1="10" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="2.5"/><line x1="14" y1="28" x2="22" y2="28" stroke="currentColor" stroke-width="2"/></svg>`
+            };
+
+            // 1-3. 타입별 설정 및 핀 배치
+            if (type === 'SWITCH') {
+                el.innerHTML = symbols['SWITCH'];
+                label.innerText = 'OFF';
+                el.appendChild(label);
+                el.onclick = (e) => this.toggleSwitch(e, el);
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'LED') {
+                el.innerHTML = symbols['LED'];
+                el.setAttribute('data-color', 'red'); // 기본 색상
+                label.innerText = '';
+                el.appendChild(label);
+                this.addPin(el, 'in-1', 'input center');
+            } else if (type === 'CLOCK') {
+                el.innerHTML = symbols['CLOCK'];
+                label.innerText = 'CLK';
+                el.appendChild(label);
+                el.classList.add('comp-clock');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'JOINT') {
+                el.innerHTML = symbols['JOINT'];
+                label.style.display = 'none';
+                el.appendChild(label);
+                this.addPin(el, 'in-out', 'input output center');
+            } else if (type === 'TRANSISTOR') {
+                el.innerHTML = symbols['TRANSISTOR'];
+                label.innerText = 'NPN';
+                el.appendChild(label);
+                this.addPin(el, 'base', 'input base');
+                this.addPin(el, 'col', 'input col');
+                this.addPin(el, 'emit', 'output emit');
+            } else if (['VCC', 'GND', 'PORT_IN', 'PORT_OUT', 'PMOS'].includes(type)) {
+                if (type === 'VCC') {
+                    el.innerHTML = symbols['VCC'];
+                    label.innerText = 'VCC';
+                    el.appendChild(label);
+                    this.addPin(el, 'out', 'output center');
+                    el.setAttribute('data-value', '1');
+                } else if (type === 'GND') {
+                    el.innerHTML = symbols['GND'];
+                    label.innerText = 'GND';
+                    el.appendChild(label);
+                    this.addPin(el, 'out', 'output center');
+                    el.setAttribute('data-value', '0');
+                } else if (type === 'PMOS') {
+                    el.innerHTML = symbols['PMOS'];
+                    label.innerText = 'PMOS';
+                    el.appendChild(label);
+                    this.addPin(el, 'base', 'input base');
+                    this.addPin(el, 'col', 'input col');
+                    this.addPin(el, 'emit', 'output emit');
+                } else if (type === 'PORT_IN') {
+                    label.innerText = 'IN';
+                    this.addPin(el, 'out', 'output center');
+                } else if (type === 'PORT_OUT') {
+                    label.innerText = 'OUT';
+                    this.addPin(el, 'in', 'input center');
+                }
+            } else {
+                // 로직 게이트 - SVG 심볼 삽입
+                if (symbols[type]) {
+                    el.innerHTML = symbols[type];
+                    label.innerText = type;
+                    el.appendChild(label);
+                } else {
+                    label.innerText = type;
+                }
+
+                this.addPin(el, 'out', 'output center');
+
+                if (type === 'NOT') {
+                    this.addPin(el, 'in-1', 'input center');
+                } else {
+                    this.addPin(el, 'in-1', 'input in-1');
+                    this.addPin(el, 'in-2', 'input in-2');
+                }
+            }
+
+            // 1-4. 위치 지정
+            // Safe Scale Check
+            const scale = this.scale || 1.0;
+            if (x !== null && y !== null) {
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+            } else {
+                const panX = this.panX || 0;
+                const panY = this.panY || 0;
+                const spawnX = (-panX + 300 + Math.random() * 50) / scale;
+                const spawnY = (-panY + 200 + Math.random() * 50) / scale;
+                el.style.left = `${spawnX}px`;
+                el.style.top = `${spawnY}px`;
+            }
+
+            // Setup Internals
+            if (GATE_SCHEMATICS[type]) {
+                el.internals = { components: [], wires: [] };
+                this.buildInternals(el, GATE_SCHEMATICS[type]);
+            } else if (!el.internals) {
+                el.internals = null;
+            }
+
+            if (this.workspace) {
+                this.workspace.appendChild(el);
+                this.components.push(el);
+            } else {
+                alert("Error: Workspace not found!");
+            }
+
+            // Double click handling - [Removed by User Request]
+            // el.ondblclick = (e) => {
+            //     e.stopPropagation();
+            //     if (this.userMode === 'expert') {
+            //         if (el.internals || GATE_SCHEMATICS[type]) {
+            //             this.enterComponent(el);
+            //         } else {
+            //             this.openPropertyModal(el);
+            //         }
+            //     }
+            // };
+        } catch (err) {
+            this.showToast(`부품 추가 실패: ${err.message}`, 'error');
+            console.error(err);
+            return null; // [FIX] 실패 시 명시적으로 null 반환
+        }
+
+        // 히스토리 저장 (Undo 지원)
+        this.saveState();
+        return el; // [FIX] 성공 시 element 반환
+    }
+
+    resizeCanvas(w, h) {
+        // Default values if not provided
+        const width = w || this.wireLayer?.getAttribute('width') || 6000;
+        const height = h || this.wireLayer?.getAttribute('height') || 4000;
+
+        if (this.wireLayer) {
+            this.wireLayer.setAttribute('width', width);
+            this.wireLayer.setAttribute('height', height);
+            this.wireLayer.style.width = width + 'px';
+            this.wireLayer.style.height = height + 'px';
+        }
+
+        // 미니맵 업데이트
+        this.updateMinimap();
+    }
+
+    saveProject(silent = false) {
+        if (!this.currentProjectId) return;
+
+        // 1. 부품 저장
+        const componentsData = this.components.map(comp => {
+            const data = {
+                id: comp.id,
+                type: comp.getAttribute('data-type'),
+                x: parseFloat(comp.style.left),
+                y: parseFloat(comp.style.top),
+                value: comp.getAttribute('data-value')
+            };
+
+            if (comp.internals) {
+                data.internals = {
+                    components: comp.internals.components.map(c => ({
+                        id: c.id,
+                        type: c.getAttribute('data-type'),
+                        x: parseFloat(c.style.left),
+                        y: parseFloat(c.style.top),
+                        value: c.getAttribute('data-value'),
+                        label: c.querySelector('.comp-label')?.innerText
+                    })),
+                    wires: comp.internals.wires.map(w => ({
+                        fromCompId: w.from.parentElement.id,
+                        fromPinClass: w.from.classList[1],
+                        toCompId: w.to.parentElement.id,
+                        toPinClass: w.to.classList[1]
+                    }))
+                };
+            }
+            return data;
+        });
+
+        // 2. 전선 저장
+        const wiresData = this.wires.map(wire => {
+            const fromComp = wire.from.closest('.component');
+            const toComp = wire.to.closest('.component');
+
+            if (!fromComp || !toComp) return null;
+
+            return {
+                fromCompId: fromComp.id,
+                fromPinClass: wire.from.classList[1],
+                toCompId: toComp.id,
+                toPinClass: wire.to.classList[1]
+            };
+        }).filter(w => w !== null);
+
+        const projectData = {
+            name: this.currentProjectName,
+            lastModified: new Date().toLocaleString(),
+            components: componentsData,
+            wires: wiresData
+        };
+
+        // 로컬 스토리지에 저장
+        localStorage.setItem(this.currentProjectId, JSON.stringify(projectData));
+
+        // 프로젝트 인덱스 업데이트 (중복 제거)
+        let projectIndex = JSON.parse(localStorage.getItem('logic_sim_projects_index')) || [];
+        if (!projectIndex.includes(this.currentProjectId)) {
+            projectIndex.push(this.currentProjectId);
+            localStorage.setItem('logic_sim_projects_index', JSON.stringify(projectIndex));
+        }
+
+        if (!silent) this.showToast(`✓ 프로젝트 저장됨`, 'success');
+    }
+
+    loadProject(projectId) {
+        const json = localStorage.getItem(projectId);
+        if (!json) {
+            alert("프로젝트를 찾을 수 없습니다.");
+            return;
+        }
+
+        const projectData = JSON.parse(json);
+        this.currentProjectName = projectData.name;
+
+        // 초기화
+        this.components.forEach(c => c.remove());
+        this.components = [];
+        this.wires.forEach(w => w.line.remove());
+        this.wires = [];
+        this.wireLayer.innerHTML = '';
+
+        // 1. 부품 복원
+        const compMap = {}; // ID -> Element 매핑
+        projectData.components.forEach(cData => {
+            // addModule 메서드 재활용 (ID는 새로 생성되므로 덮어씌움)
+            this.addModule(cData.type, cData.x, cData.y);
+            const newComp = this.components[this.components.length - 1];
+
+            // 기존 ID 복구 (중요: 전선 연결 위해)
+            newComp.id = cData.id;
+            // 값 복구
+            if (cData.value) newComp.setAttribute('data-value', cData.value);
+
+            // 스위치 등의 상태 시각적 복구
+            if (cData.type === 'SWITCH') {
+                const label = newComp.querySelector('.comp-label');
+                if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
+                newComp.style.background = cData.value === '1' ? '#2ecc71' : '#27ae60';
+            }
+
+            compMap[cData.id] = newComp;
+
+            // 1.5 Internals 복구
+            if (cData.internals) {
+                this.restoreInternals(newComp, cData.internals);
+            }
+        });
+
+        // 2. 전선 복원
+        projectData.wires.forEach(wData => {
+            const fromComp = compMap[wData.fromCompId];
+            const toComp = compMap[wData.toCompId];
+
+            if (fromComp && toComp) {
+                const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
+                const toPin = toComp.querySelector(`.${wData.toPinClass}`);
+
+                if (fromPin && toPin) {
+                    this.createWire(fromPin, toPin);
+                }
+            }
+        });
+
+        this.updateCircuit();
+    }
+
+    initEvents() {
+        window.addEventListener('mousedown', (e) => this.onMouseDown(e));
+        window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+        window.addEventListener('mouseup', () => this.onMouseUp());
+        window.addEventListener('keydown', (e) => this.onKeyDown(e));
+        window.addEventListener('keyup', (e) => this.onKeyUp(e));
+
+        // 마우스가 창 밖으로 나갔을 때 드래그 상태 해제
+        document.addEventListener('mouseleave', () => this.resetDragState());
+        window.addEventListener('blur', () => this.resetDragState());
+
+        // 마우스 휠 줌
+        if (this.workspace) {
+            this.workspace.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                this.zoom(delta);
+            }, { passive: false });
+        }
+
+        // [CRITICAL FIX] Wire Layer Click Passthrough
+        // Ensure wire layer never blocks clicks intended for workspace or components
+        if (this.wireLayer) {
+            this.wireLayer.style.pointerEvents = 'none';
+            this.wireLayer.style.zIndex = '1'; // Low z-index
+            this.wireLayer.style.overflow = 'visible';
+        }
+
+        // 마우스 위치 상태바 업데이트
+        window.addEventListener('mousemove', (e) => {
+            if (this.workspace) {
+                const rect = this.workspace.parentElement.getBoundingClientRect();
+                const x = Math.round((e.clientX - rect.left - this.panX) / this.scale);
+                const y = Math.round((e.clientY - rect.top - this.panY) / this.scale);
+                const posEl = document.getElementById('status-position');
+                if (posEl) posEl.textContent = `X: ${x}, Y: ${y}`;
+            }
+        });
+
+        // 우클릭 메뉴 관련
+        window.addEventListener('contextmenu', (e) => e.preventDefault()); // 기본 메뉴 차단
+        window.addEventListener('click', () => this.hideContextMenu());    // 클릭 시 메뉴 닫기
+
+        // ★ [NEW] Manual Button Binding to ensure they work
+        // This is redundancy in case HTML onclick fails
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('.tool-btn');
+            buttons.forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                if (onclick && onclick.includes('addModule')) {
+                    // Extract type from string: sim.addModule('AND')
+                    const match = onclick.match(/'([^']+)'/);
+                    if (match && match[1]) {
+                        const type = match[1];
+                        // Removing onclick attribute to prevent double firing if we rely on JS
+                        // But for now, lets just leave it. If HTML onclick works, fine. 
+                        // But if user says it doesn't...
+                        // Let's add click listener ONLY if onclick is removed or we assume it failed.
+                        // Actually, inline onclick is best if working.
+                        // We will rely on window.sim = this.
+                    }
+                }
+            });
+        }, 500);
+    }
+
+    buildInternals(parentComp, schematic) {
+        // Create components and wires in memory (not DOM yet, unless we view them?)
+        // Crucial: We need DOM elements to run logic? Yes, current logic relies on DOM attributes.
+        // So we will create them but keeping them detached from workspace? 
+        // Or better: Create a DocumentFragment or a hidden container?
+        // Actually, the simplest way to allow `evaluateComposite` to work without viewing 
+        // is to have them exist as objects. But `updateCircuit` uses `querySelector`.
+        // So, we MUST instantiate them. We can put them in a hidden div or just keep them in memory 
+        // ensuring `querySelector` calls in `propagate` are replaced by lookups.
+        // CHECK: `propagate` uses `comp.querySelector`. So elements must have children.
+        // Solution: Create the DOM elements but don't append to `workspace` until we `enterComponent`.
+
+        parentComp.internals = { components: [], wires: [] };
+        const idMap = {};
+
+        schematic.parts.forEach(part => {
+            const el = document.createElement('div');
+            el.classList.add('component');
+            // Fake IDs specific to this scope
+            el.id = parentComp.id + '_' + part.id;
+            el.setAttribute('data-type', part.type);
+            el.setAttribute('data-value', '0');
+            el.style.left = part.x + 'px';
+            el.style.top = part.y + 'px';
+
+            // Label
+            const label = document.createElement('div');
+            label.classList.add('comp-label');
+            label.innerText = part.label || part.type;
+            el.appendChild(label);
+
+            // Pins (Reuse logic? addPin attaches to DOM)
+            // We need to manually add pins or call a helper that operates on 'el'
+            // I'll reuse the logic block from addModule but simplified:
+            const type = part.type;
+            if (type === 'TRANSISTOR' || type === 'PMOS') {
+                this.addPin(el, 'base', 'input base');
+                this.addPin(el, 'col', 'input col');
+                this.addPin(el, 'emit', 'output emit');
+            } else if (type === 'VCC' || type === 'GND' || type === 'PORT_IN') {
+                if (type === 'VCC') el.setAttribute('data-value', '1');
+                if (type === 'GND') el.setAttribute('data-value', '0');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'PORT_OUT') {
+                this.addPin(el, 'in', 'input center');
+            }
+
+            // Store special ref
+            if (part.id) idMap[part.id] = el;
+
+            parentComp.internals.components.push(el);
+        });
+
+        // Wires
+        schematic.wires.forEach(w => {
+            // parse "t1.col" -> component t1, pin class 'col'
+            const [fromId, fromPinCls] = w.from.split('.');
+            const [toId, toPinCls] = w.to.split('.');
+
+            const fromComp = idMap[fromId];
+            const toComp = idMap[toId];
+
+            if (fromComp && toComp) {
+                const fromPin = fromComp.querySelector('.' + fromPinCls);
+                const toPin = toComp.querySelector('.' + toPinCls);
+                if (fromPin && toPin) {
+                    // Create SVG line (detached)
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    parentComp.internals.wires.push({ from: fromPin, to: toPin, line: line });
+                }
+            }
+        });
+    }
+
+    enterComponent(comp) {
+        // 내부 모달이 없으면 기능 비활성화
+        if (!this.internalModal || !this.internalWorkspace) {
+            console.log('Internal editor not available in this layout');
+            alert('내부 구조 보기 기능은 현재 사용할 수 없습니다.');
+            return;
+        }
+
+        if (!comp.internals) {
+            // Build defaults if missing (fallback) or empty
+            comp.internals = { components: [], wires: [] };
+        }
+
+        // 1. Save Current State (Main Scope)
+        this.scopeStack.push({
+            components: this.components,
+            wires: this.wires,
+            scopeComp: this.currentScopeComp,
+            panX: this.panX,
+            panY: this.panY,
+            scale: this.scale
+        });
+
+        // 2. Switch Context to Internal Editor (View-Only Mode)
+        this.internalModal.style.display = 'flex';
+        this.workspace = this.internalWorkspace;
+        this.wireLayer = this.internalWireLayer;
+
+        const compType = comp.getAttribute('data-type');
+        if (this.internalTitle) {
+            this.internalTitle.innerText = `🔍 ${compType} 내부 구조 (보기 전용)`;
+        }
+
+        this.currentScopeComp = comp;
+        this.components = comp.internals.components;
+        this.wires = comp.internals.wires;
+
+        // 3. Render Internals (Clone for view-only to prevent accidental edits)
+        if (this.workspace) {
+            this.components.forEach(c => {
+                c.style.pointerEvents = 'none';
+                this.workspace.appendChild(c);
+            });
+        }
+        if (this.wireLayer) {
+            this.wires.forEach(w => this.wireLayer.appendChild(w.line));
+        }
+
+        // 4. Reset View for Editor
+        this.panX = 0;
+        this.panY = 0;
+        this.scale = 1.0;
+        this.updateTransform();
+
+        // Hide Main Selection Box if active
+        if (this.selectionBox) this.selectionBox.style.display = 'none';
+    }
+
+    exitComponent() {
+        if (this.scopeStack.length === 0) return;
+
+        // 1. Detach Internals (Save to memory object)
+        this.components.forEach(c => c.remove());
+        this.wires.forEach(w => w.line.remove());
+
+        // 2. Restore Parent State
+        const savedState = this.scopeStack.pop();
+
+        this.components = savedState.components;
+        this.wires = savedState.wires;
+
+        // 3. Restore Context
+        if (this.internalModal) this.internalModal.style.display = 'none';
+        this.workspace = this.mainWorkspace;
+        this.wireLayer = this.mainWireLayer;
+
+        this.panX = savedState.panX;
+        this.panY = savedState.panY;
+        this.scale = savedState.scale;
+
+        // Restore `currentScopeComp`
+        this.currentScopeComp = savedState.scopeComp;
+
+        // Re-append components and wires to the main workspace/wireLayer
+        if (this.workspace) {
+            this.components.forEach(comp => {
+                this.workspace.appendChild(comp);
+            });
+        }
+        if (this.wireLayer) {
+            this.wires.forEach(wire => {
+                this.wireLayer.appendChild(wire.line);
+            });
+        }
+
+        this.updateTransform();
+
+        // Update UI
+        // Hide Back Button if no more parents
+        if (this.scopeStack.length === 0) {
+            const backBtn = document.getElementById('btn-back-parent');
+            if (backBtn) backBtn.style.display = 'none';
+        }
+    }
+
+    getDefaultTransistors(type) {
+        switch (type) {
+            case 'NOT': return 2;
+            case 'AND': return 6;
+            case 'OR': return 6;
+            case 'NAND': return 4;
+            case 'NOR': return 4;
+            case 'XNOR': return 10;
+            case 'JOINT': return 0;
+            case 'TRANSISTOR': return 1;
+            default: return 0;
+        }
+    }
+
+    addPin(parent, posClass, roleString) {
+        const pin = document.createElement('div');
+        // roleString에 'center' 같은 클래스가 포함되어 올 수 있음
+        pin.className = `pin ${posClass}`;
+
+        // 실제 로직용 role은 'input' 또는 'output'만 추출
+        const role = roleString.includes('input') ? 'input' : 'output';
+        pin.setAttribute('data-role', role);
+
+        // 드래그로 전선 연결 (누르면 시작, 떼면 연결)
+        pin.onmousedown = (e) => {
+            const parentType = parent.getAttribute('data-type');
+
+            // JOINT인 경우: 드래그 우선 (전선 연결 대신)
+            if (parentType === 'JOINT') {
+                // JOINT를 드래그하기 위해 이벤트를 전파시킴
+                // 부모 컴포넌트의 mousedown이 처리하도록
+                return; // stopPropagation 없이 리턴 -> 이벤트 버블링
+            }
+
+            e.stopPropagation(); // 부품 드래그 방지
+            e.preventDefault();
+
+            // Edit 또는 Wire 모드에서만 연결
+            if (this.mode !== 'edit' && this.mode !== 'wire') return;
+
+            // 이미 와이어링 중이면 이 핀에 연결
+            if (this.startPin && this.tempLine) {
+                this.createWire(this.startPin, pin);
+                this.cancelWiring();
+                this.updateCircuit();
+                return;
+            }
+
+            // 새 와이어링 시작
+            this.startPin = pin;
+            pin.classList.add('active');
+
+            // 임시 선 생성
+            const wsRect = this.workspace.parentElement.getBoundingClientRect();
+            const pinRect = pin.getBoundingClientRect();
+            const startX = (pinRect.left + pinRect.width / 2 - wsRect.left - this.panX) / this.scale;
+            const startY = (pinRect.top + pinRect.height / 2 - wsRect.top - this.panY) / this.scale;
+
+            this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            this.tempLine.setAttribute('fill', 'none');
+            this.tempLine.setAttribute('d', `M ${startX} ${startY} L ${startX} ${startY}`);
+            this.tempLine.style.stroke = 'var(--accent-blue)';
+            this.tempLine.style.strokeWidth = '3';
+            this.tempLine.style.strokeDasharray = '6,4';
+            this.tempLine.style.opacity = '0.8';
+            this.wireLayer.appendChild(this.tempLine);
+        };
+
+        // 핀 위에서 마우스를 떼면 연결
+        pin.onmouseup = (e) => {
+            e.stopPropagation();
+            if (this.startPin && this.startPin !== pin) {
+                this.createWire(this.startPin, pin);
+                this.cancelWiring();
+                this.updateCircuit();
+            }
+        };
+
+        parent.appendChild(pin);
+    }
+
+    // =========================================================
+    // [Section 2] 마우스 조작 (선택, 드래그, 줌/팬)
+    // =========================================================
+
+    // ★ [NEW] 컴포넌트 전용 마우스 핸들러 (우선순위 확보)
+    handleComponentMouseDown(e, target) {
+        if (e.button !== 0) return; // 좌클릭 외에는 버블링 허용 (휠클릭 패닝 등)
+
+        e.stopPropagation(); // 배경(Workspace) 클릭 방지
+
+        // Ctrl 키 없으면 단일 선택으로 변경
+        const isAlreadySelected = this.selectedComponents.includes(target);
+        this.componentWasSelected = isAlreadySelected; // 클릭 시 토글 방지용 상태 저장
+
+        if (!e.ctrlKey && !isAlreadySelected) {
+            this.clearSelection();
+        }
+        this.selectComponent(target, true);
+
+        this.dragTarget = target;
+
+        // Calculate Mouse Position in Model Logic Space
+        const wsRect = this.workspace.parentElement.getBoundingClientRect();
+        const mouseX = (e.clientX - wsRect.left - this.panX) / this.scale;
+        const mouseY = (e.clientY - wsRect.top - this.panY) / this.scale;
+
+        // Current Component Position (Model Space)
+        const compX = parseFloat(this.dragTarget.style.left) || 0;
+        const compY = parseFloat(this.dragTarget.style.top) || 0;
+
+        // Offset = Mouse - Component
+        this.dragOffset.x = mouseX - compX;
+        this.dragOffset.y = mouseY - compY;
+
+        this.dragTarget.style.cursor = 'grabbing';
+    }
+
+    onMouseDown(e) {
+        // [수정] 휠 클릭(버튼 1) 또는 Pan 모드 -> 화면 이동
+        if (e.button === 1 || this.mode === 'pan') {
+            e.preventDefault(); // 휠 클릭 시 자동 스크롤 커서 방지
+            this.isPanning = true;
+            this.lastMouse = { x: e.clientX, y: e.clientY };
+            this.workspace.style.cursor = 'grabbing';
+            return;
+        }
+
+        // 좌클릭(버튼 0)이 아니면 선택/드래그 로직 건너뜀
+        if (e.button !== 0) return;
+
+        // B. 부품 클릭 로직은 handleComponentMouseDown으로 이동됨.
+        // 하지만 기존 생성된 부품이나 HTML 구조상 window 이벤트로 들어올 수 있으므로
+        // 안전장치로 남겨두되, 직접 연결 방식이 우선함.
+        if (e.target.closest('.component')) {
+            // 이미 el.onmousedown에서 처리되었으므로 여기서는 패스하거나
+            // e.stopPropagation()이 동작했다면 여기 도달하지 않음.
+            return;
+        }
+
+        // B. 부품 클릭 (선택 및 드래그 준비)
+        if (e.target.closest('.component')) {
+            const target = e.target.closest('.component');
+
+            // Ctrl 키 없으면 단일 선택으로 변경
+            if (!e.ctrlKey && !this.selectedComponents.includes(target)) {
+                this.clearSelection();
+            }
+            this.selectComponent(target, true);
+
+            this.dragTarget = target;
+
+            // Calculate Mouse Position in Model Logic Space
+            const wsRect = this.workspace.parentElement.getBoundingClientRect();
+            const mouseX = (e.clientX - wsRect.left - this.panX) / this.scale;
+            const mouseY = (e.clientY - wsRect.top - this.panY) / this.scale;
+
+            // Current Component Position (Model Space)
+            const compX = parseFloat(this.dragTarget.style.left) || 0;
+            const compY = parseFloat(this.dragTarget.style.top) || 0;
+
+            // Offset = Mouse - Component
+            this.dragOffset.x = mouseX - compX;
+            this.dragOffset.y = mouseY - compY;
+
+            this.dragTarget.style.cursor = 'grabbing';
+            return;
+        }
+
+        // C. 빈 공간 클릭 (워크스페이스 영역 내에서만)
+        const workspaceWrapper = e.target.closest('.workspace-wrapper');
+        const isOnWorkspace = e.target.id === 'workspace' || e.target === this.workspace;
+        const isOnWireLayer = e.target.id === 'wire-layer' || e.target.closest('#wire-layer');
+        const isNotComponent = !e.target.closest('.component') && !e.target.closest('.pin');
+
+        const isEmptySpace = workspaceWrapper && isNotComponent && (isOnWorkspace || isOnWireLayer || e.target.closest('#workspace'));
+
+        if (isEmptySpace) {
+            console.log('Empty space clicked - starting selection box');
+            // [All Modes] Wiring in empty space -> Create Joint (Allow wire bending for everyone)
+            if (this.startPin) {
+                // Prevent drag/select logic
+                this.clearSelection();
+
+                // 마우스 위치에 JOINT 생성
+                const wsRect = this.workspace.parentElement.getBoundingClientRect();
+                const mouseX = (e.clientX - wsRect.left - this.panX) / this.scale;
+                const mouseY = (e.clientY - wsRect.top - this.panY) / this.scale;
+
+                // 1. Create Joint (14px x 14px -> offset 7px to center)
+                try {
+                    this.addModule('JOINT', mouseX - 7, mouseY - 7);
+                    const newJoint = this.components[this.components.length - 1];
+
+                    if (newJoint) {
+                        const jointPin = newJoint.querySelector('.pin');
+
+                        // 2. Connect current startPin to this Joint
+                        if (jointPin) {
+                            this.createWire(this.startPin, jointPin);
+                            this.cancelWiring();
+                            this.updateCircuit();
+                        }
+                    }
+                } catch (err) {
+                    console.error("JOINT creation error:", err);
+                    this.cancelWiring();
+                }
+                return;
+            }
+
+            // Start box selection
+            this.clearSelection();
+            this.isSelecting = true;
+            const wsRect = this.workspace.parentElement.getBoundingClientRect();
+            this.selectionStart = {
+                x: (e.clientX - wsRect.left - this.panX) / this.scale,
+                y: (e.clientY - wsRect.top - this.panY) / this.scale
+            };
+            this.selectionBox.style.left = this.selectionStart.x * this.scale + this.panX + 'px';
+            this.selectionBox.style.top = this.selectionStart.y * this.scale + this.panY + 'px';
+            this.selectionBox.style.width = '0px';
+            this.selectionBox.style.height = '0px';
+            this.selectionBox.style.display = 'block';
+        }
+    }
+
+    onMouseMove(e) {
+        // [Safety Fix] Force Drag Release
+        // 브라우저가 MouseUp 이벤트를 놓쳤더라도, 버튼이 눌려있지 않다면 즉시 드래그 해제
+        if (this.dragTarget && e.buttons === 0) {
+            this.onMouseUp(e);
+            return;
+        }
+
+        // A. 화면 이동 (Panning)
+        if (this.isPanning) {
+            const dx = e.clientX - this.lastMouse.x;
+            const dy = e.clientY - this.lastMouse.y;
+            this.panX += dx;
+            this.panY += dy;
+            this.lastMouse = { x: e.clientX, y: e.clientY };
+            this.updateTransform();
+            return;
+        }
+
+        const wsRect = this.workspace.parentElement.getBoundingClientRect();
+        // 현재 마우스 좌표 (Workspace 기준 역산)
+        const mouseX = (e.clientX - wsRect.left - this.panX) / this.scale;
+        const mouseY = (e.clientY - wsRect.top - this.panY) / this.scale;
+
+        // B. 드래그 선택 박스 크기 조절
+        if (this.isSelecting) {
+            const width = Math.abs(mouseX - this.selectionStart.x);
+            const height = Math.abs(mouseY - this.selectionStart.y);
+            const left = Math.min(mouseX, this.selectionStart.x);
+            const top = Math.min(mouseY, this.selectionStart.y);
+
+            this.selectionBox.style.width = width * this.scale + 'px';
+            this.selectionBox.style.height = height * this.scale + 'px';
+            this.selectionBox.style.left = left * this.scale + this.panX + 'px';
+            this.selectionBox.style.top = top * this.scale + this.panY + 'px';
+            return;
+        }
+
+        // C. 부품 드래그 (다중 선택 지원)
+        if (this.dragTarget) {
+            let newX = mouseX - this.dragOffset.x;
+            let newY = mouseY - this.dragOffset.y;
+
+            // 그리드 스냅 적용 (활성화된 경우)
+            let snapX = this.gridSnap ? Math.round(newX / this.gridSize) * this.gridSize : newX;
+            let snapY = this.gridSnap ? Math.round(newY / this.gridSize) * this.gridSize : newY;
+
+            // ★ 영역 제한: 캔버스 밖으로 나가지 못하게 (최소 0, 최대는 캔버스 크기)
+            const compWidth = this.dragTarget.offsetWidth || 72;
+            const compHeight = this.dragTarget.offsetHeight || 48;
+            const canvasWidth = parseInt(this.wireLayer?.getAttribute('width')) || 6000;
+            const canvasHeight = parseInt(this.wireLayer?.getAttribute('height')) || 4000;
+
+            snapX = Math.max(0, Math.min(snapX, canvasWidth - compWidth));
+            snapY = Math.max(0, Math.min(snapY, canvasHeight - compHeight));
+
+            // 이동 거리 계산
+            const currentX = parseFloat(this.dragTarget.style.left) || 0;
+            const currentY = parseFloat(this.dragTarget.style.top) || 0;
+            const deltaX = snapX - currentX;
+            const deltaY = snapY - currentY;
+
+            // 드래그 대상 이동
+            this.dragTarget.style.left = `${snapX}px`;
+            this.dragTarget.style.top = `${snapY}px`;
+
+            // 다중 선택된 다른 컴포넌트들도 함께 이동 (영역 제한 적용)
+            if (this.selectedComponents.length > 1 && this.selectedComponents.includes(this.dragTarget)) {
+                this.selectedComponents.forEach(comp => {
+                    if (comp !== this.dragTarget) {
+                        let compX = parseFloat(comp.style.left) || 0;
+                        let compY = parseFloat(comp.style.top) || 0;
+                        compX = Math.max(0, Math.min(compX + deltaX, canvasWidth - (comp.offsetWidth || 72)));
+                        compY = Math.max(0, Math.min(compY + deltaY, canvasHeight - (comp.offsetHeight || 48)));
+                        comp.style.left = `${compX}px`;
+                        comp.style.top = `${compY}px`;
+                    }
+                });
+            }
+
+            this.redrawWires();
+            this.updateStatusBar();
+        }
+
+        // D. 전선 그리기 (임시 선)
+        // 스냅 로직 (마그네틱 효과)
+        if (this.startPin && this.tempLine) {
+            const spRect = this.startPin.getBoundingClientRect();
+            const startX = (spRect.left + spRect.width / 2 - wsRect.left - this.panX) / this.scale;
+            const startY = (spRect.top + spRect.height / 2 - wsRect.top - this.panY) / this.scale;
+
+            let targetX = mouseX;
+            let targetY = mouseY;
+            this.snappedPin = null;
+
+            // 핀 스냅 감지 (Grid 거리 기반)
+            const snapThreshold = 15;
+            const allPins = document.querySelectorAll('.pin');
+
+            // 기존 하이라이트 제거
+            allPins.forEach(p => p.classList.remove('snap-target'));
+
+            for (const pin of allPins) {
+                if (pin === this.startPin) continue; // 자기 자신 제외
+
+                const pRect = pin.getBoundingClientRect();
+                const px = (pRect.left + pRect.width / 2 - wsRect.left - this.panX) / this.scale;
+                const py = (pRect.top + pRect.height / 2 - wsRect.top - this.panY) / this.scale;
+
+                if (Math.hypot(px - mouseX, py - mouseY) < snapThreshold) {
+                    targetX = px;
+                    targetY = py;
+                    this.snappedPin = pin;
+                    pin.classList.add('snap-target');
+                    break;
+                }
+            }
+
+            // Orthogonal temp wiring
+            const midX = (startX + targetX) / 2;
+            let d = `M ${startX} ${startY}`;
+            d += ` L ${midX} ${startY} L ${midX} ${targetY} L ${targetX} ${targetY}`;
+
+            this.tempLine.setAttribute('d', d);
+
+            // 스냅되었을 때 색상 변경
+            if (this.snappedPin) {
+                this.tempLine.style.stroke = 'var(--accent-secondary)';
+                this.tempLine.style.strokeWidth = '3px';
+            } else {
+                this.tempLine.style.stroke = 'var(--text-muted)';
+                this.tempLine.style.strokeWidth = '2px';
+            }
+        }
+    }
+
+    onMouseUp(e) {
+        if (this.isPanning) {
+            this.isPanning = false;
+            this.workspace.style.cursor = 'default';
+        }
+
+        try {
+            // A. 드래그 선택 종료
+            if (this.isSelecting) {
+                this.isSelecting = false;
+
+                // 중요: rect를 먼저 가져온 후에 숨겨야 함!
+                const rect = this.selectionBox.getBoundingClientRect();
+                this.selectionBox.style.display = 'none';
+
+                // 선택 박스 최소 크기 확인 (5px 이상이어야 유효한 드래그 선택)
+                const boxWidth = rect.right - rect.left;
+                const boxHeight = rect.bottom - rect.top;
+
+                if (boxWidth > 5 && boxHeight > 5) {
+                    // 컴포넌트 선택
+                    let selectedCount = 0;
+                    this.components.forEach(comp => {
+                        const compRect = comp.getBoundingClientRect();
+                        if (rect.left < compRect.right && rect.right > compRect.left &&
+                            rect.top < compRect.bottom && rect.bottom > compRect.top) {
+                            this.selectComponent(comp, true);
+                            selectedCount++;
+                        }
+                    });
+
+                    // 선택된 개수 피드백
+                    if (selectedCount > 0) {
+                        this.showToast(`${selectedCount}개 선택됨`, 'info');
+                        this.updateStatusBar();
+                    }
+                }
+            }
+
+            // B. 부품 드래그 종료 (격자 스냅)
+            if (this.dragTarget) {
+                const rawLeft = parseFloat(this.dragTarget.style.left);
+                const rawTop = parseFloat(this.dragTarget.style.top);
+                const snapLeft = Math.round(rawLeft / this.gridSize) * this.gridSize;
+                const snapTop = Math.round(rawTop / this.gridSize) * this.gridSize;
+
+                this.dragTarget.style.left = `${snapLeft}px`;
+                this.dragTarget.style.top = `${snapTop}px`;
+
+                this.redrawWires();
+                this.dragTarget.style.cursor = 'grab';
+
+                // 히스토리 저장 (이동 완료)
+                this.saveState();
+            }
+
+            // C. 전선 연결 마무리 (스냅된 경우)
+            if (this.startPin && this.tempLine) {
+                // 마우스 버튼을 뗐을 때 스냅된 핀이 있다면 연결
+                if (this.snappedPin) {
+                    this.createWire(this.startPin, this.snappedPin);
+                    this.cancelWiring();
+                }
+                // 빈 공간 드롭 시 취소 (또는 JOINT 생성 로직과 충돌 방지)
+                else {
+                    // 이미 onMouseDown에서 처리되지 않은 경우에만 취소
+                    // 하지만 mousedown과 mouseup은 쌍이므로 여기서 취소해도 무방
+                    this.cancelWiring();
+                }
+            }
+
+        } catch (err) {
+            console.error("MouseUp Error:", err);
+        } finally {
+            // [CRITICAL FIX] Ensure drag state is always released
+            this.dragTarget = null;
+        }
+    }
+
+    // 드래그 상태 초기화 (마우스가 창 밖으로 나갔을 때)
+    resetDragState() {
+        // 드래그 상태 해제
+        if (this.dragTarget) {
+            this.dragTarget.style.cursor = 'grab';
+            this.dragTarget = null;
+        }
+
+        // 패닝 상태 해제
+        this.isPanning = false;
+
+        // 선택 박스 숨기기
+        if (this.isSelecting) {
+            this.isSelecting = false;
+            if (this.selectionBox) {
+                this.selectionBox.style.display = 'none';
+            }
+        }
+
+        // 임시 와이어 취소
+        if (this.startPin && this.tempLine) {
+            this.cancelWiring();
+        }
+    }
+
+    // =========================================================
+    // [Section 3] 전선 연결 (Wiring)
+    // =========================================================
+    handlePinClick(pin) {
+        if (!this.startPin) {
+            // 시작점
+            const role = pin.getAttribute('data-role');
+            if (role !== 'output' && this.userMode !== 'expert') {
+                return alert("출력(오른쪽) 핀에서 시작하세요!");
+            }
+            this.startPin = pin;
+
+            this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            this.tempLine.setAttribute('fill', 'none');
+            this.tempLine.style.stroke = '#7f8c8d';
+            this.tempLine.style.strokeDasharray = "5,5";
+            this.wireLayer.appendChild(this.tempLine);
+        } else {
+            // 도착점
+            const role = pin.getAttribute('data-role');
+            if (role !== 'input' && this.userMode !== 'expert') {
+                this.cancelWiring(); return alert("입력(왼쪽) 핀에 연결해야 합니다!");
+            }
+
+            if (this.startPin.parentElement === pin.parentElement) {
+                this.cancelWiring(); return;
+            }
+
+            this.createWire(this.startPin, pin);
+
+            if (pin.parentElement.getAttribute('data-type') === 'JOINT' && this.userMode === 'expert') {
+                const joint = pin.parentElement;
+                this.cancelWiring();
+                this.updateCircuit();
+
+                const newPin = joint.querySelector('.pin');
+                this.startPin = newPin;
+                this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                this.tempLine.setAttribute('fill', 'none');
+                this.tempLine.style.stroke = '#7f8c8d';
+                this.tempLine.style.strokeDasharray = "5,5";
+                this.wireLayer.appendChild(this.tempLine);
+                return;
+            }
+
+            this.cancelWiring();
+            this.updateCircuit();
+        }
+    }
+
+    createWire(pinA, pinB, options = {}) {
+        const { skipSave = false, skipRedraw = false } = options;
+        // [Safety Check] 핀이 유효하고 DOM에 존재하는지 확인
+        if (!pinA || !pinB || !document.contains(pinA) || !document.contains(pinB)) {
+            console.warn("Cannot create wire: Invalid or detached pins");
+            return null;
+        }
+
+        // Use path for orthogonal routing
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('fill', 'none');
+        // pointer-events handled by CSS (#wire-layer path)
+        path.classList.add('wire-path');
+
+        // 전선 드래그 시 JOINT 생성 및 이동 (Grab & Pull)
+        path.onmousedown = (e) => {
+            // 팬 모드 등에서는 동작 안 함
+            if (this.mode !== 'select' && this.mode !== 'edit') return;
+            // 확실히 path를 클릭한 경우에만
+            if (e.target !== path) return;
+
+            e.stopPropagation();
+            e.preventDefault();
+
+            // 즉시 JOINT 생성 후 드래그 모드 진입
+            const joint = this.insertJointOnWire(pinA, pinB, path, e);
+            if (joint) {
+                // [CRITICAL] 직접 드래그 상태 설정 (이벤트 충돌 방지)
+                this.dragTarget = joint;
+                this.clearSelection();
+                this.selectComponent(joint, true);
+
+                // JOINT 오프셋 (중앙 정렬)
+                this.dragOffset = { x: 8, y: 8 };
+                joint.style.cursor = 'grabbing';
+
+                // 즉시 화면 갱신
+                requestAnimationFrame(() => this.redrawWires());
+            }
+        };
+
+        this.wireLayer.appendChild(path);
+        const newWire = { from: pinA, to: pinB, line: path };
+        this.wires.push(newWire);
+        this.redrawWires();
+        this.updateStatusBar();
+        this.saveState();
+
+        return newWire; // 생성 성공 시 객체 반환
+    }
+
+    // 전선 클릭 시 JOINT 삽입 (Returns the new joint component)
+    insertJointOnWire(fromPin, toPin, wirePath, event) {
+        const wsRect = this.workspace.parentElement.getBoundingClientRect();
+        // Safe check for rect
+        if (!wsRect || wsRect.width === 0) return null;
+
+        const clickX = (event.clientX - wsRect.left - this.panX) / this.scale;
+        const clickY = (event.clientY - wsRect.top - this.panY) / this.scale;
+
+        // 기존 전선 찾기 (아직 지우지 않음)
+        const wireIndex = this.wires.findIndex(w => w.line === wirePath);
+        if (wireIndex === -1) return null;
+        const oldWire = this.wires[wireIndex];
+
+        // 1. JOINT 먼저 생성 시도
+        const joint = this.addModule('JOINT', clickX - 8, clickY - 8);
+        if (!joint) {
+            console.error("Failed to create JOINT");
+            return null;
+        }
+
+        const jointPin = joint.querySelector('.pin');
+        if (!jointPin) {
+            console.error("JOINT has no pin");
+            this.removeComponent(joint);
+            return null;
+        }
+
+        // 2. 새 전선 생성 (Transaction - 저장/리드로우는 나중에 한 번만)
+        let w1 = null, w2 = null;
+        try {
+            w1 = this.createWire(fromPin, jointPin, { skipSave: true, skipRedraw: true });
+            w2 = this.createWire(jointPin, toPin, { skipSave: true, skipRedraw: true });
+
+            // 하나라도 실패하면 즉시 롤백
+            if (!w1 || !w2) {
+                throw new Error("Wire creation failed");
+            }
+        } catch (e) {
+            console.error("Transaction failed, rolling back", e);
+
+            // 롤백: 생성된 전선 제거
+            if (w1) {
+                w1.line.remove();
+                const idx = this.wires.indexOf(w1);
+                if (idx > -1) this.wires.splice(idx, 1);
+            }
+            if (w2) {
+                w2.line.remove();
+                const idx = this.wires.indexOf(w2);
+                if (idx > -1) this.wires.splice(idx, 1);
+            }
+
+            // 롤백: 생성된 JOINT 제거
+            this.removeComponent(joint);
+            return null;
+        }
+
+        // 3. 모든 생성이 성공했으면 기존 전선 제거
+        if (oldWire && oldWire.line) {
+            oldWire.line.remove();
+        }
+        // 인덱스가 바뀌었을 수 있으므로 다시 찾거나(안전), 위에서 찾은 인덱스 사용(위험)
+        // 여기선 위에서 createWire로 push만 했으므로 oldWire 인덱스는 그대로일 것임.
+        // 하지만 안전을 위해 다시 찾음
+        const currentWireIndex = this.wires.findIndex(w => w.line === wirePath);
+        if (currentWireIndex > -1) {
+            this.wires.splice(currentWireIndex, 1);
+        }
+
+        this.showToast('전선 꺾임 (드래그하여 이동)', 'info');
+
+        // 레이아웃 안정화 및 시각적 연결 보전을 위한 강제 업데이트
+        requestAnimationFrame(() => this.redrawWires());
+        // 이중 안전장치
+        setTimeout(() => this.redrawWires(), 0);
+
+        return joint;
+    }
+
+    cancelWiring() {
+        // 임시 선 제거
+        if (this.tempLine) this.tempLine.remove();
+
+        // 시작 핀 스타일 초기화
+        if (this.startPin) {
+            this.startPin.classList.remove('active');
+        }
+
+        // 모든 핀의 스냅 스타일 제거
+        document.querySelectorAll('.pin.snap-target').forEach(p => p.classList.remove('snap-target'));
+
+        this.startPin = null;
+        this.tempLine = null;
+        this.snappedPin = null;
+    }
+
+    redrawWires() {
+        if (!this.workspace || !this.wires) return;
+
+        this.wires.forEach(wire => {
+            if (!wire.from || !wire.to || !wire.line) return;
+
+            // [Fix] Use closest to find component reliably (handles complex DOM structures)
+            const fromComp = wire.from.closest('.component');
+            const toComp = wire.to.closest('.component');
+
+            if (!fromComp || !toComp) return;
+
+            // 컴포넌트의 모델 좌표 사용
+            const fromX = parseFloat(fromComp.style.left) || 0;
+            const fromY = parseFloat(fromComp.style.top) || 0;
+            const toX = parseFloat(toComp.style.left) || 0;
+            const toY = parseFloat(toComp.style.top) || 0;
+
+            // 핀 오프셋 계산 (컴포넌트 기준)
+            let fromPinOffsetX = 0, fromPinOffsetY = 0, toPinOffsetX = 0, toPinOffsetY = 0;
+
+            try {
+                // [Optimization] JOINT (size 16x16) -> Offset 8,8
+                if (fromComp.getAttribute('data-type') === 'JOINT') {
+                    fromPinOffsetX = 8; fromPinOffsetY = 8;
+                } else {
+                    const fromPinRect = wire.from.getBoundingClientRect();
+                    const fromCompRect = fromComp.getBoundingClientRect();
+                    fromPinOffsetX = (fromPinRect.left - fromCompRect.left + fromPinRect.width / 2) / this.scale;
+                    fromPinOffsetY = (fromPinRect.top - fromCompRect.top + fromPinRect.height / 2) / this.scale;
+                }
+
+                if (toComp.getAttribute('data-type') === 'JOINT') {
+                    toPinOffsetX = 8; toPinOffsetY = 8;
+                } else {
+                    const toPinRect = wire.to.getBoundingClientRect();
+                    const toCompRect = toComp.getBoundingClientRect();
+                    toPinOffsetX = (toPinRect.left - toCompRect.left + toPinRect.width / 2) / this.scale;
+                    toPinOffsetY = (toPinRect.top - toCompRect.top + toPinRect.height / 2) / this.scale;
+                }
+            } catch (e) {
+                // DOM 계산 실패 시 기본값 (중앙)
+                fromPinOffsetX = 20; fromPinOffsetY = 20;
+                toPinOffsetX = 20; toPinOffsetY = 20;
+            }
+
+            // 최종 와이어 좌표
+            const x1 = fromX + fromPinOffsetX;
+            const y1 = fromY + fromPinOffsetY;
+            const x2 = toX + toPinOffsetX;
+            const y2 = toY + toPinOffsetY;
+
+            // Orthogonal Routing
+            const midX = (x1 + x2) / 2;
+            let d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+
+            wire.line.setAttribute('d', d);
+
+            // 애니메이션 상태 업데이트 (전류 흐름)
+            const isActive = fromComp.getAttribute('data-value') === '1';
+            if (isActive) {
+                wire.line.classList.add('active-flow');
+                wire.line.style.stroke = 'var(--signal-high)';
+            } else {
+                wire.line.classList.remove('active-flow');
+                wire.line.style.stroke = 'var(--signal-low)';
+            }
+        });
+    }
+
+    // 통합 모드 - 이 함수들은 호환성을 위해 유지되지만 실제 동작은 없음
+    setUserMode(mode) {
+        this.userMode = 'expert'; // 항상 expert 모드
+        this.resizeCanvas();
+    }
+
+    // handlePinClick 이전의 빈 공간 유지
+    // 핀 클릭 핸들러 (전선 연결용)
+    handlePinClick(pin) {
+        if (!this.startPin) {
+            // 첫 번째 핀 클릭 - 전선 시작
+            this.startPin = pin;
+            pin.classList.add('active');
+        } else {
+            // 두 번째 핀 클릭 - 전선 연결 완료
+            if (this.startPin !== pin) {
+                this.createWire(this.startPin, pin);
+                this.updateCircuit();
+            }
+            this.cancelWiring();
+        }
+    }
+
+    addPackage(pkgType) {
+        // 패키지 추가 - 내부 회로를 갖는 복합 컴포넌트
+        const pkgDefs = {
+            'HALF_ADDER': {
+                label: 'HA',
+                name: 'Half Adder',
+                inputs: ['A', 'B'],
+                outputs: ['S', 'C'],
+                color: '#16a085',
+                // 내부 회로: XOR (Sum) + AND (Carry)
+                circuit: {
+                    components: [
+                        { id: 'xor1', type: 'XOR', x: 60, y: 20, label: 'XOR' },
+                        { id: 'and1', type: 'AND', x: 60, y: 80, label: 'AND' },
+                        { id: 'in_a', type: 'PORT_IN', x: 10, y: 30, label: 'A' },
+                        { id: 'in_b', type: 'PORT_IN', x: 10, y: 70, label: 'B' },
+                        { id: 'out_s', type: 'PORT_OUT', x: 140, y: 30, label: 'S' },
+                        { id: 'out_c', type: 'PORT_OUT', x: 140, y: 90, label: 'C' }
+                    ],
+                    wires: [
+                        { from: 'in_a', fromPin: 'out', to: 'xor1', toPin: 'in-1' },
+                        { from: 'in_b', fromPin: 'out', to: 'xor1', toPin: 'in-2' },
+                        { from: 'in_a', fromPin: 'out', to: 'and1', toPin: 'in-1' },
+                        { from: 'in_b', fromPin: 'out', to: 'and1', toPin: 'in-2' },
+                        { from: 'xor1', fromPin: 'out', to: 'out_s', toPin: 'in' },
+                        { from: 'and1', fromPin: 'out', to: 'out_c', toPin: 'in' }
+                    ]
+                },
+                // 시뮬레이션 로직
+                logic: (inputs) => {
+                    const a = inputs[0], b = inputs[1];
+                    return { S: a !== b ? 1 : 0, C: (a && b) ? 1 : 0 };
+                }
+            },
+            'FULL_ADDER': {
+                label: 'FA',
+                name: 'Full Adder',
+                inputs: ['A', 'B', 'Cin'],
+                outputs: ['S', 'Cout'],
+                color: '#27ae60',
+                // 내부 회로: 2 x Half Adder + OR
+                circuit: {
+                    components: [
+                        { id: 'xor1', type: 'XOR', x: 50, y: 20, label: 'XOR1' },
+                        { id: 'xor2', type: 'XOR', x: 120, y: 30, label: 'XOR2' },
+                        { id: 'and1', type: 'AND', x: 50, y: 80, label: 'AND1' },
+                        { id: 'and2', type: 'AND', x: 120, y: 100, label: 'AND2' },
+                        { id: 'or1', type: 'OR', x: 190, y: 90, label: 'OR' },
+                        { id: 'in_a', type: 'PORT_IN', x: 10, y: 20, label: 'A' },
+                        { id: 'in_b', type: 'PORT_IN', x: 10, y: 60, label: 'B' },
+                        { id: 'in_cin', type: 'PORT_IN', x: 10, y: 100, label: 'Cin' },
+                        { id: 'out_s', type: 'PORT_OUT', x: 200, y: 30, label: 'S' },
+                        { id: 'out_cout', type: 'PORT_OUT', x: 260, y: 90, label: 'Cout' }
+                    ],
+                    wires: [
+                        { from: 'in_a', fromPin: 'out', to: 'xor1', toPin: 'in-1' },
+                        { from: 'in_b', fromPin: 'out', to: 'xor1', toPin: 'in-2' },
+                        { from: 'xor1', fromPin: 'out', to: 'xor2', toPin: 'in-1' },
+                        { from: 'in_cin', fromPin: 'out', to: 'xor2', toPin: 'in-2' },
+                        { from: 'in_a', fromPin: 'out', to: 'and1', toPin: 'in-1' },
+                        { from: 'in_b', fromPin: 'out', to: 'and1', toPin: 'in-2' },
+                        { from: 'xor1', fromPin: 'out', to: 'and2', toPin: 'in-1' },
+                        { from: 'in_cin', fromPin: 'out', to: 'and2', toPin: 'in-2' },
+                        { from: 'and1', fromPin: 'out', to: 'or1', toPin: 'in-1' },
+                        { from: 'and2', fromPin: 'out', to: 'or1', toPin: 'in-2' },
+                        { from: 'xor2', fromPin: 'out', to: 'out_s', toPin: 'in' },
+                        { from: 'or1', fromPin: 'out', to: 'out_cout', toPin: 'in' }
+                    ]
+                },
+                logic: (inputs) => {
+                    const a = inputs[0], b = inputs[1], cin = inputs[2];
+                    const sum = (a ? 1 : 0) + (b ? 1 : 0) + (cin ? 1 : 0);
+                    return { S: sum % 2, Cout: sum >= 2 ? 1 : 0 };
+                }
+            },
+            'SR_LATCH': {
+                label: 'SR',
+                name: 'SR Latch',
+                inputs: ['S', 'R'],
+                outputs: ['Q', 'Q̅'],
+                color: '#2980b9',
+                circuit: {
+                    components: [
+                        { id: 'nor1', type: 'NOR', x: 60, y: 20, label: 'NOR1' },
+                        { id: 'nor2', type: 'NOR', x: 60, y: 80, label: 'NOR2' },
+                        { id: 'in_s', type: 'PORT_IN', x: 10, y: 20, label: 'S' },
+                        { id: 'in_r', type: 'PORT_IN', x: 10, y: 80, label: 'R' },
+                        { id: 'out_q', type: 'PORT_OUT', x: 140, y: 20, label: 'Q' },
+                        { id: 'out_qn', type: 'PORT_OUT', x: 140, y: 80, label: 'Q̅' }
+                    ],
+                    wires: [
+                        { from: 'in_s', fromPin: 'out', to: 'nor1', toPin: 'in-1' },
+                        { from: 'nor2', fromPin: 'out', to: 'nor1', toPin: 'in-2' },
+                        { from: 'in_r', fromPin: 'out', to: 'nor2', toPin: 'in-2' },
+                        { from: 'nor1', fromPin: 'out', to: 'nor2', toPin: 'in-1' },
+                        { from: 'nor1', fromPin: 'out', to: 'out_q', toPin: 'in' },
+                        { from: 'nor2', fromPin: 'out', to: 'out_qn', toPin: 'in' }
+                    ]
+                },
+                logic: (inputs, state) => ({ Q: state?.Q || 0, 'Q̅': state?.['Q̅'] || 1 })
+            },
+            'D_FLIPFLOP': {
+                label: 'DFF',
+                name: 'D Flip-Flop',
+                inputs: ['D', 'CLK'],
+                outputs: ['Q', 'Q̅'],
+                color: '#8e44ad',
+                logic: (inputs, state) => {
+                    // 클럭 상승 에지에서만 저장
+                    return { Q: state?.Q || 0, 'Q̅': state?.Q ? 0 : 1 };
+                }
+            }
+        };
+
+        const pkg = pkgDefs[pkgType];
+        if (!pkg) {
+            alert('알 수 없는 패키지: ' + pkgType);
+            return;
+        }
+
+        // 패키지 컴포넌트 생성
+        const el = document.createElement('div');
+        el.classList.add('component', 'package-comp');
+        el.id = 'pkg_' + Date.now() + Math.random().toString(36).substr(2, 5);
+        el.setAttribute('data-type', pkgType);
+        el.setAttribute('data-value', '0');
+
+        const inputCount = pkg.inputs.length;
+        const outputCount = pkg.outputs.length;
+        const maxPins = Math.max(inputCount, outputCount);
+
+        el.style.width = '100px';
+        el.style.height = (30 + maxPins * 22) + 'px';
+        el.style.background = `linear-gradient(135deg, ${pkg.color} 0%, ${this.darkenColorSimple(pkg.color, 25)} 100%)`;
+        el.style.borderRadius = '8px';
+        el.style.border = '2px solid rgba(255,255,255,0.3)';
+        el.style.boxShadow = `0 4px 15px ${pkg.color}66`;
+
+        // 라벨
+        const label = document.createElement('div');
+        label.classList.add('comp-label');
+        label.innerText = pkg.label;
+        label.style.color = 'white';
+        label.style.fontWeight = 'bold';
+        label.style.fontSize = '14px';
+        label.style.textShadow = '0 1px 3px rgba(0,0,0,0.5)';
+        el.appendChild(label);
+
+        // 입력 핀 (왼쪽)
+        const height = 30 + maxPins * 22;
+        pkg.inputs.forEach((name, i) => {
+            const pin = document.createElement('div');
+            pin.classList.add('pin', 'input', `in${i}`);
+            const spacing = height / (inputCount + 1);
+            pin.style.left = '-6px';
+            pin.style.top = (spacing * (i + 1)) + 'px';
+            pin.setAttribute('data-pinid', 'in_' + i);
+            pin.setAttribute('data-label', name);
+            pin.setAttribute('title', name);
+            pin.onclick = (e) => { e.stopPropagation(); this.handlePinClick(pin); };
+            el.appendChild(pin);
+        });
+
+        // 출력 핀 (오른쪽)
+        pkg.outputs.forEach((name, i) => {
+            const pin = document.createElement('div');
+            pin.classList.add('pin', 'output', `out${i}`);
+            const spacing = height / (outputCount + 1);
+            pin.style.right = '-6px';
+            pin.style.left = 'auto';
+            pin.style.top = (spacing * (i + 1)) + 'px';
+            pin.setAttribute('data-pinid', 'out_' + i);
+            pin.setAttribute('data-label', name);
+            pin.setAttribute('title', name);
+            pin.onclick = (e) => { e.stopPropagation(); this.handlePinClick(pin); };
+            el.appendChild(pin);
+        });
+
+        // 위치 설정
+        const spawnX = (-this.panX + 300 + Math.random() * 50) / this.scale;
+        const spawnY = (-this.panY + 200 + Math.random() * 50) / this.scale;
+        el.style.left = spawnX + 'px';
+        el.style.top = spawnY + 'px';
+
+        // 내부 회로 정보 저장
+        el.internals = pkg.circuit ? this.buildPackageInternals(el, pkg) : null;
+        el.pkgDef = pkg;
+
+        // 이벤트
+        el.onmousedown = (e) => this.handleComponentMouseDown(e, el);
+        el.onmouseenter = () => this.showTooltip(pkg.name || pkgType);
+        el.onmouseleave = () => this.hideTooltip();
+        el.oncontextmenu = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!this.selectedComponents.includes(el)) {
+                this.selectComponent(el, false);
+            }
+            this.showContextMenu(e.clientX, e.clientY);
+        };
+
+        // 더블클릭 시 내부 회로 보기
+        el.ondblclick = (e) => {
+            e.stopPropagation();
+            if (el.internals || pkg.circuit) {
+                this.enterComponent(el);
+            }
+        };
+
+        this.workspace.appendChild(el);
+        this.components.push(el);
+        this.saveState();
+    }
+
+    // 색상 어둡게 (간단 버전)
+    darkenColorSimple(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max((num >> 16) - amt, 0);
+        const G = Math.max((num >> 8 & 0x00FF) - amt, 0);
+        const B = Math.max((num & 0x0000FF) - amt, 0);
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    // 패키지 내부 회로 빌드
+    buildPackageInternals(parentComp, pkg) {
+        if (!pkg.circuit) return null;
+
+        const internals = { components: [], wires: [] };
+        const idMap = {};
+
+        pkg.circuit.components.forEach(part => {
+            const el = document.createElement('div');
+            el.classList.add('component');
+            el.id = parentComp.id + '_' + part.id;
+            el.setAttribute('data-type', part.type);
+            el.setAttribute('data-value', '0');
+            el.style.left = part.x + 'px';
+            el.style.top = part.y + 'px';
+
+            const label = document.createElement('div');
+            label.classList.add('comp-label');
+            label.innerText = part.label || part.type;
+            el.appendChild(label);
+
+            // 핀 추가
+            if (['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR'].includes(part.type)) {
+                this.addPin(el, 'in-1', 'input in-1');
+                this.addPin(el, 'in-2', 'input in-2');
+                this.addPin(el, 'out', 'output center');
+            } else if (part.type === 'NOT') {
+                this.addPin(el, 'in-1', 'input center');
+                this.addPin(el, 'out', 'output center');
+            } else if (part.type === 'PORT_IN') {
+                this.addPin(el, 'out', 'output center');
+            } else if (part.type === 'PORT_OUT') {
+                this.addPin(el, 'in', 'input center');
+            }
+
+            idMap[part.id] = el;
+            internals.components.push(el);
+        });
+
+        // 와이어 생성 (line SVG 요소 포함)
+        pkg.circuit.wires.forEach(wire => {
+            const fromEl = idMap[wire.from];
+            const toEl = idMap[wire.to];
+            if (fromEl && toEl) {
+                const fromPin = fromEl.querySelector(`.${wire.fromPin}`) || fromEl.querySelector('.output') || fromEl.querySelector('.out');
+                const toPin = toEl.querySelector(`.${wire.toPin}`) || toEl.querySelector('.input') || toEl.querySelector('.in');
+                if (fromPin && toPin) {
+                    // SVG 라인 요소 생성
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    line.setAttribute('stroke', '#64748b');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('fill', 'none');
+                    internals.wires.push({ from: fromPin, to: toPin, fromEl, toEl, line });
+                }
+            }
+        });
+
+        return internals;
+    }
+
+    createPackage() {
+        if (this.selectedComponents.length === 0) {
+            alert('패키지로 만들 부품들을 먼저 선택해주세요.\n(Ctrl+클릭 또는 드래그로 다중 선택)');
+            return;
+        }
+
+        // 1. 선택된 컴포넌트들의 ID 수집
+        const selectedIds = new Set(this.selectedComponents.map(c => c.id));
+
+        // 2. 내부/외부 전선 분류
+        const internalWires = [];
+        const externalInputs = [];
+        const externalOutputs = [];
+
+        this.wires.forEach(wire => {
+            const fromComp = wire.from.closest('.component');
+            const toComp = wire.to.closest('.component');
+            const fromId = fromComp?.id;
+            const toId = toComp?.id;
+            const fromInside = selectedIds.has(fromId);
+            const toInside = selectedIds.has(toId);
+
+            if (fromInside && toInside) {
+                internalWires.push({ fromId, toId, fromPin: wire.from.className, toPin: wire.to.className });
+            } else if (!fromInside && toInside) {
+                externalInputs.push({ targetId: toId, targetPin: wire.to.className, label: `IN${externalInputs.length + 1}` });
+            } else if (fromInside && !toInside) {
+                externalOutputs.push({ sourceId: fromId, sourcePin: wire.from.className, label: `OUT${externalOutputs.length + 1}` });
+            }
+        });
+
+        // 3. 위치 정규화
+        let minX = Infinity, minY = Infinity;
+        this.selectedComponents.forEach(c => {
+            minX = Math.min(minX, parseFloat(c.style.left));
+            minY = Math.min(minY, parseFloat(c.style.top));
+        });
+
+        // 4. 회로 데이터 구성
+        const circuitData = {
+            components: this.selectedComponents.map(c => ({
+                id: c.id,
+                type: c.getAttribute('data-type'),
+                value: c.getAttribute('data-value') || '0',
+                x: parseFloat(c.style.left) - minX,
+                y: parseFloat(c.style.top) - minY,
+                width: parseFloat(c.style.width) || 80,
+                height: parseFloat(c.style.height) || 56
+            })),
+            wires: internalWires,
+            inputs: externalInputs,
+            outputs: externalOutputs
+        };
+
+        // 5. 패키지 디자이너 창 열기
+        const designerWindow = window.open(
+            'package-designer.html',
+            'PackageDesigner',
+            'width=1200,height=800,menubar=no,toolbar=no,location=no'
+        );
+
+        // 6. 메시지 핸들러 설정
+        const self = this;
+        const messageHandler = (event) => {
+            if (event.data.type === 'DESIGNER_READY') {
+                setTimeout(() => {
+                    designerWindow.postMessage({
+                        type: 'CIRCUIT_DATA',
+                        data: circuitData
+                    }, '*');
+                }, 100);
+            } else if (event.data.type === 'PACKAGE_CREATED') {
+                self.onPackageCreated(event.data.data);
+                window.removeEventListener('message', messageHandler);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+    }
+
+    onPackageCreated(pkgData) {
+        this.userPackages.push(pkgData);
+        this.saveUserPackages(); // localStorage에 저장
+        this.updatePackageList();
+        this.showToast(`패키지 "${pkgData.name}"가 생성되었습니다!`, 'success');
+    }
+
+    // createBuiltInPackages 함수 제거됨 - 논리 게이트는 addModule()로 추가됨
+
+    // localStorage에서 사용자 패키지 로드
+    loadUserPackages() {
+        try {
+            const saved = localStorage.getItem('logic_sim_user_packages');
+            if (saved) {
+                this.userPackages = JSON.parse(saved);
+                console.log(`✅ ${this.userPackages.length}개의 사용자 패키지 로드됨`);
+                // DOM이 준비된 후 UI 업데이트
+                setTimeout(() => this.updatePackageList(), 0);
+            }
+        } catch (e) {
+            console.warn('패키지 로드 실패:', e);
+            this.userPackages = [];
+        }
+    }
+
+    // 사용자 패키지를 localStorage에 저장
+    saveUserPackages() {
+        try {
+            // circuit 데이터에서 DOM 참조 제거 (직렬화 가능하게)
+            const serializable = this.userPackages.map(pkg => ({
+                name: pkg.name,
+                desc: pkg.desc || '',
+                inputs: pkg.inputs,
+                outputs: pkg.outputs,
+                width: pkg.width,
+                height: pkg.height,
+                circuit: pkg.circuit ? {
+                    components: pkg.circuit.components,
+                    wires: pkg.circuit.wires?.map(w => ({
+                        fromId: w.fromId,
+                        toId: w.toId,
+                        fromPin: w.fromPin,
+                        toPin: w.toPin
+                    })) || []
+                } : null
+            }));
+            localStorage.setItem('logic_sim_user_packages', JSON.stringify(serializable));
+            console.log(`💾 ${this.userPackages.length}개의 패키지 저장됨`);
+        } catch (e) {
+            console.warn('패키지 저장 실패:', e);
+        }
+    }
+
+    updatePackageList() {
+        const container = document.getElementById('user-packages');
+        if (!container) return;
+
+        if (this.userPackages.length === 0) {
+            container.innerHTML = '';
+        } else {
+            container.innerHTML = this.userPackages.map((pkg, i) =>
+                `<button class="comp-btn package wide" onclick="sim.addUserPackage(${i})" 
+                    onmouseenter="sim.showTooltip('PACKAGE'); sim.positionTooltip(event)"
+                    onmouseleave="sim.hideTooltip()">
+                    <div class="icon"><svg><use href="#icon-package" /></svg></div>
+                    <span class="name">${pkg.name}</span>
+                    <span class="pkg-info">${pkg.inputs.length}→${pkg.outputs.length}</span>
+                </button>`
+            ).join('');
+        }
+    }
+
+    addUserPackage(index) {
+        const pkg = this.userPackages[index];
+        if (!pkg) return;
+
+        // 패키지를 캔버스 중앙에 배치
+        const scale = this.scale || 1.0;
+        const panX = this.panX || 0;
+        const panY = this.panY || 0;
+        const x = (-panX + 300) / scale;
+        const y = (-panY + 200) / scale;
+
+        const el = document.createElement('div');
+        el.className = 'component module package-component';
+        el.setAttribute('data-type', 'PACKAGE');
+        el.setAttribute('data-package-id', String(index));
+        el.setAttribute('data-value', '0');
+        el.id = 'pkg_' + Date.now() + Math.random().toString(36).substr(2, 5);
+
+        // 크기 계산 (핀 개수에 따라 동적)
+        const inputCount = pkg.inputs?.length || 0;
+        const outputCount = pkg.outputs?.length || 0;
+        const maxPins = Math.max(inputCount, outputCount, 1);
+        const width = Math.max(120, pkg.width || 120);
+        const height = Math.max(80, maxPins * 30 + 40);
+
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.width = width + 'px';
+        el.style.height = height + 'px';
+        el.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        el.style.border = '2px solid rgba(255,255,255,0.3)';
+        el.style.borderRadius = '8px';
+        el.style.position = 'absolute';
+        el.style.cursor = 'move';
+        el.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)';
+
+        // 라벨
+        const label = document.createElement('div');
+        label.className = 'comp-label';
+        label.innerText = pkg.name || 'Package';
+        label.style.fontSize = '12px';
+        label.style.fontWeight = 'bold';
+        label.style.color = 'white';
+        label.style.textShadow = '0 1px 2px rgba(0,0,0,0.3)';
+        el.appendChild(label);
+
+        // 입력 핀들 (왼쪽)
+        if (pkg.inputs && pkg.inputs.length > 0) {
+            pkg.inputs.forEach((input, i) => {
+                const spacing = height / (pkg.inputs.length + 1);
+                this.addPin(el, `in${i}`, `input left`, spacing * (i + 1) - height / 2);
+            });
+        }
+
+        // 출력 핀들 (오른쪽)
+        if (pkg.outputs && pkg.outputs.length > 0) {
+            pkg.outputs.forEach((output, i) => {
+                const spacing = height / (pkg.outputs.length + 1);
+                this.addPin(el, `out${i}`, `output right`, spacing * (i + 1) - height / 2);
+            });
+        }
+
+        // 이벤트 핸들러 연결
+        el.onmousedown = (e) => this.handleComponentMouseDown(e, el);
+        el.onmouseenter = () => this.showTooltip('PACKAGE');
+        el.onmouseleave = () => this.hideTooltip();
+        el.oncontextmenu = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!this.selectedComponents.includes(el)) {
+                this.selectComponent(el, false);
+            }
+            this.showContextMenu(e.clientX, e.clientY);
+        };
+
+        // workspace에 추가
+        if (this.workspace) {
+            this.workspace.appendChild(el);
+            this.components.push(el);
+        }
+
+        this.saveState();
+        return el;
+    }
+
+    // addBuiltInPackage 함수 제거됨 - 논리 게이트는 addModule()로 추가됨
+
+    // 사용자 모드 전환 - 통합 모드로 인해 더 이상 사용되지 않음
+    // (호환성을 위해 함수는 유지)
+    toggleUserMode() {
+        // 모든 기능이 항상 활성화되어 있음
+        console.log('통합 모드: 모든 기능이 항상 활성화되어 있습니다.');
+    }
+
+    // =========================================================
+    // [Section 4] 고급 기능 (선택, 복사, 우클릭, 단축키)
+    // =========================================================
+    selectComponent(el, keepOthers) {
+        if (!keepOthers) this.clearSelection();
+        if (!this.selectedComponents.includes(el)) {
+            this.selectedComponents.push(el);
+            el.classList.add('selected'); // CSS: 노란 테두리
+        }
+        this.updateSelectionIndicator();
+        // [Modified] 속성 패널 자동 표시 제거
+        this.hideComponentInfoPanel();
+        /*
+        // 단일 선택 시 설명창 업데이트
+        if (this.selectedComponents.length === 1) {
+            this.updateComponentInfoPanel(el);
+        } else {
+            this.hideComponentInfoPanel();
+        }
+        */
+    }
+
+    clearSelection() {
+        this.selectedComponents.forEach(el => el.classList.remove('selected'));
+        this.selectedComponents = [];
+        this.updateSelectionIndicator();
+        this.hideComponentInfoPanel();
+    }
+
+    // 선택 상태 표시기 업데이트
+    updateSelectionIndicator() {
+        const indicator = document.getElementById('selection-count');
+        if (indicator) {
+            if (this.selectedComponents.length > 0) {
+                indicator.textContent = `선택: ${this.selectedComponents.length}개`;
+                indicator.style.display = 'inline-block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+    }
+    showContextMenu(x, y) {
+        if (!this.contextMenu) return;
+        this.contextMenu.style.display = 'block';
+        this.contextMenu.style.top = y + 'px';
+    }
+
+    hideContextMenu() {
+        if (!this.contextMenu) return;
+        this.contextMenu.style.display = 'none';
+    }
+
+    // =========================================================
+    // [Section 4-1] 소자 설명창 (Component Info Panel)
+    // =========================================================
+
+    // 소자 유형별 정보 데이터
+    getComponentInfo(type) {
+        const componentData = {
+            'AND': {
+                icon: '⊗',
+                name: 'AND 게이트',
+                description: '두 입력이 모두 HIGH일 때만 출력이 HIGH가 됩니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '0'],
+                    ['0', '1', '0'],
+                    ['1', '0', '0'],
+                    ['1', '1', '1']
+                ]
+            },
+            'OR': {
+                icon: '⊕',
+                name: 'OR 게이트',
+                description: '입력 중 하나라도 HIGH이면 출력이 HIGH가 됩니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '0'],
+                    ['0', '1', '1'],
+                    ['1', '0', '1'],
+                    ['1', '1', '1']
+                ]
+            },
+            'NOT': {
+                icon: '¬',
+                name: 'NOT 게이트 (인버터)',
+                description: '입력 신호를 반전시킵니다. HIGH→LOW, LOW→HIGH',
+                inputs: 1,
+                outputs: 1,
+                truthTable: [
+                    ['0', '1'],
+                    ['1', '0']
+                ]
+            },
+            'XOR': {
+                icon: '⊻',
+                name: 'XOR 게이트',
+                description: '두 입력이 서로 다를 때만 출력이 HIGH가 됩니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '0'],
+                    ['0', '1', '1'],
+                    ['1', '0', '1'],
+                    ['1', '1', '0']
+                ]
+            },
+            'NAND': {
+                icon: '⊼',
+                name: 'NAND 게이트',
+                description: 'AND 게이트의 출력을 반전시킵니다. 범용 게이트입니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '1'],
+                    ['0', '1', '1'],
+                    ['1', '0', '1'],
+                    ['1', '1', '0']
+                ]
+            },
+            'NOR': {
+                icon: '⊽',
+                name: 'NOR 게이트',
+                description: 'OR 게이트의 출력을 반전시킵니다. 범용 게이트입니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '1'],
+                    ['0', '1', '0'],
+                    ['1', '0', '0'],
+                    ['1', '1', '0']
+                ]
+            },
+            'XNOR': {
+                icon: '⊙',
+                name: 'XNOR 게이트',
+                description: 'XOR 게이트의 출력을 반전시킵니다. 일치 검출기',
+                inputs: 2,
+                outputs: 1,
+                truthTable: [
+                    ['0', '0', '1'],
+                    ['0', '1', '0'],
+                    ['1', '0', '0'],
+                    ['1', '1', '1']
+                ]
+            },
+            'SWITCH': {
+                icon: '🔘',
+                name: '스위치',
+                description: '클릭하여 ON/OFF를 전환합니다. 입력 신호를 생성합니다.',
+                inputs: 0,
+                outputs: 1,
+                truthTable: null
+            },
+            'LED': {
+                icon: '💡',
+                name: 'LED',
+                description: '입력 신호가 HIGH일 때 불이 켜집니다.',
+                inputs: 1,
+                outputs: 0,
+                truthTable: null
+            },
+            'CLOCK': {
+                icon: '⏰',
+                name: '클럭',
+                description: '일정 주기로 HIGH/LOW 신호를 교대로 출력합니다.',
+                inputs: 0,
+                outputs: 1,
+                truthTable: null
+            },
+            'JOINT': {
+                icon: '⚫',
+                name: '연결점',
+                description: '여러 와이어를 연결하는 분기점입니다.',
+                inputs: 1,
+                outputs: 1,
+                truthTable: null
+            },
+            'TRANSISTOR': {
+                icon: '📍',
+                name: 'NMOS 트랜지스터',
+                description: '게이트가 HIGH일 때 드레인-소스가 연결됩니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: null
+            },
+            'PMOS': {
+                icon: '📌',
+                name: 'PMOS 트랜지스터',
+                description: '게이트가 LOW일 때 드레인-소스가 연결됩니다.',
+                inputs: 2,
+                outputs: 1,
+                truthTable: null
+            },
+            'VCC': {
+                icon: '⬆️',
+                name: 'VCC (전원)',
+                description: '항상 HIGH(1) 신호를 출력합니다.',
+                inputs: 0,
+                outputs: 1,
+                truthTable: null
+            },
+            'GND': {
+                icon: '⬇️',
+                name: 'GND (접지)',
+                description: '항상 LOW(0) 신호를 출력합니다.',
+                inputs: 0,
+                outputs: 1,
+                truthTable: null
+            },
+            'HALF_ADDER': {
+                icon: '➕',
+                name: 'Half Adder (반가산기)',
+                description: '두 비트를 더합니다. Sum과 Carry 출력을 가집니다.',
+                inputs: 2,
+                outputs: 2,
+                truthTable: [
+                    ['0', '0', '0', '0'],
+                    ['0', '1', '1', '0'],
+                    ['1', '0', '1', '0'],
+                    ['1', '1', '0', '1']
+                ],
+                headers: ['A', 'B', 'Sum', 'Carry']
+            },
+            'FULL_ADDER': {
+                icon: '➕',
+                name: 'Full Adder (전가산기)',
+                description: '세 비트(A, B, Cin)를 더합니다.',
+                inputs: 3,
+                outputs: 2,
+                truthTable: null
+            },
+            'SR_LATCH': {
+                icon: '🔒',
+                name: 'SR Latch',
+                description: 'Set/Reset 래치. 메모리 기능을 제공합니다.',
+                inputs: 2,
+                outputs: 2,
+                truthTable: null
+            },
+            'D_FLIPFLOP': {
+                icon: '📦',
+                name: 'D Flip-Flop',
+                description: '클럭 신호에 동기화된 메모리 소자입니다.',
+                inputs: 2,
+                outputs: 2,
+                truthTable: null
+            }
+        };
+
+        return componentData[type] || {
+            icon: '🔌',
+            name: type,
+            description: '사용자 정의 컴포넌트입니다.',
+            inputs: '?',
+            outputs: '?',
+            truthTable: null
+        };
+    }
+
+    // 설명창 업데이트
+    updateComponentInfoPanel(el) {
+        const type = el.getAttribute('data-type');
+        this.showTooltip(type);
+    }
+
+    // 설명창 숨기기
+    hideComponentInfoPanel() {
+        const panel = document.getElementById('component-info-panel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    }
+
+    deleteSelected() {
+        if (this.selectedComponents.length === 0) return;
+
+        this.selectedComponents.forEach(el => this.deleteComponent(el));
+        this.selectedComponents = [];
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast('삭제됨', 'info');
+    }
+
+    deleteComponent(el) {
+        // 연결된 전선 제거
+        this.wires = this.wires.filter(wire => {
+            if (el.contains(wire.from) || el.contains(wire.to)) {
+                wire.line.remove();
+                return false;
+            }
+            return true;
+        });
+        // 부품 제거
+        this.components = this.components.filter(c => c !== el);
+        el.remove();
+        this.hideTooltip();
+    }
+
+    // 복사 & 붙여넣기 로직
+    copySelection() {
+        if (this.selectedComponents.length === 0) return;
+
+        this.clipboard = this.selectedComponents.map(comp => {
+            return {
+                type: comp.getAttribute('data-type'),
+                x: parseFloat(comp.style.left),
+                y: parseFloat(comp.style.top)
+            };
+        });
+        this.hideContextMenu();
+    }
+
+    pasteFromClipboard() {
+        if (this.clipboard.length === 0) return;
+        this.clearSelection();
+
+        this.clipboard.forEach(data => {
+            // 살짝 겹치지 않게 오프셋(+20px) 주어서 생성
+            this.addModule(data.type, data.x + 20, data.y + 20);
+
+            // 방금 생성된 녀석 선택
+            const newComp = this.components[this.components.length - 1];
+            this.selectComponent(newComp, true);
+        });
+        this.hideContextMenu();
+        this.updateStatusBar();
+    }
+
+    // 복제 기능
+    duplicateSelection() {
+        if (this.selectedComponents.length === 0) return;
+
+        const originals = [...this.selectedComponents];
+        this.clearSelection();
+
+        originals.forEach(comp => {
+            const type = comp.getAttribute('data-type');
+            const x = parseFloat(comp.style.left) + 30;
+            const y = parseFloat(comp.style.top) + 30;
+            this.addModule(type, x, y);
+
+            const newComp = this.components[this.components.length - 1];
+            this.selectComponent(newComp, true);
+        });
+        this.updateStatusBar();
+    }
+
+    // 수평 정렬
+    alignHorizontal() {
+        if (this.selectedComponents.length < 2) return;
+
+        const avgY = this.selectedComponents.reduce((sum, c) =>
+            sum + parseFloat(c.style.top), 0) / this.selectedComponents.length;
+
+        this.selectedComponents.forEach(c => {
+            c.style.top = avgY + 'px';
+        });
+        this.redrawWires();
+    }
+
+    // 수직 정렬
+    alignVertical() {
+        if (this.selectedComponents.length < 2) return;
+
+        const avgX = this.selectedComponents.reduce((sum, c) =>
+            sum + parseFloat(c.style.left), 0) / this.selectedComponents.length;
+
+        this.selectedComponents.forEach(c => {
+            c.style.left = avgX + 'px';
+        });
+        this.redrawWires();
+    }
+
+    // 시뮬레이션 토글
+    toggleSimulation() {
+        this.isRunning = !this.isRunning;
+        const btn = document.getElementById('btn-run');
+        if (btn) {
+            if (this.isRunning) {
+                btn.innerHTML = `
+                <svg>
+                    <use href="#icon-pause" />
+                </svg>
+                <span class="btn-text">일시정지</span>
+            `;
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = `
+                <svg>
+                    <use href="#icon-play" />
+                </svg>
+                <span class="btn-text">실행</span>
+            `;
+                btn.classList.remove('active');
+            }
+        }
+    }
+
+    // 한 단계 시뮬레이션
+    stepSimulation() {
+        this.updateCircuit();
+        this.updateStatusBar();
+    }
+
+    // 시뮬레이션 초기화
+    resetSimulation() {
+        this.components.forEach(c => {
+            if (c.getAttribute('data-type') === 'SWITCH') {
+                c.setAttribute('data-value', '0');
+                const label = c.querySelector('.comp-label');
+                if (label) label.innerText = 'OFF';
+                c.style.background = '';
+            }
+        });
+        this.updateCircuit();
+        this.updateStatusBar();
+    }
+
+    // 도움말 표시
+    showHelp() {
+        const modal = document.getElementById('help-modal');
+        if (modal) modal.classList.add('show');
+    }
+
+    // 진리표 모달 표시
+    showTruthTable() {
+        const modal = document.getElementById('truth-table-modal');
+        if (modal) modal.classList.add('show');
+    }
+
+    // 진리표 생성
+    generateTruthTable() {
+        const switches = this.components.filter(c => c.getAttribute('data-type') === 'SWITCH');
+        const leds = this.components.filter(c => c.getAttribute('data-type') === 'LED');
+
+        if (switches.length === 0 || leds.length === 0) {
+            document.getElementById('truth-table-content').innerHTML = `
+                <p style="color: var(--accent-yellow); text-align: center; padding: 40px;">
+                    ⚠️ 스위치와 LED가 필요합니다.<br>
+                    회로를 먼저 구성해주세요.
+                </p>
+            `;
+            return;
+        }
+
+        const numInputs = switches.length;
+        const numOutputs = leds.length;
+        const rows = Math.pow(2, numInputs);
+
+        // 진리표 헤더
+        let html = '<table class="truth-table"><thead><tr>';
+        switches.forEach((s, i) => {
+            html += `<th>IN${i + 1}</th>`;
+        });
+        leds.forEach((l, i) => {
+            html += `<th>OUT${i + 1}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        // 각 입력 조합에 대해 시뮬레이션
+        const originalStates = switches.map(s => s.getAttribute('data-value'));
+
+        for (let row = 0; row < rows; row++) {
+            html += '<tr>';
+
+            // 입력 설정
+            for (let i = 0; i < numInputs; i++) {
+                const bit = (row >> (numInputs - 1 - i)) & 1;
+                switches[i].setAttribute('data-value', bit ? '1' : '0');
+                html += `<td class="val-${bit}">${bit}</td>`;
+            }
+
+            // 시뮬레이션 실행
+            this.updateCircuit();
+
+            // 출력 읽기
+            leds.forEach(led => {
+                const val = led.getAttribute('data-value') === '1' ? 1 : 0;
+                html += `<td class="val-${val}">${val}</td>`;
+            });
+
+            html += '</tr>';
+        }
+
+        html += '</tbody></table>';
+
+        // 원래 상태 복원
+        switches.forEach((s, i) => {
+            s.setAttribute('data-value', originalStates[i]);
+        });
+        this.updateCircuit();
+
+        document.getElementById('truth-table-content').innerHTML = html;
+    }
+
+    // 진리표 CSV 내보내기
+    exportTruthTable() {
+        const table = document.querySelector('#truth-table-content .truth-table');
+        if (!table) {
+            alert('먼저 진리표를 생성해주세요.');
+            return;
+        }
+
+        let csv = '';
+        const rows = table.querySelectorAll('tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('th, td');
+            const rowData = Array.from(cells).map(c => c.textContent);
+            csv += rowData.join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'truth_table.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // 미니맵 업데이트
+    updateMinimap() {
+        const minimap = document.getElementById('minimap');
+        const viewport = document.getElementById('minimap-viewport');
+        if (!minimap || !viewport) return;
+
+        const wrapper = this.workspace.parentElement;
+        if (!wrapper) return;
+
+        // 1. 캔버스 실제 크기 가져오기
+        const wVal = this.wireLayer ? (this.wireLayer.getAttribute('width') || window.getComputedStyle(this.wireLayer).width) : '6000';
+        const hVal = this.wireLayer ? (this.wireLayer.getAttribute('height') || window.getComputedStyle(this.wireLayer).height) : '4000';
+        const canvasWidth = parseInt(wVal) || 6000;
+        const canvasHeight = parseInt(hVal) || 4000;
+
+        // 2. 미니맵 비율 유지
+        const mapWidth = minimap.clientWidth;
+        const desiredHeight = mapWidth * (canvasHeight / canvasWidth);
+
+        if (Math.abs(minimap.clientHeight - desiredHeight) > 1) {
+            minimap.style.height = desiredHeight + 'px';
+        }
+
+        // 3. 스케일 계산
+        const scaleX = mapWidth / canvasWidth;
+        const scaleY = desiredHeight / canvasHeight;
+
+        // [NEW] 4. 소자 그리기 (Canvas 활용)
+        let canvas = minimap.querySelector('canvas');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.style.position = 'absolute';
+            canvas.style.left = '0';
+            canvas.style.top = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '0'; // 뷰포트 뒤에 배치
+            canvas.style.pointerEvents = 'none';
+            minimap.insertBefore(canvas, viewport);
+        }
+
+        // Canvas 해상도 조정
+        if (canvas.width !== mapWidth || canvas.height !== desiredHeight) {
+            canvas.width = mapWidth;
+            canvas.height = desiredHeight;
+        }
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (this.components) {
+            this.components.forEach(comp => {
+                const type = comp.getAttribute('data-type');
+
+                // 소자 종류별 색상 구분
+                if (['SWITCH', 'LED', 'CLOCK'].includes(type)) {
+                    ctx.fillStyle = '#fbbf24'; // Amber (IO Components)
+                } else if (['VCC', 'GND', 'JOINT'].includes(type)) {
+                    ctx.fillStyle = '#64748b'; // Slate (Power/Joint)
+                } else {
+                    ctx.fillStyle = '#3b82f6'; // Blue (Gates)
+                }
+
+                // 선택된 소자 하이라이트
+                if (comp.classList.contains('selected')) {
+                    ctx.fillStyle = '#ffffff';
+                }
+
+                const x = parseFloat(comp.style.left) || 0;
+                const y = parseFloat(comp.style.top) || 0;
+
+                // 미니맵 상의 위치 변환
+                const mx = x * scaleX;
+                const my = y * scaleY;
+
+                // 소자 크기 변환 (최소 3px 보장)
+                const cw = parseFloat(comp.style.width) || comp.offsetWidth || 72;
+                const ch = parseFloat(comp.style.height) || comp.offsetHeight || 48;
+
+                const mw = Math.max(3, cw * scaleX);
+                const mh = Math.max(3, ch * scaleY);
+
+                ctx.fillRect(mx, my, mw, mh);
+            });
+        }
+
+        // 5. 뷰포트 정보 계산 (기존 로직)
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        // 월드 좌표계에서의 뷰포트 크기
+        const worldVpWidth = wrapperRect.width / this.scale;
+        const worldVpHeight = wrapperRect.height / this.scale;
+
+        // 미니맵 상에서의 뷰포트 크기
+        const vpW = worldVpWidth * scaleX;
+        const vpH = worldVpHeight * scaleY;
+
+        // 미니맵 상에서의 뷰포트 위치
+        // panX는 음수 값이므로 양수로 변환하여 계산
+        const vpL = (-this.panX / this.scale) * scaleX;
+        const vpT = (-this.panY / this.scale) * scaleY;
+
+        viewport.style.width = vpW + 'px';
+        viewport.style.height = vpH + 'px';
+        viewport.style.left = vpL + 'px';
+        viewport.style.top = vpT + 'px';
+    }
+
+    // 프로젝트 내보내기
+    exportProject() {
+        const data = {
+            name: this.currentProjectName,
+            components: this.components.map(c => ({
+                type: c.getAttribute('data-type'),
+                x: parseFloat(c.style.left),
+                y: parseFloat(c.style.top),
+                value: c.getAttribute('data-value')
+            })),
+            wires: this.wires.map(w => ({
+                fromId: w.from.closest('.component')?.id,
+                fromPin: w.from.getAttribute('data-pinid'),
+                toId: w.to.closest('.component')?.id,
+                toPin: w.to.getAttribute('data-pinid')
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (this.currentProjectName || 'circuit') + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // 모드 설정
+    setMode(mode) {
+        this.mode = mode;
+
+        // 버튼 상태 업데이트
+        ['edit', 'pan', 'wire'].forEach(m => {
+            const btn = document.getElementById('btn-' + m);
+            if (btn) btn.classList.toggle('active', m === mode);
+        });
+
+        // 워크스페이스 클래스 업데이트
+        if (this.workspace) {
+            this.workspace.classList.remove('mode-pan', 'mode-wire');
+            if (mode === 'pan') this.workspace.classList.add('mode-pan');
+            if (mode === 'wire') this.workspace.classList.add('mode-wire');
+        }
+
+        // 상태바 업데이트
+        const statusMode = document.getElementById('status-mode');
+        if (statusMode) {
+            const modeNames = { edit: '편집', pan: '이동', wire: '전선' };
+            statusMode.textContent = '모드: ' + (modeNames[mode] || mode);
+        }
+    }
+
+    // 줌 초기화
+    resetZoom() {
+        this.scale = 1.0;
+        this.panX = 0;
+        this.panY = 0;
+        this.updateTransform();
+    }
+
+    // 상태바 업데이트
+    updateStatusBar() {
+        const compCount = document.getElementById('status-components');
+        const wireCount = document.getElementById('status-wires');
+
+        if (compCount) compCount.textContent = '부품: ' + this.components.length;
+        if (wireCount) wireCount.textContent = '전선: ' + this.wires.length;
+    }
+
+    // 단축키 처리
+    onKeyDown(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        const key = e.key.toUpperCase();
+
+        // 기본 동작
+        if (key === 'DELETE' || key === 'BACKSPACE') { this.deleteSelected(); e.preventDefault(); }
+        if (key === 'ESCAPE') { this.clearSelection(); this.cancelWiring(); }
+
+        // 모드 전환 단축키
+        if (key === 'V') this.setMode('edit');
+        if (key === 'H') this.setMode('pan');
+        if (key === 'W') this.setMode('wire');
+        if (key === ' ') { this.setMode('pan'); e.preventDefault(); }
+        if (key === 'R') { this.rotateSelected(); e.preventDefault(); }
+
+        // Ctrl 조합
+        if (e.ctrlKey) {
+            if (key === 'C') { this.copySelection(); e.preventDefault(); }
+            if (key === 'V') { this.pasteFromClipboard(); e.preventDefault(); }
+            if (key === 'D') { this.duplicateSelection(); e.preventDefault(); }
+            if (key === 'S') { this.saveProject(); e.preventDefault(); }
+            if (key === 'Z') { this.undo(); e.preventDefault(); }
+            if (key === 'Y') { this.redo(); e.preventDefault(); }
+            if (key === 'A') {
+                this.components.forEach(c => this.selectComponent(c, true));
+                e.preventDefault();
+            }
+        }
+
+        // 커스텀 단축키 확인
+        for (const [sKey, sType] of Object.entries(this.shortcuts)) {
+            if (key === sKey) {
+                if (sType === 'DELETE') this.deleteSelected();
+                else if (sType === 'ESCAPE') this.clearSelection();
+                else this.addModule(sType);
+            }
+        }
+    }
+
+    onKeyUp(e) {
+        if (e.key === ' ') {
+            this.setMode('edit');
+        }
+    }
+
+    // =========================================================
+    // [Section 7] Undo/Redo 시스템
+    // =========================================================
+    saveState() {
+        // 현재 상태를 히스토리에 저장
+        const state = {
+            components: this.components.map(comp => ({
+                id: comp.id,
+                type: comp.getAttribute('data-type'),
+                x: parseFloat(comp.style.left),
+                y: parseFloat(comp.style.top),
+                value: comp.getAttribute('data-value')
+            })),
+            wires: this.wires.map(wire => ({
+                fromId: wire.from.parentElement.id,
+                fromPinClass: wire.from.classList[1],
+                toId: wire.to.parentElement.id,
+                toPinClass: wire.to.classList[1]
+            }))
+        };
+
+        // 현재 인덱스 이후의 히스토리 삭제 (새로운 분기)
+        this.history = this.history.slice(0, this.historyIndex + 1);
+        this.history.push(JSON.stringify(state));
+        this.historyIndex = this.history.length - 1;
+
+        // 최대 히스토리 제한
+        if (this.history.length > this.maxHistory) {
+            this.history.shift();
+            this.historyIndex--;
+        }
+    }
+
+    undo() {
+        if (this.historyIndex <= 0) {
+            this.showToast('더 이상 되돌릴 수 없습니다.', 'warning');
+            return;
+        }
+
+        this.historyIndex--;
+        this.restoreState(JSON.parse(this.history[this.historyIndex]));
+        this.showToast('실행 취소', 'info');
+    }
+
+    redo() {
+        if (this.historyIndex >= this.history.length - 1) {
+            this.showToast('다시 실행할 내용이 없습니다.', 'warning');
+            return;
+        }
+
+        this.historyIndex++;
+        this.restoreState(JSON.parse(this.history[this.historyIndex]));
+        this.showToast('다시 실행', 'info');
+    }
+
+    restoreState(state) {
+        // 기존 요소 제거
+        this.components.forEach(c => c.remove());
+        this.wires.forEach(w => w.line.remove());
+        this.components = [];
+        this.wires = [];
+        this.wireLayer.innerHTML = '';
+
+        // 부품 복원
+        const compMap = {};
+        state.components.forEach(cData => {
+            this.addModule(cData.type, cData.x, cData.y);
+            const newComp = this.components[this.components.length - 1];
+            newComp.id = cData.id;
+            if (cData.value) newComp.setAttribute('data-value', cData.value);
+
+            // 스위치 상태 복원
+            if (cData.type === 'SWITCH') {
+                const label = newComp.querySelector('.comp-label');
+                if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
+            }
+            compMap[cData.id] = newComp;
+        });
+
+        // 전선 복원
+        state.wires.forEach(wData => {
+            const fromComp = compMap[wData.fromId];
+            const toComp = compMap[wData.toId];
+            if (fromComp && toComp) {
+                const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
+                const toPin = toComp.querySelector(`.${wData.toPinClass}`);
+                if (fromPin && toPin) {
+                    this.createWire(fromPin, toPin);
+                }
+            }
+        });
+
+        this.updateCircuit();
+        this.updateStatusBar();
+    }
+
+    // =========================================================
+    // [Section 8] 토스트 알림 시스템
+    // =========================================================
+    showToast(message, type = 'info') {
+        // 기존 토스트 제거
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <span class="toast-icon">${type === 'success' ? '✓' : type === 'warning' ? '⚠' : type === 'error' ? '✕' : 'ℹ'}</span>
+            <span class="toast-message">${message}</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        // 애니메이션 후 표시
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 단축키 설정 모달
+    openShortcutModal() {
+        const list = document.getElementById('shortcut-list');
+        list.innerHTML = '';
+        for (const [key, type] of Object.entries(this.shortcuts)) {
+            const row = document.createElement('div');
+            row.className = 'key-row';
+            row.innerHTML = `<span>${type}</span><input type="text" class="key-input" value="${key}" data-type="${type}" maxlength="1">`;
+            list.appendChild(row);
+        }
+        document.getElementById('shortcut-modal').style.display = 'flex';
+    }
+
+    closeShortcutModal() {
+        const inputs = document.querySelectorAll('.key-input');
+        const newShortcuts = {};
+        inputs.forEach(input => {
+            if (input.value.trim()) {
+                newShortcuts[input.value.toUpperCase()] = input.getAttribute('data-type');
+            }
+        });
+        this.shortcuts = newShortcuts;
+        document.getElementById('shortcut-modal').style.display = 'none';
+        document.getElementById('shortcut-modal').style.display = 'none';
+        alert(this.dict.shortcutSaved);
+    }
+
+    setLanguage(lang) {
+        if (!TRANSLATIONS[lang]) return;
+        this.currentLang = lang;
+        this.dict = TRANSLATIONS[lang];
+
+        // UI 텍스트 업데이트
+        this.updateUIText();
+    }
+
+    updateUIText() {
+        const t = this.dict;
+        if (!t) return;
+
+        // 1. Static Text Updates
+        const header = document.querySelector('#toolbox h2');
+        if (header) header.innerText = t.component;
+
+        const btnSave = document.getElementById('btn-save');
+        if (btnSave) btnSave.innerHTML = t.save;
+
+        const btnExit = document.getElementById('btn-exit');
+        if (btnExit) btnExit.innerHTML = t.exit;
+
+        const btnEdit = document.getElementById('btn-edit');
+        if (btnEdit) btnEdit.innerHTML = t.edit;
+
+        const btnPan = document.getElementById('btn-pan');
+        if (btnPan) btnPan.innerHTML = t.pan;
+
+        // Zoom buttons
+        const zoomBtns = document.querySelectorAll('.zoom-controls button');
+        if (zoomBtns[0]) zoomBtns[0].innerText = t.zoomOut;
+        if (zoomBtns[1]) zoomBtns[1].innerText = t.zoomIn;
+
+        // Categories
+        const cats = document.querySelectorAll('.category');
+        if (cats.length >= 4) {
+            if (cats[0]) cats[0].innerText = t.inputOutput;
+            if (cats[1]) cats[1].innerText = t.logicGates;
+            // cats[2] is Expert Menu Header? Or "Settings"?
+            // Previous view showed cats[2] assigned to "Hierarchy" or "Settings"?
+            // Let's rely on index.
+            // Toolbox structure: Input/Output(0), Logic Gates(1), Expert(2 - hidden or header?), Settings(Last).
+            // Let's safe guard.
+            if (cats[cats.length - 1]) cats[cats.length - 1].innerText = t.settings;
+        }
+
+        // Mode Button
+        const modeBtn = document.getElementById('btn-mode');
+        if (modeBtn) {
+            if (this.userMode === 'expert') {
+                modeBtn.innerText = t.modeExpert;
+            } else {
+                modeBtn.innerText = t.modeEasy;
+            }
+        }
+
+        // 2. Dynamic Button Text (Gates)
+        // We use a mapping from onclick attribute to translation key
+        const btnMap = {
+            "'SWITCH'": t.gateSwitch,
+            "'LED'": t.gateLed,
+            "'CLOCK'": t.gateClock,
+            "'AND'": t.gateAnd,
+            "'OR'": t.gateOr,
+            "'NOT'": t.gateNot,
+            "'XOR'": t.gateXor,
+            "'NAND'": t.gateNand,
+            "'NOR'": t.gateNor,
+            "'XNOR'": t.gateXnor,
+            "'TRANSISTOR'": t.gateTr,
+            "'PMOS'": t.gatePmos,
+            "'VCC'": t.gateVcc,
+            "'GND'": t.gateGnd
+        };
+
+        const buttons = document.querySelectorAll('.tool-btn');
+        buttons.forEach(btn => {
+            const onClick = btn.getAttribute('onclick');
+            if (!onClick) return;
+            for (const [key, text] of Object.entries(btnMap)) {
+                if (onClick.includes(key)) {
+                    // Try to preserve icon (first word or emoji)
+                    const parts = btn.innerText.split(' ');
+                    const icon = parts[0];
+                    let isEmoji = false;
+                    try {
+                        isEmoji = icon && /\p{Emoji}/u.test(icon);
+                    } catch (e) {
+                        // Fallback for older browsers
+                        isEmoji = icon && icon.charCodeAt(0) > 255;
+                    }
+
+                    if (isEmoji) {
+                        btn.innerText = icon + " " + text;
+                    } else {
+                        btn.innerText = text;
+                    }
+                }
+            }
+        });
+    }
+
+    // [Section 4-1] Expert Mode & Property Modal
+    // =========================================================
+    updateModeButton() {
+        const btn = document.getElementById('btn-mode');
+        if (!btn) return;
+
+        if (this.userMode === 'expert') {
+            btn.innerHTML = '🔧 Expert';
+            btn.classList.add('active');
+        } else {
+            btn.innerHTML = '🎓 Easy';
+            btn.classList.remove('active');
+        }
+    }
+
+    openPropertyModal(comp) {
+        if (!comp) return;
+        this.currentEditComp = comp;
+
+        // 모달 DOM 생성/재활용 (기존 shortcut-modal 말고 별도 생성)
+        let modal = document.getElementById('property-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'property-modal';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-window">
+                    <div class="modal-header">🔧 부품 속성 (Properties)</div>
+                    <div class="key-row">
+                        <span>Type</span> <span id="prop-type">AND</span>
+                    </div>
+                    <div class="key-row">
+                        <span>Delay (ms)</span> <input type="number" id="prop-delay" class="key-input" style="width: 80px;">
+                    </div>
+                    <div class="key-row">
+                        <span>Transistors</span> <input type="number" id="prop-transistors" class="key-input" style="width: 80px;">
+                    </div>
+                    <button class="modal-btn" onclick="sim.saveProperties()">저장 (Save)</button>
+                    <button class="modal-btn" style="background:#95a5a6; margin-top:5px;" onclick="document.getElementById('property-modal').style.display='none'">닫기 (Close)</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 값 채우기
+        const type = comp.getAttribute('data-type');
+        document.getElementById('prop-type').innerText = type;
+        document.getElementById('prop-delay').value = comp.getAttribute('data-delay') || '10';
+        document.getElementById('prop-transistors').value = comp.getAttribute('data-transistors') || '0';
+
+        modal.style.display = 'flex';
+    }
+
+    saveProperties() {
+        if (!this.currentEditComp) return;
+
+        const delay = document.getElementById('prop-delay').value;
+        const transistors = document.getElementById('prop-transistors').value;
+
+        this.currentEditComp.setAttribute('data-delay', delay);
+        this.currentEditComp.setAttribute('data-transistors', transistors);
+
+        document.getElementById('property-modal').style.display = 'none';
+        this.currentEditComp = null;
+    }
+
+    // =========================================================
+    // [Section 5] 시뮬레이션 엔진 (Logic Engine)
+    // =========================================================
+    toggleSwitch(e, el) {
+        if (this.mode !== 'edit') return;
+
+        // [New Fix] 선택되지 않은 상태에서 클릭 시 -> 선택만 하고 토글 안 함
+        // (사용자 요청: "전원 클릭하면 박스 생기면서 값 바뀌는 문제" 해결)
+        if (this.componentWasSelected === false) {
+            return;
+        }
+
+        const current = el.getAttribute('data-value');
+        const next = current === '1' ? '0' : '1';
+        el.setAttribute('data-value', next);
+
+        const label = el.querySelector('.comp-label');
+        if (label) label.innerText = next === '1' ? 'ON' : 'OFF';
+
+        // el.style.background = next === '1' ? '#2ecc71' : '#27ae60'; // 삭제 (네모 박스 방지)
+
+        // 심볼 색상 변경 (SVG stroke="currentColor")
+        if (next === '1') {
+            el.style.color = '#4ade80'; // Bright Green (ON)
+        } else {
+            el.style.color = ''; // Default (OFF)
+        }
+        this.updateCircuit();
+    }
+
+    clockTick() {
+        const clocks = document.querySelectorAll('.component[data-type="CLOCK"]');
+        if (clocks.length === 0) return;
+
+        clocks.forEach(clk => {
+            const current = clk.getAttribute('data-value');
+            const next = current === '1' ? '0' : '1';
+            clk.setAttribute('data-value', next);
+
+            const label = clk.querySelector('.comp-label');
+            if (label) label.innerText = next === '1' ? 'HIGH' : 'LOW';
+
+            clk.style.background = next === '1' ? '#9b59b6' : '#8e44ad';
+            clk.style.boxShadow = next === '1' ? '0 0 10px #9b59b6' : '3px 3px 10px rgba(0,0,0,0.2)';
+        });
+        this.updateCircuit();
+    }
+
+    restoreInternals(parentComp, data) {
+        // Clear default internals
+        parentComp.internals = { components: [], wires: [] };
+        const idMap = {};
+
+        // Restore Components
+        data.components.forEach(part => {
+            const el = document.createElement('div');
+            el.classList.add('component');
+            el.id = part.id;
+            el.setAttribute('data-type', part.type);
+            el.setAttribute('data-value', part.value || '0');
+            el.style.left = part.x + 'px';
+            el.style.top = part.y + 'px';
+
+            const label = document.createElement('div');
+            label.classList.add('comp-label');
+            label.innerText = part.label || part.type;
+            el.appendChild(label);
+
+            // Reuse pin logic 
+            // (Copy from buildInternals or simplify by calling addModule logic? 
+            //  But logic relies on standard types. 'part.type' should be standard.)
+            const type = part.type;
+            if (type === 'TRANSISTOR' || type === 'PMOS') {
+                this.addPin(el, 'base', 'input base');
+                this.addPin(el, 'col', 'input col');
+                this.addPin(el, 'emit', 'output emit');
+            } else if (type === 'VCC' || type === 'GND' || type === 'PORT_IN') {
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'PORT_OUT') {
+                this.addPin(el, 'in', 'input center');
+            }
+
+            idMap[part.id] = el;
+            parentComp.internals.components.push(el);
+        });
+
+        // Restore Wires
+        data.wires.forEach(wData => {
+            const fromComp = idMap[wData.fromCompId];
+            const toComp = idMap[wData.toCompId];
+
+            if (fromComp && toComp) {
+                const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
+                const toPin = toComp.querySelector(`.${wData.toPinClass}`);
+
+                if (fromPin && toPin) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    parentComp.internals.wires.push({ from: fromPin, to: toPin, line: line });
+                }
+            }
+        });
+    }
+
+    // [Optimization] 단순화된 전파 로직
+    // DOM 접근을 최소화하고, 변경사항만 업데이트
+    // [Updated] 전파 로직 반복 실행 (신호 안정화)
+    updateCircuit() {
+        let changed = false;
+        let limit = 50; // 무한 루프 방지 (최대 전파 깊이)
+
+        while (limit > 0) {
+            let stepChanged = false;
+
+            // 1. 전선 신호 전파 (Component Output -> Wire)
+            if (this.propagate()) stepChanged = true;
+
+            // 2. 부품 로직 평가 (Wire Input -> Component Output)
+            if (this.propagateList(this.components)) stepChanged = true;
+
+            if (!stepChanged) break; // 더 이상 변화 없으면 중단
+            changed = true;
+            limit--;
+        }
+
+        // LED 및 시각적 상태 업데이트
+        this.updateLEDs();
+
+        // 오실로스코프 업데이트 (변화가 있었을 때만? 아니면 항상? -> 보통 주기적으로 하지만 여기서 호출)
+        if (this.oscilloscope) this.oscilloscope.update();
+
+        return changed;
+    }
+
+    // LED 시각적 상태 업데이트
+    updateLEDs() {
+        this.components.forEach(comp => {
+            const type = comp.getAttribute('data-type');
+            if (type === 'LED') {
+                const val = comp.getAttribute('data-value') === '1';
+                if (val) {
+                    comp.classList.add('led-on');
+                } else {
+                    comp.classList.remove('led-on');
+                }
+            }
+        });
+    }
+
+    // Evaluate Composite Component (Sub-circuit)
+    evaluateComposite(comp) {
+        if (!comp.internals) return false;
+
+        let changed = false;
+
+        // 1. Map External Inputs -> Internal PORT_IN
+        // Identify external Input pins
+        const in1 = comp.querySelector('.in-1')?.getAttribute('data-signal') === '1';
+        const in2 = comp.querySelector('.in-2')?.getAttribute('data-signal') === '1';
+
+        // Identify Internal Ports (Assuming default ID scheme from default schematic, 
+        // OR filtering by type PORT_IN. Filtering is safer)
+        const portIns = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_IN');
+
+        // Heuristic mapping: Sort ports by ID or 'left' position? 
+        // Default schematics used IDs 'in_1', 'in_2'.
+        // Let's use ID matching if possible.
+        portIns.forEach(port => {
+            // Find which external pin maps to this port
+            // Convention: ID ends with 'in_1' maps to external 'in-1'
+            let val = false;
+            if (port.id.endsWith('in_1')) val = in1;
+            else if (port.id.endsWith('in_2')) val = in2;
+            else if (port.id.endsWith('in')) val = in1; // Single input case
+
+            if (port.getAttribute('data-value') !== (val ? '1' : '0')) {
+                port.setAttribute('data-value', val ? '1' : '0');
+                changed = true;
+            }
+        });
+
+        // 2. Propagate Internals
+        // Trigger propagation loop for internals
+        // Optimization: Run a mini-loop
+        for (let i = 0; i < 5; i++) {
+            // We need a version of propagate that takes a specialized list
+            if (this.propagateList(comp.internals.components, comp.internals.wires)) {
+                changed = true;
+            } else {
+                break;
+            }
+        }
+
+        // 3. Map Internal PORT_OUT -> External Output
+        const portOuts = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_OUT');
+        if (portOuts.length > 0) {
+            // Assume single output 'out' for gates
+            const res = portOuts[0].querySelector('.in')?.getAttribute('data-signal') === '1';
+
+            const currentVal = comp.getAttribute('data-value') === '1';
+            if (res !== currentVal) {
+                comp.setAttribute('data-value', res ? '1' : '0');
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    // Generic propagate for any component list (Main or Internal)
+    propagateList(components, wires) {
+        let changed = false;
+
+        // Null safety checks
+        if (!wires || !Array.isArray(wires)) wires = [];
+        if (!components || !Array.isArray(components)) components = [];
+
+        wires.forEach(wire => {
+            const fromVal = wire.from.parentElement.getAttribute('data-value') === '1';
+            const currentSignal = wire.to.getAttribute('data-signal') === '1';
+
+            if (fromVal !== currentSignal) {
+                wire.to.setAttribute('data-signal', fromVal ? '1' : '0');
+                if (this.currentScopeComp && components === this.currentScopeComp.internals.components) {
+                    // Check if visible to update UI?
+                    // Actually, if we are viewing internals, 'components' IS 'this.components'
+                    // so the standard UI update handles it.
+                    // But if we are simulating background internals, NO UI update needed.
+                }
+                // If background simulation (elements not in DOM/View), wire.line is not visible.
+                // So simple attribute setting is enough.
+                changed = true;
+            }
+        });
+
+        components.forEach(comp => {
+            const type = comp.getAttribute('data-type');
+            if (['SWITCH', 'CLOCK', 'VCC', 'GND', 'PORT_IN'].includes(type)) return;
+
+            // Gather inputs
+            const in1 = comp.querySelector('.in-1')?.getAttribute('data-signal') === '1';
+            const in2 = comp.querySelector('.in-2')?.getAttribute('data-signal') === '1';
+            let res = false;
+
+            switch (type) {
+                case 'AND': res = in1 && in2; break;
+                case 'OR': res = in1 || in2; break;
+                case 'NOT': res = !in1; break;
+                case 'XOR': res = (in1 !== in2); break;
+                case 'NAND': res = !(in1 && in2); break;
+                case 'NOR': res = !(in1 || in2); break;
+                case 'XNOR': res = (in1 === in2); break;
+                case 'JOINT': res = comp.querySelector('.pin')?.getAttribute('data-signal') === '1'; break;
+                case 'LED': res = in1; break;
+                case 'PORT_OUT':
+                    // Port out just reflects its input pin
+                    res = comp.querySelector('.in')?.getAttribute('data-signal') === '1';
+                    // Use 'data-value' to store it so external mapper can read it
+                    break;
+                case 'TRANSISTOR':
+                    const valBase = comp.querySelector('.base')?.getAttribute('data-signal') === '1';
+                    const valCol = comp.querySelector('.col')?.getAttribute('data-signal') === '1';
+                    res = valBase && valCol;
+                    break;
+                case 'PMOS':
+                    // PMOS: Base Low -> Conducts. 
+                    // Switch Model: If Base=0, Emit = Col. Else Emit = 0 (Open)
+                    // Note: This model is imperfect for "Pull Up" scenarios where logic 1 comes from VCC.
+                    // But strictly speaking: 
+                    // If Base=0 (Low), Switch Closed. Emit takes Col's value.
+                    // If Base=1 (High), Switch Open. Emit takes... 0? Floating?
+                    // In valid CMOS, there's always a path to VCC or GND.
+                    // In our simplified sim, assume 0 (Floating = 0).
+                    const pBase = comp.querySelector('.base')?.getAttribute('data-signal') === '1';
+                    const pCol = comp.querySelector('.col')?.getAttribute('data-signal') === '1'; // Typically VCC(1)
+                    if (!pBase) res = pCol; // Conducts if Base is Low
+                    else res = false; // Open
+                    break;
+                case 'PACKAGE':
+                    // 패키지는 내부 회로가 아닌 블랙박스로 작동
+                    // 입력 핀들의 조합을 기반으로 출력 결정
+                    const pkgIdx = parseInt(comp.getAttribute('data-package-id'));
+                    const pkgDef = this.userPackages?.[pkgIdx];
+                    if (pkgDef && pkgDef.circuit) {
+                        // 간단한 패스스루: 첫번째 입력을 첫번째 출력으로 전달
+                        const in0 = comp.querySelector('.in0')?.getAttribute('data-signal') === '1';
+                        res = in0;
+                    }
+                    break;
+                // BUILTIN_PACKAGE 케이스 제거됨 - 논리 게이트는 addModule()로 추가됨
+            }
+
+            // Check composite
+            if (comp.internals) {
+                // Warning: Recursive but handled by loop limits
+                // If we are simulating a background component, simple logic is skipped by above switch
+                // UNLESS generic Gates (AND/OR) also have logic above?
+                // The 'switch' above handles standard logic.
+                // IF we want to enforce "Transistor Circuit determines Logic", we should skip standard logic
+                // when internals exist.
+            }
+
+            const currentVal = comp.getAttribute('data-value') === '1';
+            if (res !== currentVal) {
+                comp.setAttribute('data-value', res ? '1' : '0');
+                changed = true;
+            }
+        });
+
+        return changed;
+    }
+
+    // [Fixed] 신호 전파 및 시각적 동기화 로직 개선
+    propagate() {
+        let changed = false;
+        if (!this.wires) return false;
+
+        this.wires.forEach(wire => {
+            if (!wire.from || !wire.to || !wire.line) return;
+
+            // DOM 연결 상태 확인 (삭제된 노드 참조 방지)
+            // if (!wire.from.isConnected || !wire.to.isConnected) return; // (구형 브라우저 호환성 위해 생략 가능하나 안전장치로 좋음)
+
+            const fromComp = wire.from.closest('.component');
+            if (!fromComp) return;
+
+            // 1. 소스 값 읽기
+            const fromVal = fromComp.getAttribute('data-value') === '1';
+
+            // 2. 타겟 값 확인
+            const currentSignal = wire.to.getAttribute('data-signal') === '1';
+
+            // 3. 시각적 상태 확인
+            const isVisuallyOn = wire.line.classList.contains('on');
+
+            // [Logic Update] 신호가 다르면 업데이트
+            if (fromVal !== currentSignal) {
+                wire.to.setAttribute('data-signal', fromVal ? '1' : '0');
+                changed = true;
+            }
+
+            // [Visual Update] 시각 상태가 다르면 강제 동기화 (버그 수정 핵심)
+            if (fromVal !== isVisuallyOn) {
+                if (fromVal) wire.line.classList.add('on');
+                else wire.line.classList.remove('on');
+            }
+        });
+
+        return changed; // 논리적 변경만 보고 (루프 제어용)
+    }
+
+
+
+    // =========================================================
+    // [Section 6] 기타 UI (모드, 줌, 툴팁)
+    // =========================================================
+    setMode(mode) {
+        this.mode = mode;
+
+        if (this.workspace) {
+            this.workspace.classList.remove('mode-pan', 'mode-wire');
+            if (mode === 'pan') this.workspace.classList.add('mode-pan');
+            if (mode === 'wire') this.workspace.classList.add('mode-wire');
+        }
+
+        const btnSelect = document.getElementById('btn-select');
+        const btnPan = document.getElementById('btn-pan');
+        const btnWire = document.getElementById('btn-wire');
+
+        if (btnSelect) btnSelect.classList.toggle('active', mode === 'edit');
+        if (btnPan) btnPan.classList.toggle('active', mode === 'pan');
+        if (btnWire) btnWire.classList.toggle('active', mode === 'wire');
+    }
+
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+
+            // body에도 클래스 추가하여 설명창 위치 조정
+            document.body.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+
+            // 사이드바 버튼 아이콘 회전 효과 등은 CSS로 처리됨
+            // 워크스페이스 리사이즈 트리거 (미니맵 등 갱신 위해)
+            setTimeout(() => this.resizeCanvas(), 300);
+        }
+    }
+
+    toggleSection(id) {
+        const section = document.getElementById(id);
+        if (section) {
+            section.classList.toggle('collapsed');
+        }
+    }
+
+    zoom(amount) {
+        this.scale += amount;
+        if (this.scale < 0.5) this.scale = 0.5;
+        if (this.scale > 2.0) this.scale = 2.0;
+        this.updateTransform();
+    }
+
+    updateTransform() {
+        if (!this.workspace) return;
+
+        // [Canvas Boundary Constraint]
+        // 캔버스 밖으로 화면이 이동하지 못하도록 제한
+        const wrapper = this.workspace.parentElement; // workspace-wrapper
+        if (wrapper) {
+            const viewWidth = wrapper.clientWidth;
+            const viewHeight = wrapper.clientHeight;
+
+            // 캔버스 실제 크기 (스케일 적용) - 기본값 6000x4000
+            const baseWidth = parseInt(this.wireLayer?.getAttribute('width')) || 6000;
+            const baseHeight = parseInt(this.wireLayer?.getAttribute('height')) || 4000;
+
+            const scaledWidth = baseWidth * this.scale;
+            const scaledHeight = baseHeight * this.scale;
+
+            // X축 제한
+            if (scaledWidth > viewWidth) {
+                // panX는 0(왼쪽 끝) ~ viewWidth - scaledWidth(오른쪽 끝) 사이여야 함
+                // (panX가 음수이므로, 0이 최대값이고 viewWidth - scaledWidth가 최소값)
+                const minX = viewWidth - scaledWidth;
+                const maxX = 0;
+                this.panX = Math.min(maxX, Math.max(this.panX, minX));
+            } else {
+                // 캔버스가 화면보다 작으면 0으로 고정 (왼쪽 상단 기준)
+                this.panX = 0;
+            }
+
+            // Y축 제한
+            if (scaledHeight > viewHeight) {
+                const minY = viewHeight - scaledHeight;
+                const maxY = 0;
+                this.panY = Math.min(maxY, Math.max(this.panY, minY));
+            } else {
+                this.panY = 0;
+            }
+        }
+
+        this.workspace.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
+        const zoomEl = document.getElementById('zoom-level');
+        if (zoomEl) zoomEl.innerText = Math.round(this.scale * 100) + '%';
+        this.redrawWires();
+        this.updateMinimap();
+    }
+
+    showTooltip(type) {
+        // component-info-panel 사용 (좌측 상단 고정)
+        const info = this.getComponentInfo(type);
+        if (!info) return;
+
+        const panel = document.getElementById('component-info-panel');
+        if (!panel) return;
+
+        // 애니메이션 데이터
+        const animationData = {
+            'AND': `<svg viewBox="0 0 280 80"><path d="M40 20 L80 20 A 20 20 0 0 1 80 60 L40 60 Z" fill="none" stroke="#3b82f6" stroke-width="2"/><line x1="10" y1="30" x2="40" y2="30" stroke="#22c55e" stroke-width="3" class="anim-wire"/><line x1="10" y1="50" x2="40" y2="50" stroke="#22c55e" stroke-width="3" class="anim-wire"/><line x1="100" y1="40" x2="130" y2="40" stroke="#22c55e" stroke-width="3" class="anim-wire"/><text x="150" y="35" fill="#94a3b8" font-size="11">1 AND 1 = 1</text><text x="150" y="52" fill="#94a3b8" font-size="11">1 AND 0 = 0</text></svg>`,
+            'OR': `<svg viewBox="0 0 280 80"><path d="M35 20 Q 50 40 35 60 Q 70 60 90 40 Q 70 20 35 20 Z" fill="none" stroke="#06b6d4" stroke-width="2"/><line x1="10" y1="30" x2="42" y2="30" stroke="#22c55e" stroke-width="3" class="anim-wire"/><line x1="10" y1="50" x2="42" y2="50" stroke="#64748b" stroke-width="3"/><line x1="90" y1="40" x2="120" y2="40" stroke="#22c55e" stroke-width="3" class="anim-wire"/><text x="140" y="35" fill="#94a3b8" font-size="11">1 OR 0 = 1</text><text x="140" y="52" fill="#94a3b8" font-size="11">0 OR 0 = 0</text></svg>`,
+            'NOT': `<svg viewBox="0 0 280 80"><path d="M40 20 L80 40 L40 60 Z" fill="none" stroke="#f59e0b" stroke-width="2"/><circle cx="88" cy="40" r="6" fill="none" stroke="#f59e0b" stroke-width="2"/><line x1="10" y1="40" x2="40" y2="40" stroke="#22c55e" stroke-width="3" class="anim-wire"/><line x1="94" y1="40" x2="120" y2="40" stroke="#64748b" stroke-width="3"/><text x="140" y="35" fill="#94a3b8" font-size="11">NOT 1 = 0</text><text x="140" y="52" fill="#94a3b8" font-size="11">NOT 0 = 1</text></svg>`,
+            'XOR': `<svg viewBox="0 0 280 80"><path d="M45 20 Q 60 40 45 60 Q 75 60 95 40 Q 75 20 45 20 Z" fill="none" stroke="#8b5cf6" stroke-width="2"/><path d="M35 20 Q 50 40 35 60" fill="none" stroke="#8b5cf6" stroke-width="2"/><text x="130" y="35" fill="#94a3b8" font-size="11">1 XOR 0 = 1</text><text x="130" y="52" fill="#94a3b8" font-size="11">1 XOR 1 = 0</text></svg>`,
+            'NAND': `<svg viewBox="0 0 280 80"><path d="M40 20 L75 20 A 20 20 0 0 1 75 60 L40 60 Z" fill="none" stroke="#ec4899" stroke-width="2"/><circle cx="100" cy="40" r="6" fill="none" stroke="#ec4899" stroke-width="2"/><text x="130" y="35" fill="#94a3b8" font-size="11">1 NAND 1 = 0</text><text x="130" y="52" fill="#94a3b8" font-size="11">1 NAND 0 = 1</text></svg>`,
+            'NOR': `<svg viewBox="0 0 280 80"><path d="M35 20 Q 50 40 35 60 Q 65 60 85 40 Q 65 20 35 20 Z" fill="none" stroke="#ef4444" stroke-width="2"/><circle cx="93" cy="40" r="6" fill="none" stroke="#ef4444" stroke-width="2"/><text x="120" y="35" fill="#94a3b8" font-size="11">0 NOR 0 = 1</text><text x="120" y="52" fill="#94a3b8" font-size="11">1 NOR 0 = 0</text></svg>`,
+            'XNOR': `<svg viewBox="0 0 280 80"><path d="M45 20 Q 60 40 45 60 Q 70 60 85 40 Q 70 20 45 20 Z" fill="none" stroke="#a855f7" stroke-width="2"/><path d="M35 20 Q 50 40 35 60" fill="none" stroke="#a855f7" stroke-width="2"/><circle cx="93" cy="40" r="6" fill="none" stroke="#a855f7" stroke-width="2"/><text x="120" y="35" fill="#94a3b8" font-size="11">1 XNOR 1 = 1</text><text x="120" y="52" fill="#94a3b8" font-size="11">1 XNOR 0 = 0</text></svg>`,
+            'SWITCH': `<svg viewBox="0 0 280 80"><circle cx="50" cy="40" r="18" fill="none" stroke="#22c55e" stroke-width="2"/><circle cx="50" cy="40" r="10" fill="#22c55e"/><line x1="68" y1="40" x2="100" y2="40" stroke="#22c55e" stroke-width="3"/><text x="120" y="44" fill="#94a3b8" font-size="12">ON = 1, OFF = 0</text></svg>`,
+            'LED': `<svg viewBox="0 0 280 80"><line x1="10" y1="40" x2="35" y2="40" stroke="#22c55e" stroke-width="3" class="anim-wire"/><circle cx="55" cy="40" r="18" fill="rgba(234, 179, 8, 0.3)" stroke="#eab308" stroke-width="2"/><circle cx="55" cy="40" r="10" fill="#eab308" class="led-glow"/><text x="90" y="44" fill="#94a3b8" font-size="12">INPUT 1 → 💡</text></svg>`,
+            'CLOCK': `<svg viewBox="0 0 280 80"><rect x="25" y="25" width="50" height="30" fill="none" stroke="#3b82f6" stroke-width="2" rx="4"/><path d="M10 40 L25 40 M75 40 L100 40" stroke="#3b82f6" stroke-width="2"/><path d="M35 35 L35 45 L50 45 L50 35 L65 35" stroke="#22c55e" stroke-width="2" fill="none" class="anim-wire"/><text x="110" y="44" fill="#94a3b8" font-size="11">주기적 펄스</text></svg>`
+        };
+
+        // 사용법 데이터
+        const usageData = {
+            'AND': '두 개 이상의 조건이 모두 참이어야 하는 경우에 사용합니다.',
+            'OR': '여러 조건 중 하나만 만족해도 되는 경우에 사용합니다.',
+            'NOT': '신호를 반전시킬 때 사용합니다. 인버터라고도 합니다.',
+            'XOR': '두 신호가 다른지 비교할 때 사용합니다. 패리티 체크에 활용.',
+            'NAND': '범용 게이트입니다. 모든 논리를 NAND만으로 구현 가능합니다.',
+            'NOR': '범용 게이트입니다. 래치(Latch) 회로 구성에 많이 사용됩니다.',
+            'XNOR': '두 신호가 같은지 비교할 때 사용합니다. 동등 비교기.',
+            'SWITCH': '클릭해서 켜고 끄세요. 초록색이면 ON(1), 회색이면 OFF(0).',
+            'LED': '다른 게이트의 출력을 연결하여 결과를 확인하세요.',
+            'CLOCK': '순차 회로, 카운터, 타이밍 회로에 필수적인 소자입니다.',
+            'TRANSISTOR': '게이트에 제어 신호를 연결하여 전류 흐름을 제어합니다.',
+            'PMOS': 'NMOS와 함께 CMOS 회로를 구성합니다.',
+            'VCC': '풀업 저항이나 상수 1 입력이 필요할 때 사용합니다.',
+            'GND': '풀다운 저항이나 상수 0 입력이 필요할 때 사용합니다.',
+            'JOINT': '전선 분기점을 만들 때 사용합니다. 신호를 여러 곳에 전달.',
+            'PACKAGE': '더블클릭하여 내부 회로를 볼 수 있습니다.'
+        };
+
+        // 아이콘 및 이름
+        const iconEl = panel.querySelector('.info-type-icon');
+        const nameEl = panel.querySelector('.info-type-name');
+        if (iconEl) iconEl.textContent = info.icon;
+        if (nameEl) nameEl.textContent = info.name;
+
+        // 애니메이션
+        const animEl = document.getElementById('info-animation');
+        if (animEl) {
+            animEl.innerHTML = animationData[type] || '';
+        }
+
+        // 설명
+        const descEl = panel.querySelector('.info-description');
+        if (descEl) descEl.textContent = info.description;
+
+        // 사용법
+        const usageSection = document.getElementById('info-usage-section');
+        const usageEl = document.getElementById('info-usage');
+        if (usageEl && usageSection) {
+            const usage = usageData[type];
+            if (usage) {
+                usageEl.textContent = usage;
+                usageSection.style.display = 'block';
+            } else {
+                usageSection.style.display = 'none';
+            }
+        }
+
+        // 입력/출력
+        const inputsEl = document.getElementById('info-inputs');
+        const outputsEl = document.getElementById('info-outputs');
+        if (inputsEl) inputsEl.textContent = info.inputs;
+        if (outputsEl) outputsEl.textContent = info.outputs;
+
+        // 진리표
+        const truthTableContainer = document.getElementById('info-truth-table');
+        if (truthTableContainer) {
+            if (info.truthTable && info.truthTable.length > 0) {
+                truthTableContainer.style.display = 'block';
+                const table = truthTableContainer.querySelector('.truth-table');
+                if (table) {
+                    let html = '<thead><tr>';
+                    const colCount = info.truthTable[0].length;
+                    const headers = info.headers || (
+                        colCount === 2 ? ['In', 'Out'] :
+                            colCount === 3 ? ['A', 'B', 'Out'] :
+                                colCount === 4 ? ['A', 'B', 'S', 'C'] :
+                                    Array.from({ length: colCount }, (_, i) => `C${i}`)
+                    );
+                    headers.forEach(h => html += `<th>${h}</th>`);
+                    html += '</tr></thead><tbody>';
+                    info.truthTable.forEach(row => {
+                        html += '<tr>';
+                        row.forEach((cell, idx) => {
+                            const isOutput = idx >= colCount - (colCount === 2 ? 1 : colCount === 3 ? 1 : 2);
+                            const className = cell === '1' ? 'high' : 'low';
+                            html += `<td class="${isOutput ? className : ''}">${cell}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                    table.innerHTML = html;
+                }
+            } else {
+                truthTableContainer.style.display = 'none';
+            }
+        }
+
+        // 패널 표시
+        panel.classList.remove('hidden');
+    }
+
+    hideTooltip() {
+        // component-info-panel 숨기기
+        const panel = document.getElementById('component-info-panel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    }
+
+    // Position tooltip - 이제 component-info-panel이 고정 위치이므로 필요 없음
+    positionTooltip(event) {
+        // component-info-panel은 CSS로 고정 위치 (좌측 상단)
+        // 별도 위치 조정 불필요
+    }
+
+    // [Section 6] UI Handling
+    toggleSidebar() {
+        const toolbox = document.getElementById('toolbox') || document.querySelector('.sidebar');
+        const workspace = document.getElementById('workspace');
+        if (!toolbox || !workspace) return;
+
+        toolbox.classList.toggle('collapsed');
+        workspace.classList.toggle('collapsed');
+
+        // body에도 클래스 추가하여 설명창 위치 조정
+        document.body.classList.toggle('sidebar-collapsed', toolbox.classList.contains('collapsed'));
+
+        // Update button arrow
+        const btn = document.getElementById('btn-collapse');
+        if (btn) {
+            if (toolbox.classList.contains('collapsed')) {
+                btn.innerHTML = '▶';
+            } else {
+                btn.innerHTML = '◀';
+            }
+        }
+    }
+
+    // =========================================================
+    // [Section 6.1] 전문가 모드 - 패키지 시스템
+    // =========================================================
+    // NOTE: addPackage, createPackage 함수는 Section 3-2에 정의됨 (중복 제거됨)
+
+    // 사용자 패키지 목록 업데이트
+    updateUserPackagesList() {
+        const container = document.getElementById('user-packages');
+        if (!container) return;
+
+        const userPackages = JSON.parse(localStorage.getItem('userPackages') || '[]');
+
+        container.innerHTML = userPackages.map((pkg, index) => `
+            <button class="comp-btn package wide" onclick="sim.loadUserPackage(${index})">
+                <div class="icon">📦</div>
+                <span class="name">${pkg.name}</span>
+            </button>
+        `).join('');
+    }
+
+    // 사용자 패키지 로드
+    loadUserPackage(index) {
+        const userPackages = JSON.parse(localStorage.getItem('userPackages') || '[]');
+        const pkg = userPackages[index];
+        if (!pkg) return;
+
+        const baseX = 200 + Math.random() * 100;
+        const baseY = 150 + Math.random() * 100;
+
+        pkg.components.forEach(comp => {
+            this.addModule(comp.type, baseX + comp.x - pkg.components[0].x, baseY + comp.y - pkg.components[0].y);
+        });
+
+        this.showToast(`"${pkg.name}" 패키지 로드됨`, 'success');
+    }
+
+    // =========================================================
+    // [Section 6.2] 시뮬레이션 속도 제어
+    // =========================================================
+
+    // 슬라이더 드래그 중 레이블만 업데이트 (토스트 없음)
+    updateSpeedLabel(speed) {
+        this.simulationSpeed = Math.max(0.1, Math.min(10, speed));
+        const label = document.getElementById('speed-value');
+        if (label) label.textContent = `${this.simulationSpeed.toFixed(1)}x`;
+    }
+
+    // 속도 설정 완료 (슬라이더에서 손 뗄 때 호출)
+    setSimulationSpeed(speed, showNotification = false) {
+        this.simulationSpeed = Math.max(0.1, Math.min(10, speed));
+        const label = document.getElementById('speed-value');
+        if (label) label.textContent = `${this.simulationSpeed.toFixed(1)}x`;
+
+        if (showNotification) {
+            this.showToast(`시뮬레이션 속도: ${this.simulationSpeed.toFixed(1)}x`, 'info');
+        }
+    }
+
+    // =========================================================
+    // [Section 7] 편의 기능 (LED 색상, 정렬, 회전, 복제, 삭제)
+    // =========================================================
+
+    // 그리드 스냅 토글
+    toggleGridSnap() {
+        this.gridSnap = !this.gridSnap;
+        const btn = document.getElementById('btn-grid-snap');
+        if (btn) btn.classList.toggle('active', this.gridSnap);
+        this.showToast(this.gridSnap ? '그리드 스냅 ON' : '그리드 스냅 OFF', 'info');
+    }
+
+    // 전선 연결 모드 토글 (핀 직접 vs 격자 기반)
+    toggleWireMode() {
+        this.wireMode = this.wireMode === 'pin' ? 'grid' : 'pin';
+        const btn = document.getElementById('btn-wire-mode');
+        if (btn) {
+            btn.textContent = this.wireMode === 'pin' ? '🔌 핀' : '📐 격자';
+        }
+        this.showToast(this.wireMode === 'pin' ? '핀 직접 연결 모드' : '격자 기준 연결 모드', 'info');
+    }
+
+    // 전체 선택 (Ctrl+A)
+    selectAll() {
+        this.clearSelection();
+        this.components.forEach(comp => this.selectComponent(comp, true));
+        this.showToast(`${this.components.length}개 전체 선택됨`, 'info');
+        this.updateStatusBar();
+    }
+
+    // 수평 균등 배치
+    distributeHorizontal() {
+        if (this.selectedComponents.length < 3) {
+            this.showToast('균등 배치하려면 3개 이상 선택하세요', 'warning');
+            return;
+        }
+
+        // X 좌표로 정렬
+        const sorted = [...this.selectedComponents].sort((a, b) =>
+            parseFloat(a.style.left) - parseFloat(b.style.left)
+        );
+
+        const minX = parseFloat(sorted[0].style.left);
+        const maxX = parseFloat(sorted[sorted.length - 1].style.left);
+        const spacing = (maxX - minX) / (sorted.length - 1);
+
+        sorted.forEach((comp, i) => {
+            comp.style.left = (minX + i * spacing) + 'px';
+        });
+
+        this.redrawWires();
+        this.saveState();
+        this.showToast('수평 균등 배치 완료', 'success');
+    }
+
+    // 수직 균등 배치
+    distributeVertical() {
+        if (this.selectedComponents.length < 3) {
+            this.showToast('균등 배치하려면 3개 이상 선택하세요', 'warning');
+            return;
+        }
+
+        // Y 좌표로 정렬
+        const sorted = [...this.selectedComponents].sort((a, b) =>
+            parseFloat(a.style.top) - parseFloat(b.style.top)
+        );
+
+        const minY = parseFloat(sorted[0].style.top);
+        const maxY = parseFloat(sorted[sorted.length - 1].style.top);
+        const spacing = (maxY - minY) / (sorted.length - 1);
+
+        sorted.forEach((comp, i) => {
+            comp.style.top = (minY + i * spacing) + 'px';
+        });
+
+        this.redrawWires();
+        this.saveState();
+        this.showToast('수직 균등 배치 완료', 'success');
+    }
+
+    // 수평 뒤집기 (좌우 반전)
+    flipHorizontal() {
+        if (this.selectedComponents.length < 2) return;
+
+        let minX = Infinity, maxX = -Infinity;
+        this.selectedComponents.forEach(comp => {
+            const x = parseFloat(comp.style.left);
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+        });
+
+        const centerX = (minX + maxX) / 2;
+        this.selectedComponents.forEach(comp => {
+            const x = parseFloat(comp.style.left);
+            comp.style.left = (2 * centerX - x) + 'px';
+        });
+
+        this.redrawWires();
+        this.saveState();
+        this.showToast('좌우 반전 완료', 'success');
+    }
+
+    // 수직 뒤집기 (상하 반전)
+    flipVertical() {
+        if (this.selectedComponents.length < 2) return;
+
+        let minY = Infinity, maxY = -Infinity;
+        this.selectedComponents.forEach(comp => {
+            const y = parseFloat(comp.style.top);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        });
+
+        const centerY = (minY + maxY) / 2;
+        this.selectedComponents.forEach(comp => {
+            const y = parseFloat(comp.style.top);
+            comp.style.top = (2 * centerY - y) + 'px';
+        });
+
+        this.redrawWires();
+        this.saveState();
+        this.showToast('상하 반전 완료', 'success');
+    }
+
+    // 선택 잠금 (이동 방지)
+    lockSelection() {
+        this.selectedComponents.forEach(comp => {
+            comp.classList.toggle('locked');
+        });
+        this.showToast('선택 항목 잠금 토글', 'info');
+    }
+
+    // LED 색상 변경
+    setLEDColor(color) {
+        const validColors = ['red', 'green', 'blue', 'yellow', 'white'];
+        if (!validColors.includes(color)) return;
+
+        this.selectedComponents.forEach(comp => {
+            if (comp.getAttribute('data-type') === 'LED') {
+                comp.setAttribute('data-color', color);
+                this.showToast(`LED 색상: ${color}`, 'info');
+            }
+        });
+        this.hideContextMenu();
+        this.saveState();
+    }
+
+    // 수평 정렬 (선택된 컴포넌트들의 Y좌표를 평균으로 맞춤)
+    alignSelectedHorizontal() {
+        if (this.selectedComponents.length < 2) {
+            this.showToast('정렬할 컴포넌트를 2개 이상 선택하세요', 'warning');
+            return;
+        }
+
+        let sumY = 0;
+        this.selectedComponents.forEach(comp => {
+            sumY += parseInt(comp.style.top) || 0;
+        });
+        const avgY = Math.round(sumY / this.selectedComponents.length);
+
+        this.selectedComponents.forEach(comp => {
+            comp.style.top = avgY + 'px';
+        });
+
+        this.redrawWires();
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast('수평 정렬 완료', 'success');
+    }
+
+    // 수직 정렬 (선택된 컴포넌트들의 X좌표를 평균으로 맞춤)
+    alignSelectedVertical() {
+        if (this.selectedComponents.length < 2) {
+            this.showToast('정렬할 컴포넌트를 2개 이상 선택하세요', 'warning');
+            return;
+        }
+
+        let sumX = 0;
+        this.selectedComponents.forEach(comp => {
+            sumX += parseInt(comp.style.left) || 0;
+        });
+        const avgX = Math.round(sumX / this.selectedComponents.length);
+
+        this.selectedComponents.forEach(comp => {
+            comp.style.left = avgX + 'px';
+        });
+
+        this.redrawWires();
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast('수직 정렬 완료', 'success');
+    }
+
+    // 컴포넌트 회전 (90도씩)
+    rotateSelected() {
+        this.selectedComponents.forEach(comp => {
+            const currentRotation = parseInt(comp.getAttribute('data-rotation') || '0');
+            const newRotation = (currentRotation + 90) % 360;
+            comp.setAttribute('data-rotation', newRotation);
+            comp.style.transform = `rotate(${newRotation}deg)`;
+        });
+
+        this.redrawWires();
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast('회전 완료', 'success');
+    }
+
+    // 복제 기능
+    duplicateSelection() {
+        if (this.selectedComponents.length === 0) {
+            this.showToast('복제할 컴포넌트를 선택하세요', 'warning');
+            return;
+        }
+
+        const newComponents = [];
+        const offset = 30; // 복제 오프셋
+
+        this.selectedComponents.forEach(comp => {
+            const type = comp.getAttribute('data-type');
+            const x = (parseInt(comp.style.left) || 0) + offset;
+            const y = (parseInt(comp.style.top) || 0) + offset;
+
+            const newComp = this.addModule(type, x, y);
+            if (newComp) {
+                // 속성 복사
+                const color = comp.getAttribute('data-color');
+                if (color) newComp.setAttribute('data-color', color);
+                newComponents.push(newComp);
+            }
+        });
+
+        // 새 컴포넌트 선택
+        this.clearSelection();
+        newComponents.forEach(comp => this.selectComponent(comp, true));
+
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast(`${newComponents.length}개 복제됨`, 'success');
+    }
+
+    // 복사
+    copySelection() {
+        if (this.selectedComponents.length === 0) {
+            this.showToast('복사할 컴포넌트를 선택하세요', 'warning');
+            return;
+        }
+
+        this.clipboard = this.selectedComponents.map(comp => ({
+            type: comp.getAttribute('data-type'),
+            x: parseInt(comp.style.left) || 0,
+            y: parseInt(comp.style.top) || 0,
+            color: comp.getAttribute('data-color'),
+            rotation: comp.getAttribute('data-rotation')
+        }));
+
+        this.hideContextMenu();
+        this.showToast(`${this.clipboard.length}개 복사됨`, 'success');
+    }
+
+    // 붙여넣기
+    pasteFromClipboard() {
+        if (!this.clipboard || this.clipboard.length === 0) {
+            this.showToast('붙여넣을 내용이 없습니다', 'warning');
+            return;
+        }
+
+        const offset = 40;
+        const newComponents = [];
+
+        this.clipboard.forEach(item => {
+            const newComp = this.addModule(item.type, item.x + offset, item.y + offset);
+            if (newComp) {
+                if (item.color) newComp.setAttribute('data-color', item.color);
+                if (item.rotation) {
+                    newComp.setAttribute('data-rotation', item.rotation);
+                    newComp.style.transform = `rotate(${item.rotation}deg)`;
+                }
+                newComponents.push(newComp);
+            }
+        });
+
+        this.clearSelection();
+        newComponents.forEach(comp => this.selectComponent(comp, true));
+
+        this.hideContextMenu();
+        this.saveState();
+        this.showToast(`${newComponents.length}개 붙여넣기됨`, 'success');
+    }
+
+    // 삭제
+    deleteSelected() {
+        if (this.selectedComponents.length === 0) {
+            this.showToast('삭제할 컴포넌트를 선택하세요', 'warning');
+            return;
+        }
+
+        const count = this.selectedComponents.length;
+
+        // 연결된 와이어 삭제
+        this.selectedComponents.forEach(comp => {
+            const pins = comp.querySelectorAll('.pin');
+            pins.forEach(pin => {
+                const pinId = pin.id;
+                this.wires = this.wires.filter(w => {
+                    if (w.from === pinId || w.to === pinId) {
+                        if (w.line && w.line.parentNode) {
+                            w.line.parentNode.removeChild(w.line);
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+            });
+
+            // 컴포넌트 삭제
+            if (comp.parentNode) {
+                comp.parentNode.removeChild(comp);
+            }
+        });
+
+        this.selectedComponents = [];
+        this.hideContextMenu();
+        this.updateStatusBar();
+        this.saveState();
+        this.showToast(`${count}개 삭제됨`, 'success');
+    }
+
+    // 컨텍스트 메뉴 표시 (LED 옵션 조건부 표시)
+    showContextMenu(x, y) {
+        if (!this.contextMenu) return;
+
+        // LED 색상 옵션 표시 여부
+        const hasLED = this.selectedComponents.some(comp =>
+            comp.getAttribute('data-type') === 'LED'
+        );
+
+        this.contextMenu.querySelectorAll('.ctx-led-only').forEach(el => {
+            el.style.display = hasLED ? '' : 'none';
+        });
+
+        this.contextMenu.style.left = x + 'px';
+        this.contextMenu.style.top = y + 'px';
+        this.contextMenu.style.display = 'block';
+    }
+
+    // 컨텍스트 메뉴 숨기기
+    hideContextMenu() {
+        if (this.contextMenu) {
+            this.contextMenu.style.display = 'none';
+        }
+    }
+}
+
+// ===================================
+// [Oscilloscope Class]
+// ===================================
+class Oscilloscope {
+    constructor(sim) {
+        this.sim = sim;
+        this.canvas = document.getElementById('oscilloscope-canvas');
+        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+        this.history = []; // { time: 0, signals: { id: val, ... } }
+        this.maxHistory = 500;
+
+        if (this.canvas) {
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        }
+    }
+
+    resize() {
+        if (!this.canvas || !this.canvas.parentElement) return;
+        if (this.canvas.parentElement.style.display === 'none') return;
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height - 25; // header height
+    }
+
+    update() {
+        if (!this.canvas || !this.canvas.parentElement) return;
+        if (this.canvas.parentElement.style.display === 'none') return;
+
+        // Collect Output Signals (LEDs and Final Outputs)
+        const signalSnapshot = {};
+        this.sim.components.forEach(comp => {
+            const type = comp.getAttribute('data-type');
+            const val = comp.getAttribute('data-value') === '1' ? 1 : 0;
+            if (type === 'LED' || type === 'SWITCH' || type === 'CLOCK' || type === 'PORT_OUT') {
+                signalSnapshot[comp.id] = val;
+            }
+        });
+
+        this.history.push(signalSnapshot);
+        if (this.history.length > this.maxHistory) this.history.shift();
+    }
+
+    draw() {
+        if (!this.canvas || !this.ctx || !this.canvas.parentElement) return;
+        if (this.canvas.parentElement.style.display === 'none') return;
+
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const signals = Object.keys(this.history[0] || {});
+        if (signals.length === 0) return;
+
+        const rowHeight = h / signals.length;
+        const stepX = w / this.maxHistory;
+
+        signals.forEach((id, index) => {
+            const yBase = index * rowHeight + rowHeight * 0.8;
+            const amplitude = rowHeight * 0.6;
+
+            ctx.beginPath();
+            ctx.strokeStyle = `hsl(${index * 60}, 70%, 50%)`;
+            ctx.lineWidth = 2;
+
+            ctx.fillStyle = "#aaa";
+            ctx.font = "10px monospace";
+            ctx.fillText(id.substr(0, 8), 5, yBase - amplitude - 5);
+
+            for (let i = 0; i < this.history.length; i++) {
+                const val = this.history[i][id];
+                const x = i * stepX;
+                const y = yBase - (val * amplitude);
+
+                if (i === 0) ctx.moveTo(x, y);
+                else {
+                    const prevVal = this.history[i - 1][id];
+                    const prevY = yBase - (prevVal * amplitude);
+                    ctx.lineTo(x, prevY);
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        });
+    }
+}
+
+// 시뮬레이터 실행
+window.sim = new CircuitSimulator();

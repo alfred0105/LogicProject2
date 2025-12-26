@@ -1,0 +1,3924 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ============================================
+   🎨 PREMIUM DESIGN SYSTEM - Logic Simulator
+   Enterprise-Grade Visual Design
+   ============================================ */
+
+:root {
+    /* === Core Color Palette === */
+    --bg-void: #050608;
+    --bg-base: #0a0c10;
+    --bg-surface: #12151a;
+    --bg-elevated: #1a1e25;
+    --bg-hover: #242a33;
+    --bg-active: #2d3640;
+
+    /* Glass Effect Colors */
+    --glass-bg: rgba(18, 21, 26, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-glow: rgba(88, 166, 255, 0.1);
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.15);
+
+    /* Text Hierarchy */
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-disabled: #475569;
+
+    /* Accent Colors - Neon Glow */
+    --accent-blue: #3b82f6;
+    --accent-blue-glow: rgba(59, 130, 246, 0.5);
+    --accent-cyan: #06b6d4;
+    --accent-cyan-glow: rgba(6, 182, 212, 0.5);
+    --accent-green: #10b981;
+    --accent-green-glow: rgba(16, 185, 129, 0.5);
+    --accent-purple: #8b5cf6;
+    --accent-purple-glow: rgba(139, 92, 246, 0.5);
+    --accent-pink: #ec4899;
+    --accent-pink-glow: rgba(236, 72, 153, 0.5);
+    --accent-orange: #f59e0b;
+    --accent-orange-glow: rgba(245, 158, 11, 0.5);
+    --accent-red: #ef4444;
+    --accent-red-glow: rgba(239, 68, 68, 0.5);
+
+    /* Signal Colors */
+    --signal-high: #ff4e42;
+    --signal-high-glow: 0 0 20px rgba(255, 78, 66, 0.6);
+    --signal-low: #6b7280;
+    --signal-low-glow: none;
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+    --gradient-surface: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, var(--accent-blue-glow) 0%, transparent 70%);
+
+    /* Dimensions */
+    --header-height: 52px;
+    --sidebar-width: 260px;
+    --statusbar-height: 28px;
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 40px var(--accent-blue-glow);
+
+    /* Transitions */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 400ms;
+}
+
+/* ============================================
+   🚀 PERFORMANCE OPTIMIZATIONS
+   GPU 가속 및 레이아웃 최적화
+   ============================================ */
+
+/* GPU 가속을 위한 레이어 프로모션 */
+.workspace-wrapper,
+#workspace,
+#wire-layer {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* 컴포넌트는 드래그 시에만 will-change 적용 (JS에서 동적 처리) */
+.component {
+    contain: layout style;
+}
+
+.component.dragging {
+    will-change: left, top;
+}
+
+/* 와이어 레이어 최적화 */
+#wire-layer path {
+    contain: layout;
+    vector-effect: non-scaling-stroke;
+}
+
+/* 애니메이션 최적만 GPU 가속 */
+.active-flow {
+    will-change: stroke-dashoffset;
+}
+
+/* 스크롤 컨테이너 최적화 */
+.sidebar-content {
+    contain: strict;
+    overflow-anchor: none;
+}
+
+/* === Reset & Base === */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-void);
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Custom Scrollbar === */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-active);
+    background-clip: content-box;
+}
+
+/* === App Container === */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-base);
+}
+
+/* ============================================
+   HEADER - Glassmorphism Premium Style
+   ============================================ */
+.header {
+    height: var(--header-height);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 4px;
+    z-index: 100;
+    position: relative;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--accent-blue) 20%,
+            var(--accent-purple) 50%,
+            var(--accent-pink) 80%,
+            transparent 100%);
+    opacity: 0.3;
+}
+
+/* Brand */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 16px;
+    margin-right: 8px;
+    border-right: 1px solid var(--border-subtle);
+}
+
+.brand-logo {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-brand);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.brand-logo svg {
+    width: 18px;
+    height: 18px;
+    fill: white;
+}
+
+.brand-text {
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+/* Toolbar Groups */
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 4px;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-subtle);
+    margin: 0 8px;
+}
+
+.toolbar-spacer {
+    flex: 1;
+}
+
+/* Icon Buttons - Premium Style */
+.icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 36px;
+    padding: 0 8px;
+    gap: 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-brand);
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+.icon-btn.active {
+    background: var(--bg-active);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 12px var(--accent-blue-glow);
+}
+
+.icon-btn.active::before {
+    opacity: 0.1;
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-text {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+    position: relative;
+    z-index: 1;
+}
+
+/* Tool Toggle - Special styling */
+.tool-toggle {
+    display: flex;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 2px;
+    border: 1px solid var(--border-subtle);
+}
+
+.tool-toggle .icon-btn {
+    border-radius: var(--radius-xs);
+    min-width: 36px;
+    height: 30px;
+}
+
+.tool-toggle .icon-btn.active {
+    background: var(--accent-blue);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Edit Options */
+.edit-options {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.icon-btn.small {
+    min-width: auto;
+    padding: 4px 8px;
+    font-size: 11px;
+    height: 28px;
+}
+
+.icon-btn.small.active {
+    background: var(--accent-green);
+    color: white;
+}
+
+/* Speed Control */
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.speed-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.speed-slider {
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg-active);
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--accent-cyan-glow);
+    transition: transform 0.1s ease;
+}
+
+.speed-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.speed-value {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-cyan);
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Zoom Control */
+.zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+}
+
+.zoom-control .icon-btn {
+    min-width: 28px;
+    height: 26px;
+    padding: 0;
+}
+
+.zoom-value {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    min-width: 42px;
+    text-align: center;
+}
+
+/* Mode Switch */
+.mode-switch .icon-btn {
+    padding: 0 12px;
+    height: 32px;
+}
+
+.mode-switch .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Selection Indicator */
+.selection-indicator {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--accent-blue-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 15px var(--accent-blue-glow), 0 0 30px var(--accent-blue-glow);
+    }
+}
+
+/* Selection Box (Drag to select) */
+#selection-box,
+.selection-box {
+    position: fixed;
+    border: 2px dashed var(--accent-blue);
+    background: rgba(59, 130, 246, 0.15);
+    pointer-events: none;
+    z-index: 1000;
+    border-radius: 4px;
+    display: none;
+}
+
+/* ============================================
+   SIDEBAR - Modern Card-based Component Picker
+   ============================================ */
+.sidebar {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height) - var(--statusbar-height));
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.sidebar-toggle-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(100%, -50%);
+    width: 24px;
+    height: 56px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-left: none;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--duration-fast) var(--ease-out);
+    z-index: 51;
+}
+
+.sidebar-toggle-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sidebar-toggle-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+/* Account Section */
+.account-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--bg-elevated), var(--bg-surface));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.account-avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: var(--bg-active);
+    border-radius: 50%;
+    border: 2px solid var(--accent-blue);
+}
+
+.account-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.account-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.account-plan {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Tool Label Styling */
+.tool-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: inherit;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
+.tool-toggle .icon-btn {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 10px;
+    min-width: 48px;
+    height: auto;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 8px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.section:hover {
+    border-color: var(--border-default);
+}
+
+.section.collapsed .section-content {
+    display: none;
+}
+
+.section-header {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out);
+}
+
+.section-header:hover {
+    background: var(--bg-hover);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.section-arrow {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.section.collapsed .section-arrow {
+    transform: rotate(-90deg);
+}
+
+.section-count {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-active);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.section-content {
+    padding: 8px;
+    padding-top: 0;
+}
+
+/* Component Grid */
+.comp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+/* Component Buttons - Premium Cards */
+.comp-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 4px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.comp-btn::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: var(--gradient-brand);
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-out);
+    z-index: 0;
+    border-radius: inherit;
+}
+
+.comp-btn::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: var(--bg-surface);
+    border-radius: calc(var(--radius-md) - 2px);
+    z-index: 1;
+}
+
+.comp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.comp-btn:hover::before {
+    opacity: 1;
+}
+
+.comp-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.comp-btn .icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.comp-btn .icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--text-secondary);
+    stroke-width: 2;
+    fill: none;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.comp-btn:hover .icon svg {
+    stroke: var(--accent-blue);
+    filter: drop-shadow(0 0 4px var(--accent-blue-glow));
+}
+
+.comp-btn .name {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: relative;
+    z-index: 2;
+    transition: color var(--duration-fast) var(--ease-out);
+}
+
+.comp-btn:hover .name {
+    color: var(--text-primary);
+}
+
+/* IO Components - Special styling */
+.comp-btn.io .icon svg {
+    stroke: var(--accent-green);
+}
+
+.comp-btn.io:hover .icon svg {
+    stroke: var(--accent-green);
+    filter: drop-shadow(0 0 6px var(--accent-green-glow));
+}
+
+/* Gate-specific colors */
+.comp-btn.gate-and .icon svg {
+    stroke: var(--accent-blue);
+}
+
+.comp-btn.gate-or .icon svg {
+    stroke: var(--accent-cyan);
+}
+
+.comp-btn.gate-not .icon svg {
+    stroke: var(--accent-orange);
+}
+
+.comp-btn.gate-xor .icon svg {
+    stroke: var(--accent-purple);
+}
+
+.comp-btn.gate-nand .icon svg {
+    stroke: var(--accent-pink);
+}
+
+.comp-btn.gate-nor .icon svg {
+    stroke: var(--accent-red);
+}
+
+.comp-btn.gate-and:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-blue-glow));
+}
+
+.comp-btn.gate-or:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-cyan-glow));
+}
+
+.comp-btn.gate-not:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-orange-glow));
+}
+
+.comp-btn.gate-xor:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-purple-glow));
+}
+
+.comp-btn.gate-nand:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-pink-glow));
+}
+
+.comp-btn.gate-nor:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-red-glow));
+}
+
+/* Wide buttons */
+.comp-btn.wide {
+    grid-column: span 3;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+}
+
+.comp-btn.wide .name {
+    font-size: 11px;
+}
+
+.comp-btn.dashed {
+    border-style: dashed;
+    background: transparent;
+}
+
+.comp-btn.dashed::after {
+    background: transparent;
+}
+
+/* Package buttons */
+.comp-btn.package {
+    border-color: var(--accent-purple);
+    border-style: dashed;
+}
+
+.comp-btn.package:hover {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 20px var(--accent-purple-glow);
+}
+
+/* Expert Only Sections */
+.section.expert-only {
+    display: none;
+}
+
+body.expert-mode .section.expert-only {
+    display: block;
+}
+
+/* ============================================
+   WORKSPACE - Premium Canvas
+   ============================================ */
+.workspace-wrapper {
+    flex: 1;
+    position: relative;
+    margin-left: var(--sidebar-width);
+    overflow: hidden;
+    background: var(--bg-base);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.collapsed~.workspace-wrapper {
+    margin-left: 0;
+}
+
+#workspace {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+
+    /* 내부 캔버스 크기 */
+    min-width: 6000px;
+    min-height: 4000px;
+    transform-origin: 0 0;
+
+    /* Premium Grid Pattern */
+    background-color: var(--bg-base);
+    background-image:
+        /* Major grid - every 100px */
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px),
+        /* Minor grid - every 20px */
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+
+    cursor: default;
+}
+
+body.mode-pan #workspace {
+    cursor: grab;
+}
+
+body.mode-pan #workspace:active {
+    cursor: grabbing;
+}
+
+body.mode-wire #workspace {
+    cursor: crosshair;
+}
+
+/* Wire Layer */
+#wire-layer {
+    position: absolute;
+    width: 6000px;
+    /* Ensure huge size */
+    height: 4000px;
+    pointer-events: none;
+    z-index: 5;
+    overflow: visible;
+}
+
+#wire-layer path {
+    pointer-events: visibleStroke;
+    /* More robust than 'stroke' */
+    stroke: var(--signal-low);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: stroke 0.1s ease, filter 0.1s ease;
+}
+
+#wire-layer path:hover {
+    stroke: var(--accent-orange);
+    stroke-width: 6;
+    filter: drop-shadow(0 0 6px var(--accent-orange-glow));
+    cursor: pointer;
+}
+
+/* Current Flow Animation */
+#wire-layer path.on {
+    stroke: var(--signal-high);
+    filter: drop-shadow(0 0 5px var(--signal-high-glow));
+}
+
+@keyframes wire-flow {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
+
+#wire-layer path.active-flow {
+    stroke-dasharray: 8, 4;
+    animation: wire-flow 0.5s linear infinite;
+    filter: drop-shadow(0 0 5px var(--signal-high-glow));
+    /* stroke color is handled by JS but ensure priority */
+    stroke: var(--signal-high) !important;
+}
+
+/* Transistor Animation */
+.component[data-type="TRANSISTOR"][data-value="1"] svg,
+.component[data-type="PMOS"][data-value="1"] svg {
+    filter: drop-shadow(0 0 8px var(--accent-green-glow));
+    stroke: var(--accent-green);
+}
+
+.component[data-type="TRANSISTOR"][data-value="1"] .pin.base,
+.component[data-type="PMOS"][data-value="1"] .pin.base {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green-glow);
+}
+
+#wire-layer path.on {
+    stroke: var(--signal-high);
+    filter: drop-shadow(var(--signal-high-glow));
+}
+
+/* ============================================
+   COMPONENTS - Pure Schematic Symbol Design
+   (No Box - Actual Component Shape)
+   ============================================ */
+.component {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 48px;
+    background: transparent;
+    border: none;
+    cursor: grab;
+    z-index: 10;
+    /* left, top은 제외하여 드래그 시 즉시 이동 */
+    transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.component:hover {
+    filter: drop-shadow(0 0 12px var(--accent-blue-glow));
+}
+
+.component:active {
+    cursor: grabbing;
+}
+
+.component.selected {
+    filter: drop-shadow(0 0 16px var(--accent-blue)) drop-shadow(0 0 4px var(--accent-blue));
+}
+
+.component.dragging {
+    opacity: 0.85;
+    z-index: 100;
+}
+
+/* Component SVG Symbols - Pure Schematic */
+.component svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+    fill: none;
+    transition: stroke 0.2s ease, filter 0.2s ease;
+}
+
+.component:hover svg {
+    stroke: var(--accent-blue);
+}
+
+.component.selected svg {
+    stroke: var(--accent-blue);
+}
+
+/* Component Label */
+.comp-label {
+    position: absolute;
+    bottom: -18px;
+    /* 조금 더 아래로 */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    /* 9px -> 12px 확대 */
+    font-weight: 700;
+    /* 굵게 */
+    color: var(--text-primary);
+    /* 어두운 색 -> 밝은 색 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0.9;
+    /* 투명도 줄임 */
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    /* 배경 대비 강화 */
+    z-index: 100;
+    /* 전선 위에 표시 */
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.component:hover .comp-label {
+    opacity: 1;
+    color: var(--accent-blue);
+}
+
+/* === LOGIC GATES - Color Coding with Glow Effect === */
+.component[data-type="AND"] svg {
+    stroke: #3b82f6;
+    filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
+}
+
+.component[data-type="OR"] svg {
+    stroke: #10b981;
+    filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.4));
+}
+
+.component[data-type="NOT"] svg {
+    stroke: #ef4444;
+    filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.4));
+}
+
+.component[data-type="XOR"] svg {
+    stroke: #06b6d4;
+    filter: drop-shadow(0 0 3px rgba(6, 182, 212, 0.4));
+}
+
+.component[data-type="NAND"] svg {
+    stroke: #8b5cf6;
+    filter: drop-shadow(0 0 3px rgba(139, 92, 246, 0.4));
+}
+
+.component[data-type="NOR"] svg {
+    stroke: #f59e0b;
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.4));
+}
+
+.component[data-type="XNOR"] svg {
+    stroke: #ec4899;
+    filter: drop-shadow(0 0 3px rgba(236, 72, 153, 0.4));
+}
+
+/* LOGIC GATES - Hover Glow Effect (강하게 빛남) */
+.component[data-type="AND"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 6px rgba(59, 130, 246, 1));
+}
+
+.component[data-type="OR"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)) drop-shadow(0 0 6px rgba(16, 185, 129, 1));
+}
+
+.component[data-type="NOT"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)) drop-shadow(0 0 6px rgba(239, 68, 68, 1));
+}
+
+.component[data-type="XOR"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8)) drop-shadow(0 0 6px rgba(6, 182, 212, 1));
+}
+
+.component[data-type="NAND"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8)) drop-shadow(0 0 6px rgba(139, 92, 246, 1));
+}
+
+.component[data-type="NOR"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 6px rgba(245, 158, 11, 1));
+}
+
+.component[data-type="XNOR"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.8)) drop-shadow(0 0 6px rgba(236, 72, 153, 1));
+}
+
+/* === SWITCH - Toggle Button Style === */
+.component[data-type="SWITCH"] {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Switch 핀 위치 - 정확히 수직 중앙 */
+.component[data-type="SWITCH"] .pin.output {
+    right: -6px;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.component[data-type="SWITCH"] svg {
+    stroke: var(--text-muted);
+    stroke-width: 3;
+}
+
+.component[data-type="SWITCH"][data-value="1"] svg {
+    stroke: var(--accent-green);
+    filter: drop-shadow(0 0 12px var(--accent-green-glow));
+}
+
+.component[data-type="SWITCH"] .comp-label {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* === LED - Pure Circle with Customizable Color === */
+.component[data-type="LED"] {
+    width: 32px;
+    height: 32px;
+}
+
+.component[data-type="LED"] svg {
+    stroke: var(--text-muted);
+    stroke-width: 2.5;
+    fill: var(--bg-elevated);
+}
+
+/* LED OFF State */
+.component[data-type="LED"][data-value="0"] svg {
+    fill: var(--bg-elevated);
+    stroke: var(--text-muted);
+}
+
+/* LED ON State - Default Red */
+.component[data-type="LED"][data-value="1"] svg {
+    fill: #ef4444;
+    stroke: #fca5a5;
+    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8)) drop-shadow(0 0 32px rgba(239, 68, 68, 0.5));
+}
+
+/* LED Custom Colors */
+.component[data-type="LED"][data-color="red"][data-value="1"] svg {
+    fill: #ef4444;
+    stroke: #fca5a5;
+    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8));
+}
+
+.component[data-type="LED"][data-color="green"][data-value="1"] svg {
+    fill: #22c55e;
+    stroke: #86efac;
+    filter: drop-shadow(0 0 16px rgba(34, 197, 94, 0.8));
+}
+
+.component[data-type="LED"][data-color="blue"][data-value="1"] svg {
+    fill: #3b82f6;
+    stroke: #93c5fd;
+    filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.8));
+}
+
+.component[data-type="LED"][data-color="yellow"][data-value="1"] svg {
+    fill: #eab308;
+    stroke: #fef08a;
+    filter: drop-shadow(0 0 16px rgba(234, 179, 8, 0.8));
+}
+
+.component[data-type="LED"][data-color="white"][data-value="1"] svg {
+    fill: #f8fafc;
+    stroke: #ffffff;
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.9));
+}
+
+/* === CLOCK - Waveform Symbol === */
+.component[data-type="CLOCK"] {
+    width: 56px;
+    height: 40px;
+}
+
+.component[data-type="CLOCK"] svg {
+    stroke: var(--accent-purple);
+    stroke-width: 2.5;
+}
+
+.component[data-type="CLOCK"][data-value="1"] svg {
+    stroke: #a855f7;
+    filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.7));
+}
+
+/* === JOINT - Wire Connection Node === */
+.component[data-type="JOINT"] {
+    width: 20px;
+    height: 20px;
+    z-index: 15;
+    cursor: grab;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.component[data-type="JOINT"]:active {
+    cursor: grabbing;
+    transform: scale(1.3);
+}
+
+.component[data-type="JOINT"] svg {
+    stroke: none;
+    stroke-width: 0;
+    fill: #64748b;
+    transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+.component[data-type="JOINT"][data-value="1"] svg {
+    fill: var(--signal-high);
+    filter: drop-shadow(0 0 8px rgba(255, 78, 66, 0.6));
+}
+
+.component[data-type="JOINT"]:hover {
+    transform: scale(1.5);
+    z-index: 20;
+}
+
+.component[data-type="JOINT"]:hover svg {
+    fill: var(--accent-cyan);
+    filter: drop-shadow(0 0 12px var(--accent-cyan-glow));
+}
+
+.component[data-type="JOINT"].selected svg {
+    fill: var(--accent-blue);
+    filter: drop-shadow(0 0 10px var(--accent-blue-glow));
+}
+
+.component[data-type="JOINT"].dragging {
+    z-index: 100;
+    cursor: grabbing;
+}
+
+.component[data-type="JOINT"] .comp-label {
+    display: none;
+}
+
+/* === TRANSISTOR - NPN/PMOS Symbol === */
+.component[data-type="TRANSISTOR"],
+.component[data-type="PMOS"] {
+    width: 56px;
+    height: 56px;
+}
+
+.component[data-type="TRANSISTOR"] svg {
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.component[data-type="PMOS"] svg {
+    stroke: #f97316;
+    stroke-width: 2;
+}
+
+/* === VCC/GND Power Symbols (가로 방향) === */
+.component[data-type="VCC"],
+.component[data-type="GND"] {
+    width: 44px;
+    height: 40px;
+}
+
+.component[data-type="VCC"] svg {
+    stroke: #ef4444;
+    fill: #ef4444;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5));
+}
+
+.component[data-type="VCC"]:hover svg {
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8));
+}
+
+.component[data-type="GND"] svg {
+    stroke: #64748b;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 4px rgba(100, 116, 139, 0.3));
+}
+
+.component[data-type="GND"]:hover svg {
+    stroke: #94a3b8;
+    filter: drop-shadow(0 0 8px rgba(148, 163, 184, 0.5));
+}
+
+/* VCC Pin - 왼쪽 (연결선 시작) - 초기화 및 강제 지정 */
+.component[data-type="VCC"] .pin.vcc-left {
+    left: 0 !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.component[data-type="VCC"] .pin.vcc-left:hover {
+    transform: translate(-50%, -50%) scale(1.4) !important;
+}
+
+/* GND Pin - 왼쪽 (연결선 시작) - 선택자 단순화로 강제 적용 */
+.component[data-type="GND"] .pin {
+    left: 0 !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.component[data-type="GND"] .pin:hover {
+    transform: translate(-50%, -50%) scale(1.4) !important;
+}
+
+/* ============================================
+   PINS - Connection Points
+   ============================================ */
+.pin {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--bg-hover);
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    z-index: 25;
+    cursor: crosshair;
+    transition: all 0.15s var(--ease-out);
+}
+
+.pin::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+}
+
+.pin:hover {
+    transform: translateY(-50%) scale(1.4);
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 12px var(--accent-blue-glow);
+}
+
+.pin.snap-target {
+    transform: translateY(-50%) scale(1.6);
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 16px var(--accent-green-glow);
+}
+
+/* Pin being dragged from (active wiring source) */
+.pin.active {
+    transform: translateY(-50%) scale(1.5);
+    background: var(--accent-purple);
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 20px var(--accent-purple-glow);
+    animation: pin-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes pin-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 12px var(--accent-purple-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 24px var(--accent-purple-glow), 0 0 40px var(--accent-purple-glow);
+    }
+}
+
+.pin.connected {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+/* Pin Positions - Symmetrical */
+.pin.in-1 {
+    left: -5px;
+    top: 25%;
+    transform: translateY(-50%);
+}
+
+.pin.in-2 {
+    left: -5px;
+    top: 75%;
+    transform: translateY(-50%);
+}
+
+.pin.out {
+    right: -5px;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 입력 핀 중앙 (LED, NOT 등) */
+.pin.input.center,
+.pin.center-in {
+    left: -5px;
+    right: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 출력 핀 중앙 (스위치, VCC, 클럭, NOT 등) */
+.pin.output.center,
+.pin.center-out {
+    right: -5px;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ============================================
+   STATUS BAR - Minimal Premium Style
+   ============================================ */
+.statusbar {
+    height: var(--statusbar-height);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 50;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-green-glow);
+}
+
+.statusbar-spacer {
+    flex: 1;
+}
+
+#status-user-mode {
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+/* ============================================
+   SELECTION BOX
+   ============================================ */
+.selection-box,
+#selection-box {
+    position: absolute;
+    border: 1px solid var(--accent-blue);
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+}
+
+/* ============================================
+   MINIMAP - Overview Panel
+   ============================================ */
+.minimap {
+    position: absolute;
+    bottom: 40px;
+    right: 16px;
+    width: 180px;
+    height: 120px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    z-index: 60;
+}
+
+.minimap-viewport {
+    position: absolute;
+    border: 2px solid var(--accent-blue);
+    background: rgba(59, 130, 246, 0.15);
+    border-radius: 2px;
+    pointer-events: none;
+    transition: all 0.1s ease-out;
+}
+
+/* ============================================
+   CONTEXT MENU - Premium Dropdown
+   ============================================ */
+#context-menu {
+    position: fixed;
+    display: none;
+    min-width: 180px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    z-index: 1000;
+    animation: fadeIn 0.15s var(--ease-out);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.ctx-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.ctx-item svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.ctx-item .shortcut {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    background: var(--bg-active);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.ctx-item.danger {
+    color: var(--accent-red);
+}
+
+.ctx-item.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.ctx-sep {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 6px 0;
+}
+
+/* ============================================
+   TOOLTIP - 비활성화됨 (component-info-panel 사용)
+   ============================================ */
+#tooltip {
+    display: none !important;
+    /* 기존 tooltip은 더 이상 사용하지 않음
+       대신 component-info-panel 사용 */
+}
+
+#tooltip.show,
+#tooltip.visible {
+    display: none !important;
+}
+
+/* Tooltip Header */
+.tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-active);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.tooltip-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+}
+
+.tooltip-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: var(--accent-blue);
+    stroke-width: 2;
+    fill: none;
+}
+
+.tooltip-title-area {
+    flex: 1;
+}
+
+.tooltip-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.tooltip-type {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Tooltip Animation Area */
+.tooltip-animation {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+    overflow: hidden;
+}
+
+.tooltip-animation svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Animation keyframes for tooltip demos */
+@keyframes pulse-signal {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        stroke: var(--signal-low);
+    }
+
+    50% {
+        opacity: 1;
+        stroke: var(--signal-high);
+    }
+}
+
+@keyframes blink-led {
+
+    0%,
+    100% {
+        fill: var(--bg-elevated);
+    }
+
+    50% {
+        fill: #ef4444;
+        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+    }
+}
+
+.tooltip-animation .anim-wire {
+    animation: pulse-signal 1.5s ease-in-out infinite;
+}
+
+.tooltip-animation .anim-led {
+    animation: blink-led 1s ease-in-out infinite;
+}
+
+/* Tooltip Content */
+.tooltip-content {
+    padding: 14px 16px;
+}
+
+.tooltip-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+/* Usage Section */
+.tooltip-usage {
+    background: var(--bg-active);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.tooltip-usage-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-orange);
+    margin-bottom: 6px;
+}
+
+.tooltip-usage-content {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Shortcuts */
+.tooltip-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tooltip-shortcut {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.tooltip-shortcut kbd {
+    background: var(--bg-active);
+    border: 1px solid var(--border-default);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   MODALS - Premium Dialogs
+   ============================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeOverlay 0.2s var(--ease-out);
+}
+
+@keyframes fadeOverlay {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    width: 420px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg), 0 0 80px rgba(59, 130, 246, 0.1);
+    animation: modalIn 0.25s var(--ease-spring);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.modal-close svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px var(--accent-blue-glow);
+    outline: none;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--accent-blue);
+    color: white;
+    box-shadow: 0 2px 8px var(--accent-blue-glow);
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 16px var(--accent-blue-glow);
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+/* Shortcuts Grid */
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-base);
+    border-radius: var(--radius-sm);
+}
+
+.shortcut-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-default);
+    min-width: 50px;
+    text-align: center;
+}
+
+.shortcut-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS - Premium Alerts
+   ============================================ */
+.toast-notification {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s var(--ease-spring);
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.toast-icon {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.toast-info {
+    border-left: 3px solid var(--accent-blue);
+}
+
+.toast-info .toast-icon {
+    color: var(--accent-blue);
+}
+
+.toast-success {
+    border-left: 3px solid var(--accent-green);
+}
+
+.toast-success .toast-icon {
+    color: var(--accent-green);
+}
+
+.toast-warning {
+    border-left: 3px solid var(--accent-orange);
+}
+
+.toast-warning .toast-icon {
+    color: var(--accent-orange);
+}
+
+.toast-error {
+    border-left: 3px solid var(--accent-red);
+}
+
+.toast-error .toast-icon {
+    color: var(--accent-red);
+}
+
+/* ============================================
+   EXPERT MODE - Professional Theme Override
+   ============================================ */
+body.expert-mode {
+    --bg-base: #0f1419;
+    --bg-surface: #15202b;
+    --bg-elevated: #1c2938;
+    --accent-primary: #1da1f2;
+}
+
+body.expert-mode #workspace {
+    background-image:
+        linear-gradient(rgba(29, 161, 242, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(29, 161, 242, 0.1) 1px, transparent 1px),
+        linear-gradient(rgba(29, 161, 242, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(29, 161, 242, 0.03) 1px, transparent 1px);
+}
+
+body.expert-mode .component {
+    background: transparent;
+    border: none;
+}
+
+body.expert-mode .pin {
+    background: var(--bg-surface);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.expert-mode #status-user-mode {
+    color: var(--accent-cyan);
+}
+
+/* Component labels always visible */
+body.expert-mode .comp-label {
+    display: block;
+}
+
+/* ============================================
+   TRANSISTOR PIN POSITIONING
+   ============================================ */
+/* Base: Left Center */
+.component[data-type="TRANSISTOR"] .pin.base,
+.component[data-type="PMOS"] .pin.base {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Collector: Top */
+.component[data-type="TRANSISTOR"] .pin.col,
+.component[data-type="PMOS"] .pin.col {
+    left: 50%;
+    top: -6px;
+    transform: translateX(-50%);
+}
+
+/* Emitter: Bottom */
+.component[data-type="TRANSISTOR"] .pin.emit,
+.component[data-type="PMOS"] .pin.emit {
+    left: 50%;
+    bottom: -6px;
+    top: auto;
+    transform: translateX(-50%);
+}
+
+
+/* Transistor component button colors */
+.comp-btn.trans-npn .icon svg {
+    stroke: var(--accent-cyan);
+}
+
+.comp-btn.trans-npn:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-cyan-glow));
+}
+
+.comp-btn.trans-pmos .icon svg {
+    stroke: var(--accent-purple);
+}
+
+.comp-btn.trans-pmos:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-purple-glow));
+}
+
+.comp-btn.power-vcc .icon svg {
+    stroke: #ef4444;
+    fill: #ef4444;
+}
+
+.comp-btn.power-vcc:hover .icon svg {
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+}
+
+.comp-btn.power-gnd .icon svg {
+    stroke: #94a3b8;
+}
+
+.comp-btn.power-gnd:hover .icon svg {
+    stroke: #cbd5e1;
+    filter: drop-shadow(0 0 4px rgba(148, 163, 184, 0.4));
+}
+
+
+/* Package component styles */
+.comp-btn.package .icon svg {
+    stroke: var(--accent-purple);
+}
+
+.comp-btn.package:hover .icon svg {
+    filter: drop-shadow(0 0 6px var(--accent-purple-glow));
+}
+
+.comp-btn.package .pkg-info {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-top: -2px;
+}
+
+/* Package wide button */
+.comp-btn.wide {
+    grid-column: span 2;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.comp-btn.wide .icon {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* ============================================
+   PACKAGE COMPONENT (CANVAS)
+   ============================================ */
+.component.package-component {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    min-width: 100px;
+    min-height: 60px;
+}
+
+.component.package-component:hover {
+    box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+    transform: scale(1.02);
+}
+
+.component.package-component.selected {
+    box-shadow: 0 0 0 3px var(--accent-blue), 0 6px 30px rgba(102, 126, 234, 0.6);
+}
+
+.component.package-component .comp-label {
+    display: flex !important;
+    color: white !important;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.component.package-component .pin.input {
+    left: -6px;
+    background: var(--accent-blue);
+    border-color: white;
+}
+
+.component.package-component .pin.output {
+    right: -6px;
+    left: auto;
+    background: var(--accent-orange);
+    border-color: white;
+}
+
+/* ============================================
+   INPUT/OUTPUT PIN DISTINCTION STYLES
+   ============================================ */
+/* 입력 핀 스타일 - 노란색/주황색 계열 */
+.pin.input,
+.pin.in-1,
+.pin.in-2 {
+    background: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.3);
+}
+
+.pin.input:hover,
+.pin.in-1:hover,
+.pin.in-2:hover {
+    background: #f59e0b !important;
+    border-color: #d97706 !important;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
+    transform: scale(1.4);
+}
+
+/* 출력 핀 스타일 - 시안색 계열 */
+.pin.output,
+.pin.out {
+    background: #cffafe !important;
+    border-color: #06b6d4 !important;
+    box-shadow: 0 0 4px rgba(6, 182, 212, 0.3);
+}
+
+.pin.output:hover,
+.pin.out:hover {
+    background: #06b6d4 !important;
+    border-color: #0891b2 !important;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.6) !important;
+    transform: scale(1.4);
+}
+
+/* 신호가 HIGH일 때 핀 상태 */
+.pin[data-signal="1"] {
+    background: var(--signal-high) !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 0 10px var(--signal-high-glow) !important;
+}
+
+/* 핀 레이블 표시 (hover 시) */
+.pin[data-label]::after {
+    content: attr(data-label);
+    position: absolute;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    padding: 2px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    border: 1px solid var(--border-default);
+}
+
+.pin.input[data-label]::after,
+.pin.in-1[data-label]::after,
+.pin.in-2[data-label]::after {
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pin.output[data-label]::after,
+.pin.out[data-label]::after {
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pin[data-label]:hover::after {
+    opacity: 1;
+}
+
+/* 출력 핀 위치 보정 */
+.pin.output.center {
+    right: -5px;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ============================================
+   COMPONENT INFO PANEL (소자 설명창)
+   ============================================ */
+.component-info-panel {
+    position: fixed;
+    /* 기본 위치 (우하단) - positionTooltip()에서 동적으로 변경됨 */
+    right: 20px;
+    bottom: 20px;
+    width: 280px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    transition: opacity var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out);
+    /* 패널이 마우스 이벤트를 차단하지 않도록 함 */
+    pointer-events: none;
+}
+
+/* 4분면 기반 위치 클래스 */
+.component-info-panel.position-top-left {
+    animation: slideFromTop 0.2s ease-out;
+}
+
+.component-info-panel.position-top-right {
+    animation: slideFromTop 0.2s ease-out;
+}
+
+.component-info-panel.position-bottom-left {
+    animation: slideFromBottom 0.2s ease-out;
+}
+
+.component-info-panel.position-bottom-right {
+    animation: slideFromBottom 0.2s ease-out;
+}
+
+@keyframes slideFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideFromBottom {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 사이드바가 접혔을 때 설명창 위치 조정 - 더 이상 필요 없음 */
+body.sidebar-collapsed .component-info-panel {
+    /* 동적 위치 사용 */
+}
+
+.component-info-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+}
+
+.component-info-panel .info-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--accent-blue-glow), transparent);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .info-type-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.component-info-panel .info-type-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.component-info-panel .info-body {
+    padding: 14px 16px;
+}
+
+.component-info-panel .info-description {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+}
+
+.component-info-panel .info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.component-info-panel .info-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.component-info-panel .info-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Truth Table Styling */
+.component-info-panel .info-truth-table {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .truth-table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+
+.component-info-panel .truth-table th,
+.component-info-panel .truth-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .truth-table th {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td {
+    color: var(--text-secondary);
+}
+
+.component-info-panel .truth-table td.high {
+    color: var(--signal-high);
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td.low {
+    color: var(--text-muted);
+}
+
+/* Animation Area */
+.component-info-panel .info-animation {
+    padding: 12px;
+    background: var(--bg-active);
+    border-bottom: 1px solid var(--border-subtle);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.component-info-panel .info-animation:empty {
+    display: none;
+}
+
+.component-info-panel .info-animation svg {
+    width: 100%;
+    max-width: 260px;
+    height: 60px;
+}
+
+/* Animated wire effect */
+.component-info-panel .anim-wire {
+    stroke-dasharray: 8, 4;
+    animation: dash 0.8s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -12;
+    }
+}
+
+/* LED glow animation */
+.component-info-panel .led-glow {
+    animation: ledPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes ledPulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Usage Section */
+.component-info-panel .info-usage {
+    margin-top: 10px;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-blue);
+}
+
+.component-info-panel .info-usage-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    margin-bottom: 4px;
+}
+
+.component-info-panel .info-usage-content {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    padding: 4px 0;
+    word-break: keep-all;
+}
+
+/* 진리표 스타일 */
+.component-info-panel .info-truth-table {
+    padding: 8px 12px 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .info-truth-table .info-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.component-info-panel .truth-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.component-info-panel .truth-table th,
+.component-info-panel .truth-table td {
+    padding: 4px 8px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .truth-table th {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.component-info-panel .truth-table td.high {
+    color: #ff4e42;
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td.low {
+    color: #6b7280;
+}
+
+/* 진리표 생성기 테이블 스타일 */
+.truth-table-generated {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.truth-table-generated th,
+.truth-table-generated td {
+    padding: 6px 10px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+}
+
+.truth-table-generated th {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.truth-table-generated td {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.truth-table-generated td.high {
+    color: #ff4e42;
+    font-weight: 600;
+}
+
+.truth-table-generated td.low {
+    color: #6b7280;
+}
+
+/* 사이드바가 접혔을 때 설명창 위치 조정 */
+body.sidebar-collapsed .component-info-panel {
+    left: 16px;
+}
+
+.component-info-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+}
+
+.component-info-panel .info-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--accent-blue-glow), transparent);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .info-type-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.component-info-panel .info-type-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.component-info-panel .info-body {
+    padding: 14px 16px;
+}
+
+.component-info-panel .info-description {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+}
+
+.component-info-panel .info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.component-info-panel .info-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.component-info-panel .info-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Truth Table Styling */
+.component-info-panel .info-truth-table {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .truth-table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+
+.component-info-panel .truth-table th,
+.component-info-panel .truth-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+}
+
+.component-info-panel .truth-table th {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td {
+    color: var(--text-secondary);
+}
+
+.component-info-panel .truth-table td.high {
+    color: var(--signal-high);
+    font-weight: 600;
+}
+
+.component-info-panel .truth-table td.low {
+    color: var(--text-muted);
+}
+
+/* Animation Area */
+.component-info-panel .info-animation {
+    padding: 12px;
+    background: var(--bg-active);
+    border-bottom: 1px solid var(--border-subtle);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.component-info-panel .info-animation:empty {
+    display: none;
+}
+
+.component-info-panel .info-animation svg {
+    width: 100%;
+    max-width: 260px;
+    height: 60px;
+}
+
+/* Animated wire effect */
+.component-info-panel .anim-wire {
+    stroke-dasharray: 8, 4;
+    animation: dash 0.8s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -12;
+    }
+}
+
+/* LED glow animation */
+.component-info-panel .led-glow {
+    animation: ledPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes ledPulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Usage Section */
+.component-info-panel .info-usage {
+    margin-top: 10px;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-blue);
+}
+
+.component-info-panel .info-usage-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    margin-bottom: 4px;
+}
+
+.component-info-panel .info-usage-content {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ============================================
+   CRITICAL WIRE FIXES
+   ============================================ */
+.wire-path {
+    fill: none;
+    transition: stroke 0.1s;
+    pointer-events: stroke;
+    /* Ensure clicks are registered on the line */
+    will-change: stroke-dashoffset;
+    /* Optimize animation performance */
+}
+
+.wire-path.active-flow {
+    /* Styles are handled by the .active-flow block below */
+}
+
+/* === Wire Visualization & Animation === */
+
+
+.active-flow {
+    stroke: #ff4e42 !important;
+    stroke-width: 4px !important;
+    stroke-dasharray: 12, 6 !important;
+    animation: flowAnimation 0.6s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255, 78, 66, 0.6));
+}
+
+@keyframes flowAnimation {
+    from {
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -18;
+    }
+}
+
+.temp-wire {
+    animation: dashAnimation 1s linear infinite;
+}
+
+@keyframes dashAnimation {
+    from {
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -12;
+    }
+}
+
+/* ============================================
+   전선(Wire) 활성화 애니메이션
+   ============================================ */
+#wire-layer line,
+#internal-wire-layer line {
+    stroke: #555555;
+    stroke-width: 3px;
+    stroke-linecap: round;
+    transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+/* 전원이 인가된 전선 */
+#wire-layer line.active-flow,
+#internal-wire-layer line.active-flow {
+    stroke: var(--signal-high, #ff4e42) !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 0 6px rgba(255, 78, 66, 0.6));
+    stroke-dasharray: 8 4 !important;
+    animation: wireFlowAnimation 0.4s linear infinite !important;
+}
+
+@keyframes wireFlowAnimation {
+    from {
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -12;
+    }
+}
+
+/* ============================================
+   LED 활성화 스타일
+   ============================================ */
+.component[data-type="LED"] {
+    /* filter와 box-shadow만 transition, left/top 제외하여 이동 시 느려지지 않음 */
+    transition: filter 0.2s ease, box-shadow 0.2s ease;
+    /* LED는 정사각형이므로 핀이 정확히 중앙에 오도록 함 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* LED 핀 위치 - 정확히 수직 중앙 */
+.component[data-type="LED"] .pin.input {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.component[data-type="LED"].led-on {
+    filter: brightness(1.3);
+}
+
+.component[data-type="LED"].led-on svg circle {
+    fill: var(--led-color, #ef4444) !important;
+    filter: drop-shadow(0 0 12px var(--led-color, #ef4444));
+}
+
+/* LED 색상별 glow 효과 */
+.component[data-type="LED"][data-color="red"].led-on svg circle {
+    fill: #ef4444 !important;
+    filter: drop-shadow(0 0 15px #ef4444);
+}
+
+.component[data-type="LED"][data-color="green"].led-on svg circle {
+    fill: #22c55e !important;
+    filter: drop-shadow(0 0 15px #22c55e);
+}
+
+.component[data-type="LED"][data-color="blue"].led-on svg circle {
+    fill: #3b82f6 !important;
+    filter: drop-shadow(0 0 15px #3b82f6);
+}
+
+.component[data-type="LED"][data-color="yellow"].led-on svg circle {
+    fill: #eab308 !important;
+    filter: drop-shadow(0 0 15px #eab308);
+}
+
+.component[data-type="LED"][data-color="white"].led-on svg circle {
+    fill: #ffffff !important;
+    filter: drop-shadow(0 0 15px #ffffff);
+}
+
+/* ============================================
+   스위치 ON 상태 스타일
+   ============================================ */
+.component[data-type="SWITCH"][data-value="1"] {
+    filter: brightness(1.2);
+}
+
+.component[data-type="SWITCH"][data-value="1"] svg {
+    stroke: var(--signal-high, #ff4e42) !important;
+    filter: drop-shadow(0 0 8px rgba(255, 78, 66, 0.5));
+}
+
+/* ============================================
+   핀(Pin) 스타일
+   ============================================ */
+.pin {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #4a5568;
+    border: 2px solid #718096;
+    border-radius: 50%;
+    cursor: crosshair;
+    z-index: 10;
+    transition: all 0.15s ease;
+}
+
+.pin:hover {
+    background: var(--accent-blue, #3b82f6);
+    border-color: var(--accent-blue, #3b82f6);
+    transform: translateY(-50%) scale(1.3);
+    box-shadow: 0 0 8px var(--accent-blue-glow, rgba(59, 130, 246, 0.5));
+}
+
+.pin.active {
+    background: #10b981;
+    border-color: #10b981;
+    transform: translateY(-50%) scale(1.3);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    animation: pinPulse 0.8s ease-in-out infinite;
+}
+
+.pin.snap-target {
+    background: #22c55e;
+    border-color: #22c55e;
+    transform: translateY(-50%) scale(1.4);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.7);
+}
+
+/* 핀 위치 클래스 */
+.pin.left {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pin.right {
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pin.top {
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.pin.bottom {
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 다중 핀 위치 */
+.pin.left-top {
+    left: -6px;
+    top: 25%;
+}
+
+.pin.left-bottom {
+    left: -6px;
+    top: 75%;
+}
+
+.pin.right-top {
+    right: -6px;
+    top: 25%;
+}
+
+.pin.right-bottom {
+    right: -6px;
+    top: 75%;
+}
+
+/* 입력/출력 핀 구분 */
+.pin[data-role="input"] {
+    background: #6366f1;
+    border-color: #818cf8;
+}
+
+.pin[data-role="output"] {
+    background: #f59e0b;
+    border-color: #fbbf24;
+}
+
+.pin[data-role="input"]:hover {
+    background: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.pin[data-role="output"]:hover {
+    background: #d97706;
+    border-color: #d97706;
+}
+
+@keyframes pinPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(16, 185, 129, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+    }
+}
+
+/* ============================================
+   컴포넌트 기본 스타일
+   ============================================ */
+.component {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    z-index: 5;
+}
+
+.component:active {
+    cursor: grabbing;
+}
+
+.component.selected {
+    outline: 2px solid var(--accent-blue, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   LED 스타일
+   ============================================ */
+.component[data-type="LED"] svg circle {
+    fill: #333;
+    stroke: #666;
+    transition: all 0.2s ease;
+}
+
+.component[data-type="LED"].led-on svg circle {
+    fill: #ff4444 !important;
+    stroke: #ff6b6b !important;
+    filter: drop-shadow(0 0 12px rgba(255, 68, 68, 0.8));
+}
+
+.component[data-type="LED"].led-on {
+    animation: ledGlow 1s ease-in-out infinite alternate;
+}
+
+/* LED 색상 변형 */
+.component[data-type="LED"][data-color="green"].led-on svg circle {
+    fill: #22c55e !important;
+    stroke: #4ade80 !important;
+    filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
+}
+
+.component[data-type="LED"][data-color="blue"].led-on svg circle {
+    fill: #3b82f6 !important;
+    stroke: #60a5fa !important;
+    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+}
+
+.component[data-type="LED"][data-color="yellow"].led-on svg circle {
+    fill: #eab308 !important;
+    stroke: #facc15 !important;
+    filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.8));
+}
+
+@keyframes ledGlow {
+    0% {
+        filter: brightness(1);
+    }
+
+    100% {
+        filter: brightness(1.2);
+    }
+}
+
+/* ============================================
+   WORKSPACE TABS - 탭 시스템
+   ============================================ */
+.workspace-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 12px 0;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 100;
+}
+
+.workspace-tabs .tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.workspace-tabs .tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+}
+
+.workspace-tabs .tab.active {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    border-color: var(--accent-blue);
+    border-bottom: 2px solid var(--bg-base);
+    margin-bottom: -1px;
+}
+
+.workspace-tabs .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bg-base);
+}
+
+.workspace-tabs .tab-icon {
+    font-size: 14px;
+}
+
+.workspace-tabs .tab-title {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-tabs .tab-close {
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    transition: all 0.15s ease;
+}
+
+.workspace-tabs .tab-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
+
+/* Workspace Content Areas */
+.workspace-content {
+    display: none;
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+.workspace-content.active {
+    display: block;
+}
+
+/* ============================================
+   MODULE EDITOR - 모듈 편집기
+   ============================================ */
+.module-editor {
+    display: none;
+    flex-direction: column;
+    background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+}
+
+.module-editor.active {
+    display: flex;
+}
+
+.module-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.module-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.module-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.module-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.module-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-module-action {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    background: var(--accent-blue);
+    color: white;
+}
+
+.btn-module-action:hover {
+    background: var(--accent-cyan);
+    transform: translateY(-1px);
+}
+
+.btn-module-action.secondary {
+    background: var(--bg-active);
+    color: var(--text-secondary);
+}
+
+.btn-module-action.secondary:hover {
+    background: var(--bg-hover);
+}
+
+.module-canvas {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-base);
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Module I/O Panel */
+.module-io-panel {
+    display: flex;
+    gap: 20px;
+    padding: 16px 20px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.io-section {
+    flex: 1;
+    min-width: 200px;
+}
+
+.io-section h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.io-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.io-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+}
+
+.io-item input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+}
+
+.io-item .io-remove {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.io-item .io-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
+
+.btn-add-io {
+    width: 100%;
+    padding: 8px;
+    border: 2px dashed var(--border-default);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-add-io:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================
+   IMPROVED MODULES - 직관적인 모듈 디자인
+   ============================================ */
+.package-comp {
+    position: relative;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+}
+
+/* Module Pin Labels */
+.package-comp .pin-label {
+    position: absolute;
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.package-comp .pin-label.left {
+    right: calc(100% + 6px);
+    transform: translateY(-50%);
+}
+
+.package-comp .pin-label.right {
+    left: calc(100% + 6px);
+    transform: translateY(-50%);
+}
+
+/* Module Title Enhancement */
+.package-comp .comp-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Module Pin Styling */
+.package-comp .pin {
+    width: 10px;
+    height: 10px;
+    border-width: 2px;
+}
+
+.package-comp .pin.input {
+    background: var(--accent-cyan);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.package-comp .pin.output {
+    background: var(--accent-orange);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Module Type Colors */
+.package-comp[data-type="HALF_ADDER"] {
+    background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+}
+
+.package-comp[data-type="FULL_ADDER"] {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+.package-comp[data-type="SR_LATCH"] {
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+}
+
+.package-comp[data-type="D_FLIPFLOP"] {
+    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+}
+
+/* Module hover effect */
+.package-comp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   MODULE EDITOR PALETTE & COMPONENTS
+   ============================================ */
+
+/* Module Name Input */
+.module-name-input {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 200px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.module-name-input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Save Button Highlight */
+.btn-module-action.save {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn-module-action.save:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+/* Module Editor Body Layout */
+.module-editor-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Component Palette */
+.module-palette {
+    width: 180px;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.palette-section h5 {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.palette-btn {
+    padding: 10px 6px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.palette-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.palette-btn.input {
+    border-color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.1);
+}
+
+.palette-btn.input:hover {
+    background: rgba(6, 182, 212, 0.2);
+}
+
+.palette-btn.output {
+    border-color: var(--accent-orange);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.palette-btn.output:hover {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+.palette-btn .icon {
+    font-size: 16px;
+}
+
+.palette-btn .label {
+    font-size: 10px;
+}
+
+/* Module Stats */
+.module-stats {
+    background: var(--bg-elevated);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.stat-row span:last-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Canvas Hint */
+.canvas-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.canvas-hint.hidden {
+    display: none;
+}
+
+/* I/O Panel Improvements */
+.io-section.wide {
+    flex: 2;
+}
+
+.io-help {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* PORT Components in Module Editor */
+.component.port-in,
+.component.port-out {
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 11px;
+}
+
+.component.port-in {
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, #0891b2 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.component.port-out {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Internal Component Styling */
+.component.internal-comp {
+    min-width: 60px;
+    min-height: 40px;
+    background: var(--bg-elevated);
+    border: 2px solid var(--border-default);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.component.internal-comp .comp-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Size Input Fields */
+.size-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.size-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.size-row label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    width: 40px;
+}
+
+.size-row input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-size: 12px;
+    text-align: center;
+}
+
+.size-row input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+/* Module Wire Layer Fix */
+#module-wire-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#module-wire-layer path,
+#module-wire-layer line {
+    pointer-events: stroke;
+}
+
+.module-canvas {
+    position: relative;
+}
+
+.module-canvas .component {
+    z-index: 2;
+}
+
+/* Component Context Menu */
+.context-menu {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    min-width: 160px;
+    padding: 6px 0;
+    z-index: 10000;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.context-menu.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.context-menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.context-menu-item .icon {
+    font-size: 16px;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 6px 0;
+}
+
+.context-menu-item.danger {
+    color: var(--accent-red);
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Package Item with Delete Button */
+.package-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.package-item .comp-btn {
+    flex: 1;
+}
+
+.pkg-delete-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.package-item:hover .pkg-delete-btn {
+    opacity: 1;
+}
+
+.pkg-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+}
