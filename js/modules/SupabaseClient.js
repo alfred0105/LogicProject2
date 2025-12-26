@@ -14,8 +14,15 @@
 
     // CDN 로드 확인 및 초기화
     if (window.supabase && window.supabase.createClient) {
-        _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✅ Supabase 연결 설정됨');
+        _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true, // URL의 토큰을 자동으로 감지
+                flowType: 'implicit' // 중요: PKCE(기본값) 대신 implicit 사용 (호스팅 환경 호환성)
+            }
+        });
+        console.log('✅ Supabase 연결 설정됨 (옵션 적용)');
     } else if (typeof createClient !== 'undefined') {
         // 구형 방식 호환
         // _supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
