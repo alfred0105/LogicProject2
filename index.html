@@ -263,22 +263,36 @@
                     return;
                 }
 
-                // URL에 액세스 토큰이 있다면 로그인이 진행 중인 것이므로 잠시 더 기다림
+                // URL에 액세스 토큰이 있다면 수동으로 세션 복구 시도 (가장 확실한 방법)
                 if (window.location.hash && window.location.hash.includes('access_token')) {
-                    console.log('⏳ 로그인 토큰 감지됨, 처리 대기 중...');
-                    // 해시가 처리될 시간을 줌 (최대 3초)
-                    let attempts = 0;
-                    const waitForLogin = async () => {
-                        const user = await window.getCurrentUser();
-                        if (user) {
-                            updateUI(user);
-                        } else if (attempts < 30) { // 100ms * 30 = 3초
-                            attempts++;
-                            setTimeout(waitForLogin, 100);
+                    console.log('🔄 Access Token 감지됨. 수동 세션 복구 시도...');
+
+                    try {
+                        // 해시 파싱
+                        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                        const accessToken = hashParams.get('access_token');
+                        const refreshToken = hashParams.get('refresh_token');
+
+                        if (accessToken && refreshToken) {
+                            // 강제 세션 설정
+                            const { data, error } = await window.sb.auth.setSession({
+                                access_token: accessToken,
+                                refresh_token: refreshToken
+                            });
+
+                            if (!error && data.session) {
+                                console.log('✅ 수동 로그인 성공!');
+                                updateUI(data.session.user);
+                                // URL 클린업 (선택)
+                                window.history.replaceState(null, '', window.location.pathname);
+                                return;
+                            } else {
+                                console.error('❌ 수동 로그인 실패:', error);
+                            }
                         }
-                    };
-                    waitForLogin();
-                    return;
+                    } catch (e) {
+                        console.error('URL 파싱 오류:', e);
+                    }
                 }
 
                 const user = await window.getCurrentUser();
