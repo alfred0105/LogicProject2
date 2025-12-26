@@ -9,6 +9,12 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (projectId) {
             this.currentProjectId = projectId;
+            // 만약 ID가 UUID 형식(Supabase ID)이라면 Cloud ID로도 설정
+            // (UUID는 보통 36자)
+            if (projectId.length > 30) {
+                this.currentCloudId = projectId;
+                console.log('Detected Cloud Project ID via URL:', this.currentCloudId);
+            }
         } else {
             this.currentProjectId = 'temp_' + Date.now();
         }
@@ -18,18 +24,23 @@ Object.assign(CircuitSimulator.prototype, {
             if (modal) modal.classList.add('show');
         } else if (projectId) {
             // URL 파라미터에 ID가 있으면 로컬 스토리지 또는 Cloud에서 로드 시도
-            // CloudManager가 있으면 Cloud 우선 시도할 수도 있지만, 여기서는 로컬을 기본값으로 둠
-            // (만약 Cloud 프로젝트라면 loadProject 내부나 CloudManager.loadProjectFromCloud에서 처리됨)
             if (window.sim && window.sim.cloud && window.sim.cloud.loadProjectFromCloud) {
-                // Supabase 로딩을 기다려야 할 수도 있음. 일단 로컬 확인
+                // Supabase 로딩을 기다려야 할 수도 있음.
+                // 1. 로컬 스토리지에 있으면 먼저 로드 (빠른 반응)
                 if (localStorage.getItem(projectId)) {
                     this.loadProject(projectId);
-                } else {
-                    // 로컬에 없으면 클라우드 로드 시도 (비동기)
-                    setTimeout(() => {
-                        window.sim.cloud.loadProjectFromCloud(projectId);
-                    }, 1000);
                 }
+
+                // 2. 클라우드 로드 시도 (최신 데이터 동기화)
+                // CloudManager가 로드되면 실행
+                const tryCloudLoad = () => {
+                    if (window.sim.cloud) {
+                        window.sim.cloud.loadProjectFromCloud(projectId);
+                    } else {
+                        setTimeout(tryCloudLoad, 500);
+                    }
+                };
+                tryCloudLoad();
             } else {
                 this.loadProject(projectId);
             }
@@ -60,17 +71,32 @@ Object.assign(CircuitSimulator.prototype, {
             this.resizeCanvas(w, h);
         }
 
-        this.currentProjectName = name;
+        this.updateProjectName(name);
 
         const modal = document.getElementById('new-project-modal');
         if (modal) modal.classList.remove('show');
     },
 
     /**
-     * 프로젝트 이름 업데이트 (UI에서 호출)
+     * 프로젝트 이름 업데이트 (UI 반영용 헬퍼)
+     */
+    updateProjectNameUI(name) {
+        if (!name) return;
+        const nameInput = document.getElementById('project-name-input');
+        if (nameInput) {
+            nameInput.value = name;
+        }
+    },
+
+    /**
+     * 프로젝트 이름 업데이트 (UI에서 호출 + Cloud 동기화)
      */
     updateProjectName(newName) {
         this.currentProjectName = newName || "Untitled Project";
+        this.updateProjectNameUI(this.currentProjectName);
+
+        // "Logic Sim"은 기본값이므로 저장 트리거 안 할 수도 있지만
+        // 사용자가 명시적으로 입력했다면 저장해야 함.
         if (this.cloud) this.cloud.triggerAutoSave();
     },
 
@@ -160,6 +186,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (!projectData) return;
 
         this.currentProjectName = projectData.name || "Untitled";
+        this.updateProjectNameUI(this.currentProjectName); // UI 업데이트
 
         this.components.forEach(c => c.remove());
         this.components = [];
@@ -220,9 +247,6 @@ Object.assign(CircuitSimulator.prototype, {
         this.showToast(`✓ 프로젝트 불러옴: ${projectData.name}`, 'info');
     },
 
-    /**
-     * 로컬 JSON 파일 다운로드
-     */
     exportProject() {
         const projectData = this.exportProjectData();
         const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
@@ -235,6 +259,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     generateTruthTable() {
+        // ... (이전과 동일)
         const switches = this.components.filter(c => c.getAttribute('data-type') === 'SWITCH');
         const leds = this.components.filter(c => c.getAttribute('data-type') === 'LED');
 
@@ -292,6 +317,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     exportTruthTable() {
+        // ... (이전과 동일)
         const table = document.querySelector('#truth-table-content .truth-table');
         if (!table) {
             alert('먼저 진리표를 생성해주세요.');
