@@ -48,7 +48,6 @@
         const { data, error } = await _supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/dashboard.html',
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',
