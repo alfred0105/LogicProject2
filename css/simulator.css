@@ -3932,10 +3932,12 @@ body.sidebar-collapsed .component-info-panel {
     display: block !important;
 }
 
-/* NOT 게이트 아이콘 (1+버블 스타일) 제거하고 투명하게 */
-.component[data-type="NOT"] {
-    background: none !important;
+/* NOT 게이트 아이콘 (1+버블 스타일) 제거하고 투명하게 - 강력 적용 */
+div.component[data-type="NOT"] {
+    background-image: none !important;
+    background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
 }
 
 /* NOT 게이트 입력 핀 위치 보정 */
