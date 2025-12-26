@@ -124,7 +124,7 @@
 
     // CloudManager 자동 로드
     const script = document.createElement('script');
-    script.src = 'js/modules/CloudManager.js?v=9';
+    script.src = 'js/modules/CloudManager.js?v=10';
     script.onload = () => {
         console.log('✅ CloudManager module loaded');
         const checkSim = setInterval(() => {
@@ -135,6 +135,11 @@
                 if (!window.sim.cloud) {
                     window.sim.cloud = new window.CloudManager(window.sim);
                     console.log('☁️ Cloud functionality attached to Simulator');
+
+                    // 프로젝트 로딩 시작 (URL 파라미터 체크)
+                    if (window.sim.initProject) {
+                        window.sim.initProject();
+                    }
                 }
             }
         }, 500);
