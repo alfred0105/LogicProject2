@@ -32,9 +32,18 @@ class CloudManager {
      * 자동 저장 트리거 (Debounce)
      * 변경 사항이 발생했을 때 호출
      */
-    triggerAutoSave() {
-        if (!this.user) return; // 로그인이 안 되어 있으면 자동저장 안 함
+    async triggerAutoSave() {
+        // 로그인 상태 재확인
+        if (!this.user) {
+            await this.checkLoginStatus();
+        }
 
+        if (!this.user) {
+            // console.log('Auto-save skipped: Not logged in');
+            return;
+        }
+
+        // console.log('Auto-save triggered...'); 
         this.updateSaveStatusUI('pending', '변경사항 저장 대기 중...');
 
         if (this.autoSaveTimer) {
