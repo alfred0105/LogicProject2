@@ -176,8 +176,16 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (!silent) this.showToast(`✓ 프로젝트 저장됨 (로컬)`, 'success');
 
-        // 클라우드 자동 저장 트리거
-        if (this.cloud) this.cloud.triggerAutoSave();
+        // 클라우드 즉시 저장 (수동 저장 시)
+        // silent가 false(버튼 클릭)면 즉시 저장하고 결과 알림
+        // silent가 true(내부 호출)면 자동 저장 트리거? -> 아니오, saveProject는 이제 '명시적 저장'으로 간주.
+        // 하지만 내부적으로 saveProject(true)를 쓰면 꼬일 수 있음.
+        // 다행히 HistoryManager는 triggerAutoSave를 직접 부름.
+
+        if (this.cloud) {
+            // 수동 저장(버튼)인 경우 silent=false 전달 -> 알림 뜸
+            this.cloud.saveProjectToCloud(this.currentProjectName, silent);
+        }
     },
 
     /**

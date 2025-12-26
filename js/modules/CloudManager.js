@@ -41,10 +41,10 @@ class CloudManager {
             clearTimeout(this.autoSaveTimer);
         }
 
-        // 3초 후 저장
+        // 1초 후 저장
         this.autoSaveTimer = setTimeout(() => {
             this.saveProjectToCloud(null, true); // silent=true
-        }, 3000);
+        }, 1000);
     }
 
     /**
