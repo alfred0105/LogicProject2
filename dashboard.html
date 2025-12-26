@@ -152,7 +152,7 @@
                 .from('projects')
                 .select('*')
                 .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+                .order('updated_at', { ascending: false });
 
             if (error) {
                 console.error('Error loading projects:', error);
@@ -193,7 +193,7 @@
         function createNewProject() {
             // 새 프로젝트는 simulator.html을 열면 됨 (쿼리 없이)
             // simulator.html에서 저장 시 새 프로젝트로 저장됨
-            location.href = 'simulator.html';
+            location.href = 'simulator.html?new=true';
         }
 
         async function deleteProject(projectId, event) {

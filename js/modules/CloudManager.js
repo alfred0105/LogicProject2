@@ -24,7 +24,7 @@ class CloudManager {
     }
 
     /**
-     * 현재 프로젝트를 Supabase에 저장
+     * 현재 프로젝트를 Supabase에 저장 (Update or Insert)
      */
     async saveProjectToCloud(projectName) {
         if (!window.sb) {
@@ -43,28 +43,67 @@ class CloudManager {
 
         // 저장할 데이터 준비
         const projectData = this.sim.exportProjectData(); // 시뮬레이터에서 JSON 데이터 추출
-
-        // Supabase에 저장 (Upsert: 기존 ID가 있으면 업데이트, 없으면 생성)
-        // 현재는 간단하게 항상 새 프로젝트로 가정하거나, 로컬스토리지에 저장된 cloud_id가 있는지 확인해야 함.
-        // 여기서는 단순 Insert 구현
+        const title = projectName || this.sim.currentProjectName || 'Untitled Project';
+        const now = new Date().toISOString();
 
         try {
-            const { data, error } = await window.sb
-                .from('projects')
-                .insert([
-                    {
-                        user_id: user.id,
-                        title: projectName || 'Untitled Project',
+            let data, error;
+
+            // 이미 클라우드 ID가 있으면 업데이트 시도
+            if (this.sim.currentCloudId) {
+                console.log('Updating existing project:', this.sim.currentCloudId);
+                const result = await window.sb
+                    .from('projects')
+                    .update({
+                        title: title,
                         data: projectData,
-                        created_at: new Date().toISOString()
-                    }
-                ])
-                .select();
+                        updated_at: now
+                    })
+                    .eq('id', this.sim.currentCloudId)
+                    .select(); // 업데이트된 데이터 반환
+
+                data = result.data;
+                error = result.error;
+            } else {
+                // 새 프로젝트 생성 (Insert)
+                // 만약 현재 프로젝트 ID가 UUID 형식(Supabase ID)이라면 해당 ID로 Insert 시도해볼 수 있음 (복구 등)
+                // 하지만 안전하게 새 ID 생성
+                console.log('Creating new cloud project');
+                const result = await window.sb
+                    .from('projects')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            title: title,
+                            data: projectData,
+                            created_at: now,
+                            updated_at: now
+                        }
+                    ])
+                    .select();
+
+                data = result.data;
+                error = result.error;
+            }
 
             if (error) throw error;
 
-            alert('클라우드에 저장되었습니다!');
-            console.log('Project saved:', data);
+            if (data && data.length > 0) {
+                const savedProject = data[0];
+                this.sim.currentCloudId = savedProject.id;
+                this.sim.currentProjectId = savedProject.id; // 로컬 ID도 동기화
+                this.sim.currentProjectName = savedProject.title;
+
+                alert(`클라우드에 저장되었습니다! (${savedProject.title})`);
+                console.log('Project saved:', savedProject);
+
+                // URL 업데이트 (새로 만든 경우 ID 반영)
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('id', savedProject.id);
+                newUrl.searchParams.delete('new'); // new 플래그 제거
+                window.history.replaceState({}, '', newUrl);
+            }
+
         } catch (e) {
             console.error('Save failed:', e);
             alert('저장 실패: ' + e.message);
@@ -88,11 +127,21 @@ class CloudManager {
 
             if (data && data.data) {
                 this.sim.importProjectData(data.data); // 시뮬레이터에 데이터 로드
-                console.log('Project loaded:', data.title);
+
+                // 클라우드 ID 설정 (중요: 다음 저장 시 업데이트로 처리됨)
+                this.sim.currentCloudId = data.id;
+                this.sim.currentProjectId = data.id;
+                this.sim.currentProjectName = data.title;
+
+                console.log('Project loaded from Cloud:', data.title);
+                if (this.sim.showToast) this.sim.showToast(`☁️ 프로젝트 로드됨: ${data.title}`, 'success');
             }
         } catch (e) {
             console.error('Load failed:', e);
-            alert('프로젝트를 불러오지 못했습니다.');
+            // 로컬 스토리지에 있을 수 있으므로 조용히 실패하거나 경고
+            if (!localStorage.getItem(projectId)) {
+                alert('프로젝트를 불러오지 못했습니다. (클라우드/로컬 없음)');
+            }
         }
     }
 }
