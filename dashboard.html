@@ -4,15 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logic Sim - Dashboard</title>
+    <title>LoCAD - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/Security.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="dashboard">
 
     <div class="dashboard-header">
-        <div class="logo">⚡ Logic Simulator</div>
+        <div class="logo">⚡ LoCAD</div>
         <div class="user-info">
             <span id="user-display">안녕하세요, <strong>...</strong>님</span>
             <button class="btn-settings" onclick="openSettings()">⚙️ 설정</button>
@@ -133,7 +134,15 @@
         function updateUserInfo(user) {
             const display = document.getElementById('user-display');
             const name = user.user_metadata.full_name || user.email.split('@')[0];
-            display.innerHTML = `안녕하세요, <strong>${name}</strong>님`;
+
+            // Ace님 계정 관리자 표시 (임시 로직: 이메일에 ace 포함 시)
+            let adminBadge = '';
+            // 실제 배포 시에는 더 정교한 로직(DB의 role 필드 등)을 사용해야 함
+            if (user.email && (user.email.includes('ace'))) {
+                adminBadge = '<span class="admin-badge" style="background:#ef4444; color:white; font-size:10px; padding:2px 6px; border-radius:4px; vertical-align:middle; margin-left:6px; font-weight:700;">ADMIN</span>';
+            }
+
+            display.innerHTML = `안녕하세요, <strong>${name}</strong>님${adminBadge}`;
         }
 
         async function handleLogout() {
@@ -314,7 +323,6 @@
             showStep();
         }
     </script>
-
 </body>
 
 </html>
