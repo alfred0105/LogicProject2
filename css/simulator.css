@@ -3972,3 +3972,104 @@ div.component[data-type="NOT"] {
     background-color: #f1c40f !important;
     box-shadow: 0 0 8px #f1c40f !important;
 }
+
+/* ============================================
+   📱 TOUCH DEVICE SUPPORT
+   ============================================ */
+
+/* 터치 디바이스에서 더 큰 터치 영역 */
+@media (pointer: coarse) {
+
+    /* 핀 터치 영역 확대 */
+    .pin {
+        min-width: 18px !important;
+        min-height: 18px !important;
+        margin: 4px !important;
+    }
+
+    .pin::before {
+        content: '';
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
+    }
+
+    /* 컴포넌트 최소 크기 */
+    .component {
+        min-height: 50px;
+        touch-action: none;
+    }
+
+    /* 버튼 터치 영역 */
+    .comp-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+
+    /* 툴바 버튼 */
+    .toolbar-btn,
+    .btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* 드래그 중 터치 피드백 */
+    .component.dragging {
+        opacity: 0.9;
+        transform: scale(1.02);
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4) !important;
+    }
+
+    /* 선택된 컴포넌트 터치 시각화 */
+    .component.selected {
+        box-shadow: 0 0 0 3px var(--accent-blue), 0 4px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    /* 와이어 터치 영역 확대 */
+    .wire-layer path {
+        stroke-width: 6px;
+        cursor: pointer;
+    }
+
+    /* 사이드바 섹션 헤더 터치 영역 */
+    .section-header {
+        min-height: 44px;
+        padding: 12px;
+    }
+}
+
+/* 터치 드래그 시 성능 최적화 */
+.component.dragging {
+    will-change: transform, left, top;
+    pointer-events: none;
+}
+
+/* iOS Safari 안전 영역 대응 */
+@supports (padding: max(0px)) {
+    .toolbar {
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .sidebar {
+        padding-left: max(12px, env(safe-area-inset-left));
+    }
+}
+
+/* 터치 시 텍스트 선택 방지 */
+.workspace-content,
+.component,
+.pin,
+.sidebar,
+.toolbar {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* 스위치 터치 피드백 */
+.component[data-type="SWITCH"]:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
