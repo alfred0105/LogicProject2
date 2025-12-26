@@ -968,6 +968,19 @@ body.expert-mode .component[data-type="JOINT"][data-value="1"] {
     right: -6px;
 }
 
+/* NOT 게이트: 단일 입력, 중앙 */
+.component[data-type="NOT"] .pin.in-1 {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* NOT 게이트: 단일 입력, 중앙 */
+.component[data-type="NOT"] .pin.in-1 {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
 /* Hide Labels */
 .component[data-type="TRANSISTOR"] .comp-label,
