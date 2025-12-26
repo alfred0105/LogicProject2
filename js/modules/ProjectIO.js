@@ -17,7 +17,22 @@ Object.assign(CircuitSimulator.prototype, {
             const modal = document.getElementById('new-project-modal');
             if (modal) modal.classList.add('show');
         } else if (projectId) {
-            this.loadProject(projectId);
+            // URL 파라미터에 ID가 있으면 로컬 스토리지 또는 Cloud에서 로드 시도
+            // CloudManager가 있으면 Cloud 우선 시도할 수도 있지만, 여기서는 로컬을 기본값으로 둠
+            // (만약 Cloud 프로젝트라면 loadProject 내부나 CloudManager.loadProjectFromCloud에서 처리됨)
+            if (window.sim && window.sim.cloud && window.sim.cloud.loadProjectFromCloud) {
+                // Supabase 로딩을 기다려야 할 수도 있음. 일단 로컬 확인
+                if (localStorage.getItem(projectId)) {
+                    this.loadProject(projectId);
+                } else {
+                    // 로컬에 없으면 클라우드 로드 시도 (비동기)
+                    setTimeout(() => {
+                        window.sim.cloud.loadProjectFromCloud(projectId);
+                    }, 1000);
+                }
+            } else {
+                this.loadProject(projectId);
+            }
         }
 
         this.setMode('edit');
@@ -51,9 +66,10 @@ Object.assign(CircuitSimulator.prototype, {
         if (modal) modal.classList.remove('show');
     },
 
-    saveProject(silent = false) {
-        if (!this.currentProjectId) return;
-
+    /**
+     * 프로젝트 데이터를 JSON 객체로 반환 (중요: CloudManager에서 사용)
+     */
+    exportProjectData() {
         const componentsData = this.components.map(comp => {
             const data = {
                 id: comp.id,
@@ -105,6 +121,16 @@ Object.assign(CircuitSimulator.prototype, {
             wires: wiresData
         };
 
+        return projectData;
+    },
+
+    /**
+     * 로컬 스토리지에 저장
+     */
+    saveProject(silent = false) {
+        if (!this.currentProjectId) return;
+
+        const projectData = this.exportProjectData();
         localStorage.setItem(this.currentProjectId, JSON.stringify(projectData));
 
         let projectIndex = JSON.parse(localStorage.getItem('logic_sim_projects_index')) || [];
@@ -113,18 +139,16 @@ Object.assign(CircuitSimulator.prototype, {
             localStorage.setItem('logic_sim_projects_index', JSON.stringify(projectIndex));
         }
 
-        if (!silent) this.showToast(`✓ 프로젝트 저장됨`, 'success');
+        if (!silent) this.showToast(`✓ 프로젝트 저장됨 (로컬)`, 'success');
     },
 
-    loadProject(projectId) {
-        const json = localStorage.getItem(projectId);
-        if (!json) {
-            alert("프로젝트를 찾을 수 없습니다.");
-            return;
-        }
+    /**
+     * 프로젝트 불러오기 (데이터 주입)
+     */
+    importProjectData(projectData) {
+        if (!projectData) return;
 
-        const projectData = JSON.parse(json);
-        this.currentProjectName = projectData.name;
+        this.currentProjectName = projectData.name || "Untitled";
 
         this.components.forEach(c => c.remove());
         this.components = [];
@@ -133,95 +157,63 @@ Object.assign(CircuitSimulator.prototype, {
         this.wireLayer.innerHTML = '';
 
         const compMap = {};
-        projectData.components.forEach(cData => {
-            this.addModule(cData.type, cData.x, cData.y);
-            const newComp = this.components[this.components.length - 1];
+        if (projectData.components) {
+            projectData.components.forEach(cData => {
+                this.addModule(cData.type, cData.x, cData.y);
+                const newComp = this.components[this.components.length - 1];
 
-            newComp.id = cData.id;
-            if (cData.value) newComp.setAttribute('data-value', cData.value);
+                newComp.id = cData.id;
+                if (cData.value) newComp.setAttribute('data-value', cData.value);
 
-            if (cData.type === 'SWITCH') {
-                const label = newComp.querySelector('.comp-label');
-                if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
-                newComp.style.background = cData.value === '1' ? '#2ecc71' : '#27ae60';
-            }
-
-            compMap[cData.id] = newComp;
-
-            if (cData.internals && this.restoreInternals) {
-                this.restoreInternals(newComp, cData.internals);
-            }
-        });
-
-        projectData.wires.forEach(wData => {
-            const fromComp = compMap[wData.fromCompId];
-            const toComp = compMap[wData.toCompId];
-
-            if (fromComp && toComp) {
-                const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
-                const toPin = toComp.querySelector(`.${wData.toPinClass}`);
-
-                if (fromPin && toPin) {
-                    this.createWire(fromPin, toPin);
+                if (cData.type === 'SWITCH') {
+                    const label = newComp.querySelector('.comp-label');
+                    if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
+                    newComp.style.background = cData.value === '1' ? '#2ecc71' : '#27ae60';
                 }
-            }
-        });
+
+                compMap[cData.id] = newComp;
+
+                if (cData.internals && this.restoreInternals) {
+                    this.restoreInternals(newComp, cData.internals);
+                }
+            });
+        }
+
+        if (projectData.wires) {
+            projectData.wires.forEach(wData => {
+                const fromComp = compMap[wData.fromCompId];
+                const toComp = compMap[wData.toCompId];
+
+                if (fromComp && toComp) {
+                    const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
+                    const toPin = toComp.querySelector(`.${wData.toPinClass}`);
+
+                    if (fromPin && toPin) {
+                        this.createWire(fromPin, toPin);
+                    }
+                }
+            });
+        }
 
         this.updateCircuit();
     },
 
+    loadProject(projectId) {
+        const json = localStorage.getItem(projectId);
+        if (!json) {
+            // 로컬에 없으면 조용히 리턴 (initProject에서 처리)
+            return;
+        }
+        const projectData = JSON.parse(json);
+        this.importProjectData(projectData);
+        this.showToast(`✓ 프로젝트 불러옴: ${projectData.name}`, 'info');
+    },
+
+    /**
+     * 로컬 JSON 파일 다운로드
+     */
     exportProject() {
-        const componentsData = this.components.map(comp => {
-            const data = {
-                id: comp.id,
-                type: comp.getAttribute('data-type'),
-                x: parseFloat(comp.style.left),
-                y: parseFloat(comp.style.top),
-                value: comp.getAttribute('data-value')
-            };
-
-            if (comp.internals) {
-                data.internals = {
-                    components: comp.internals.components.map(c => ({
-                        id: c.id,
-                        type: c.getAttribute('data-type'),
-                        x: parseFloat(c.style.left),
-                        y: parseFloat(c.style.top),
-                        value: c.getAttribute('data-value'),
-                        label: c.querySelector('.comp-label')?.innerText
-                    })),
-                    wires: comp.internals.wires.map(w => ({
-                        fromCompId: w.from.parentElement.id,
-                        fromPinClass: w.from.classList[1],
-                        toCompId: w.to.parentElement.id,
-                        toPinClass: w.to.classList[1]
-                    }))
-                };
-            }
-            return data;
-        });
-
-        const wiresData = this.wires.map(wire => {
-            const fromComp = wire.from.closest('.component');
-            const toComp = wire.to.closest('.component');
-
-            if (!fromComp || !toComp) return null;
-
-            return {
-                fromCompId: fromComp.id,
-                fromPinClass: wire.from.classList[1],
-                toCompId: toComp.id,
-                toPinClass: wire.to.classList[1]
-            };
-        }).filter(w => w !== null);
-
-        const projectData = {
-            name: this.currentProjectName,
-            lastModified: new Date().toLocaleString(),
-            components: componentsData,
-            wires: wiresData
-        };
-
+        const projectData = this.exportProjectData();
         const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
