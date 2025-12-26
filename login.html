@@ -156,6 +156,24 @@
 
     <!-- 로직 스크립트 연결 -->
     <script src="js/modules/SupabaseClient.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Supabase 초기화 대기
+            const checkAuth = async () => {
+                if (typeof window.getCurrentUser === 'function') {
+                    const user = await window.getCurrentUser();
+                    if (user) {
+                        // 이미 로그인 된 경우 대시보드로 이동
+                        window.location.replace('dashboard.html');
+                    }
+                } else {
+                    // 아직 로드 안됨, 재시도
+                    setTimeout(checkAuth, 100);
+                }
+            };
+            checkAuth();
+        });
+    </script>
 </body>
 
 </html>
