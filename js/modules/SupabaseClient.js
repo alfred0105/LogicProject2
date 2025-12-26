@@ -6,7 +6,7 @@
     // [중요] 아래 두 변수에 Supabase 대시보드에서 복사한 값을 붙여넣으세요.
     // =========================================================================
     const SUPABASE_URL = 'https://vaxukhoepptadsosygya.supabase.co';
-    const SUPABASE_KEY = 'sb_secret_9VjPJWwQvc3RFpvnjgABZQ_ELU5--xC';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZheHVraG9lcHB0YWRzb3N5Z3lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NTM5MjMsImV4cCI6MjA4MjMyOTkyM30.mQ1QBkjDqFaCgcW4CnWbvs-M5Qnsi5boukx68aa6Ubg';
     // =========================================================================
 
     // 내부 변수 (충돌 방지)
