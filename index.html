@@ -240,23 +240,31 @@
     <script>
         // 로그인 상태 체크하여 버튼 변경
         document.addEventListener('DOMContentLoaded', async () => {
-            // SupabaseClient.js 로드 대기
-            setTimeout(async () => {
-                if (typeof getCurrentUser === 'function') {
-                    const user = await getCurrentUser();
-                    if (user) {
-                        // 로그인 됨
-                        const authBtns = document.getElementById('auth-buttons');
-                        authBtns.innerHTML = `
-                             <a href="simulator.html" class="btn btn-primary">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                이어서 하기
-                            </a>
-                            <a href="dashboard.html" class="btn btn-secondary">내 대시보드</a>
-                        `;
-                    }
+            const checkAuth = async () => {
+                // Supabase 클라이언트 준비 확인
+                if (typeof window.sb === 'undefined' || typeof window.getCurrentUser !== 'function') {
+                    setTimeout(checkAuth, 100);
+                    return;
                 }
-            }, 300);
+
+                const user = await window.getCurrentUser();
+                if (user) {
+                    // 로그인 됨: 버튼 교체
+                    const authBtns = document.getElementById('auth-buttons');
+                    const userName = user.user_metadata.full_name || user.email.split('@')[0];
+
+                    authBtns.innerHTML = `
+                         <a href="simulator.html" class="btn btn-primary">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            시뮬레이터 시작
+                        </a>
+                        <a href="dashboard.html" class="btn btn-secondary">
+                            <span style="margin-right:4px">👤</span> ${userName}님
+                        </a>
+                    `;
+                }
+            };
+            checkAuth();
         });
     </script>
 </body>
