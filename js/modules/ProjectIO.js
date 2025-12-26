@@ -6,6 +6,7 @@ Object.assign(CircuitSimulator.prototype, {
         const params = new URLSearchParams(window.location.search);
         const projectId = params.get('id');
         const isNew = params.get('new');
+        const tutorialId = params.get('tutorial');
 
         if (projectId) {
             this.currentProjectId = projectId;
@@ -19,7 +20,15 @@ Object.assign(CircuitSimulator.prototype, {
             this.currentProjectId = 'temp_' + Date.now();
         }
 
-        if (isNew === 'true') {
+        // 튜토리얼 모드: 모달 스킵하고 프로젝트 이름 자동 설정
+        if (tutorialId) {
+            // 프로젝트 이름 입력창이 보이면 기본값 설정
+            const nameInput = document.getElementById('project-name-input');
+            if (nameInput) {
+                nameInput.value = '튜토리얼';
+            }
+            // 모달 표시하지 않음 - TutorialSystem.js가 자동 시작함
+        } else if (isNew === 'true') {
             const modal = document.getElementById('new-project-modal');
             if (modal) modal.classList.add('show');
         } else if (projectId) {
