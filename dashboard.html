@@ -195,34 +195,51 @@
         });
 
         async function initDashboard() {
-            if (typeof getCurrentUser !== 'function') {
+            if (typeof window.sb === 'undefined') {
                 setTimeout(initDashboard, 100);
                 return;
             }
 
-            // 1. 사용자 정보 확인
+            const renderDashboard = (user) => {
+                // 2. UI 업데이트
+                const userArea = document.getElementById('userArea');
+                userArea.innerHTML = `
+                    <div class="user-info">
+                        <img src="${user.user_metadata.avatar_url || ''}" class="user-avatar" id="user-avatar-img" alt="User">
+                        <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                            <span id="user-name" style="font-weight:600;">${user.user_metadata.full_name || 'User'}</span>
+                            <span id="user-email" style="font-size:12px; color:var(--text-muted);">${user.email}</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="signOut()">로그아웃</button>
+                `;
+                // 3. 프로젝트 목록 불러오기
+                loadProjects(user.id);
+            };
+
+            // 우선 현재 세션 확인
             const user = await getCurrentUser();
-            if (!user) {
-                // 로그인 안 됨 -> 로그인 페이지로
-                window.location.href = 'login.html';
+            if (user) {
+                renderDashboard(user);
                 return;
             }
 
-            // 2. UI 업데이트
-            const userArea = document.getElementById('userArea');
-            userArea.innerHTML = `
-                <div class="user-info">
-                    <img src="${user.user_metadata.avatar_url || ''}" class="user-avatar" id="user-avatar-img" alt="User">
-                    <div style="display:flex; flex-direction:column; align-items:flex-start;">
-                        <span id="user-name" style="font-weight:600;">${user.user_metadata.full_name || 'User'}</span>
-                        <span id="user-email" style="font-size:12px; color:var(--text-muted);">${user.email}</span>
-                    </div>
-                </div>
-                <button class="btn-logout" onclick="signOut()">로그아웃</button>
-            `;
+            // OAuth 리디렉션 직후라 세션이 아직 안 잡혔을 수 있음. 이벤트를 기다림.
+            console.log('⏳ 세션 확인 중...');
 
-            // 3. 프로젝트 목록 불러오기
-            loadProjects(user.id);
+            // 3초간 기다려도 로그인이 안되면 로그인 페이지로 이동
+            const timeout = setTimeout(() => {
+                console.log('⚠️ 로그인 시간 초과 -> 로그인 페이지로 이동');
+                window.location.href = 'login.html';
+            }, 3000);
+
+            const { data: { subscription } } = window.sb.auth.onAuthStateChange((event, session) => {
+                if (session && session.user) {
+                    console.log('✅ 세션 감지됨!');
+                    clearTimeout(timeout);
+                    renderDashboard(session.user);
+                }
+            });
         }
 
         async function loadProjects(userId) {
