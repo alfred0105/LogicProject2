@@ -4,248 +4,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logic Sim - 대시보드</title>
+    <title>Logic Sim - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Pretendard', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-default);
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--accent-blue);
-        }
-
-        .btn-logout {
-            padding: 8px 16px;
-            border: 1px solid var(--border-default);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-logout:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .project-section {
-            margin-bottom: 40px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .btn-new-project {
-            padding: 10px 20px;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-new-project:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--accent-blue-glow);
-        }
-
-        .project-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .project-card {
-            background: var(--bg-hover);
-            border: 1px solid var(--border-default);
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .project-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-blue);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-
-        .project-card .title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .project-card .date {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            border: 1px dashed var(--border-default);
-        }
-    </style>
 </head>
 
-<body>
+<body class="dashboard">
 
-    <div class="dashboard-container">
-        <header>
-            <div class="logo-area">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--accent-blue)">
-                    <path d="M13 3L4 14h7v7l9-11h-7V3z" />
-                </svg>
-                <span>Logic Board</span>
-            </div>
-            <div class="user-area" id="userArea">
-                <div class="loading">Loading...</div>
-            </div>
-        </header>
+    <div class="dashboard-header">
+        <div class="logo">⚡ Logic Simulator</div>
+        <div class="user-info">
+            <span id="user-display">안녕하세요, <strong>...</strong>님</span>
+            <button class="btn-settings" onclick="openSettings()">⚙️ 설정</button>
+            <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
+        </div>
+    </div>
 
-        <section class="project-section">
-            <div class="section-header">
-                <h2>내 프로젝트</h2>
-                <a href="simulator.html" class="btn-new-project">
-                    <span>+</span> 새 프로젝트
-                </a>
+    <div class="dashboard-content">
+        <div class="section-header">
+            <h2>내 작업물 (My Works)</h2>
+            <button class="btn-new-project" onclick="createNewProject()">
+                <span>+</span> 새 프로젝트
+            </button>
+        </div>
+
+        <div id="project-list" class="project-grid">
+            <div class="empty-state">로딩 중...</div>
+        </div>
+
+        <!-- 튜토리얼/학습 섹션 -->
+        <div class="section-header" style="margin-top: 50px;">
+            <h2>📚 학습 자료 (Tutorials)</h2>
+        </div>
+        <div class="tutorial-grid">
+            <div class="tutorial-card" onclick="startTutorial('basics')">
+                <div class="tutorial-icon">🎓</div>
+                <div class="tutorial-title">기초: 논리 게이트</div>
+                <div class="tutorial-desc">AND, OR, NOT 게이트의 작동 원리 학습</div>
+            </div>
+            <div class="tutorial-card" onclick="startTutorial('packages')">
+                <div class="tutorial-icon">📦</div>
+                <div class="tutorial-title">패키지 사용법</div>
+                <div class="tutorial-desc">반가산기, 전가산기 등 패키지 활용</div>
+            </div>
+            <div class="tutorial-card" onclick="startTutorial('advanced')">
+                <div class="tutorial-icon">🔧</div>
+                <div class="tutorial-title">전문가 모드</div>
+                <div class="tutorial-desc">트랜지스터 레벨 회로 설계</div>
+            </div>
+            <div class="tutorial-card" onclick="startTutorial('projects')">
+                <div class="tutorial-icon">💡</div>
+                <div class="tutorial-title">프로젝트 예제</div>
+                <div class="tutorial-desc">4비트 가산기, 플립플롭 등 예제</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 계정 설정 모달 -->
+    <div id="settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content settings-modal">
+            <h2>⚙️ 계정 설정</h2>
+
+            <div class="settings-group">
+                <label>언어 (Language)</label>
+                <select id="setting-language" onchange="saveSettings()">
+                    <option value="ko">한국어</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                </select>
             </div>
 
-            <div class="project-grid" id="projectGrid">
-                <div class="loading">프로젝트를 불러오는 중...</div>
+            <div class="settings-group">
+                <label>테마 (Theme)</label>
+                <select id="setting-theme" onchange="saveSettings()">
+                    <option value="dark">다크 모드</option>
+                    <option value="light">라이트 모드</option>
+                </select>
             </div>
-        </section>
+
+            <div class="settings-group">
+                <label>
+                    <input type="checkbox" id="setting-tutorials" onchange="saveSettings()">
+                    시뮬레이터에서 튜토리얼 힌트 표시
+                </label>
+            </div>
+
+            <div class="settings-group">
+                <label>
+                    <input type="checkbox" id="setting-autosave" onchange="saveSettings()" checked>
+                    자동 저장 (Auto-save)
+                </label>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="closeSettings()">확인</button>
+            </div>
+        </div>
     </div>
 
     <!-- 로직 스크립트 연결 -->
     <script src="js/modules/SupabaseClient.js"></script>
     <script>
-        // SupabaseClient.js가 로드된 후 실행
+        // ========== 초기화 및 로그인 체크 ==========
         document.addEventListener('DOMContentLoaded', async () => {
-            // 라이브러리 로딩 대기
-            // SupabaseClient.js에서 전역 함수들이 정의될 시간을 줌
-            setTimeout(initDashboard, 100);
+            loadSettings();
+            setTimeout(checkLogin, 100);
         });
 
-        async function initDashboard() {
-            if (typeof window.sb === 'undefined') {
-                setTimeout(initDashboard, 100);
+        async function checkLogin() {
+            if (typeof window.sb === 'undefined' || typeof window.getCurrentUser !== 'function') {
+                setTimeout(checkLogin, 100);
                 return;
             }
 
-            const renderDashboard = (user) => {
-                // 2. UI 업데이트
-                const userArea = document.getElementById('userArea');
-                userArea.innerHTML = `
-                    <div class="user-info">
-                        <img src="${user.user_metadata.avatar_url || ''}" class="user-avatar" id="user-avatar-img" alt="User">
-                        <div style="display:flex; flex-direction:column; align-items:flex-start;">
-                            <span id="user-name" style="font-weight:600;">${user.user_metadata.full_name || 'User'}</span>
-                            <span id="user-email" style="font-size:12px; color:var(--text-muted);">${user.email}</span>
-                        </div>
-                    </div>
-                    <button class="btn-logout" onclick="signOut()">로그아웃</button>
-                `;
-                // 3. 프로젝트 목록 불러오기
+            const user = await window.getCurrentUser();
+            if (!user) {
+                // 로그인이 안 되어 있으면 대기 (SupabaseClient.js가 알아서 처리하거나 할 수 있음)
+                // 하지만 Dashboard는 보호된 페이지이므로 로그인 페이지로 튕겨야 할 수도 있음
+                // 여기서는 일단 대기
+                console.log('로그인 정보 없음.');
+                // window.location.href = 'login.html'; // 필요하면 활성화
+            } else {
+                updateUserInfo(user);
                 loadProjects(user.id);
-            };
-
-            // 우선 현재 세션 확인
-            const user = await getCurrentUser();
-            if (user) {
-                renderDashboard(user);
-                return;
             }
-
-            // OAuth 리디렉션 직후라 세션이 아직 안 잡혔을 수 있음. 이벤트를 기다림.
-            console.log('⏳ 세션 확인 중...');
-
-            // 3초간 기다려도 로그인이 안되면 로그인 페이지로 이동
-            const timeout = setTimeout(() => {
-                console.log('⚠️ 로그인 시간 초과 -> 로그인 페이지로 이동');
-                window.location.href = 'login.html';
-            }, 3000);
-
-            const { data: { subscription } } = window.sb.auth.onAuthStateChange((event, session) => {
-                if (session && session.user) {
-                    console.log('✅ 세션 감지됨!');
-                    clearTimeout(timeout);
-                    renderDashboard(session.user);
-                }
-            });
         }
 
-        async function loadProjects(userId) {
-            const grid = document.getElementById('projectGrid');
+        function updateUserInfo(user) {
+            const display = document.getElementById('user-display');
+            const name = user.user_metadata.full_name || user.email.split('@')[0];
+            display.innerHTML = `안녕하세요, <strong>${name}</strong>님`;
+        }
 
-            // Supabase에서 데이터 조회
+        async function handleLogout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                await window.signOut();
+                window.location.href = 'index.html';
+            }
+        }
+
+        // ========== 프로젝트 관리 (Supabase) ==========
+        async function loadProjects(userId) {
+            const list = document.getElementById('project-list');
+
+            // Supabase에서 조회
             const { data, error } = await window.sb
                 .from('projects')
                 .select('*')
@@ -254,41 +156,165 @@
 
             if (error) {
                 console.error('Error loading projects:', error);
-                grid.innerHTML = '<div class="loading">프로젝트를 불러오지 못했습니다.</div>';
+                list.innerHTML = '<div class="empty-state">프로젝트를 불러오지 못했습니다.</div>';
                 return;
             }
 
             if (!data || data.length === 0) {
-                grid.innerHTML = `
-                    <div style="grid-column: 1/-1;" class="empty-state">
+                list.innerHTML = `
+                    <div class="empty-state">
                         <p>저장된 프로젝트가 없습니다.</p>
-                        <a href="simulator.html" class="btn-new-project" style="margin-top: 16px;">새 프로젝트 만들기</a>
-                    </div>
-                `;
+                        <button class="btn-new-project" style="margin-top:16px; display:inline-flex;" onclick="createNewProject()">
+                            새 프로젝트 만들기
+                        </button>
+                    </div>`;
                 return;
             }
 
-            // 카드 생성
-            grid.innerHTML = '';
+            list.innerHTML = '';
             data.forEach(project => {
                 const date = new Date(project.created_at).toLocaleDateString();
                 const card = document.createElement('div');
                 card.className = 'project-card';
+                card.onclick = () => location.href = `simulator.html?id=${project.id}`;
+
                 card.innerHTML = `
-                    <div class="title">${project.title || '제목 없음'}</div>
-                    <div class="date">${date}</div>
+                    <button class="btn-delete-card" onclick="deleteProject('${project.id}', event)">🗑️</button>
+                    <div class="card-preview">⚡</div>
+                    <div class="card-info">
+                        <div class="card-title">${project.title || '제목 없음'}</div>
+                        <div class="card-date">생성일: ${date}</div>
+                    </div>
                 `;
-                card.onclick = () => {
-                    // 프로젝트 데이터(JSON)를 로컬 스토리지에 임시 저장 후 이동하거나
-                    // URL 파라미터로 ID를 넘겨서 index.html에서 로드하도록 할 수 있습니다.
-                    // 여기서는 간단하게 로컬스토리지 방식 사용 예시:
-                    localStorage.setItem('logic_sim_data', JSON.stringify(project.data));
-                    window.location.href = 'index.html';
-                };
-                grid.appendChild(card);
+                list.appendChild(card);
             });
         }
+
+        function createNewProject() {
+            // 새 프로젝트는 simulator.html을 열면 됨 (쿼리 없이)
+            // simulator.html에서 저장 시 새 프로젝트로 저장됨
+            location.href = 'simulator.html';
+        }
+
+        async function deleteProject(projectId, event) {
+            event.stopPropagation();
+            if (!confirm('정말 삭제하시겠습니까? 복구할 수 없습니다.')) return;
+
+            const { error } = await window.sb
+                .from('projects')
+                .delete()
+                .eq('id', projectId);
+
+            if (error) {
+                alert('삭제 실패: ' + error.message);
+            } else {
+                // 목록 새로고침
+                const user = await window.getCurrentUser();
+                if (user) loadProjects(user.id);
+            }
+        }
+
+        // ========== 설정 관리 (LocalStorage) ==========
+        const DEFAULT_SETTINGS = {
+            language: 'ko',
+            theme: 'dark',
+            showTutorials: true,
+            autoSave: true
+        };
+
+        function loadSettings() {
+            const saved = JSON.parse(localStorage.getItem('logic_sim_settings')) || DEFAULT_SETTINGS;
+            document.getElementById('setting-language').value = saved.language || 'ko';
+            document.getElementById('setting-theme').value = saved.theme || 'dark';
+            document.getElementById('setting-tutorials').checked = saved.showTutorials !== false;
+            document.getElementById('setting-autosave').checked = saved.autoSave !== false;
+        }
+
+        function saveSettings() {
+            const settings = {
+                language: document.getElementById('setting-language').value,
+                theme: document.getElementById('setting-theme').value,
+                showTutorials: document.getElementById('setting-tutorials').checked,
+                autoSave: document.getElementById('setting-autosave').checked
+            };
+            localStorage.setItem('logic_sim_settings', JSON.stringify(settings));
+        }
+
+        function openSettings() {
+            loadSettings();
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        // ========== 튜토리얼 ==========
+        function startTutorial(type) {
+            const tutorials = {
+                'basics': {
+                    title: '기초: 논리 게이트',
+                    steps: [
+                        '논리 게이트는 디지털 회로의 기본 구성 요소입니다.',
+                        'AND 게이트: 두 입력이 모두 1일 때만 출력이 1입니다.',
+                        'OR 게이트: 입력 중 하나라도 1이면 출력이 1입니다.',
+                        'NOT 게이트: 입력을 반전시킵니다. (1→0, 0→1)',
+                        '시뮬레이터에서 SWITCH와 LED를 연결해 직접 테스트해보세요!'
+                    ]
+                },
+                'packages': {
+                    title: '패키지 사용법',
+                    steps: [
+                        '패키지는 여러 게이트를 하나로 묶은 복합 컴포넌트입니다.',
+                        '반가산기(HA): 두 비트를 더해 합(S)과 자리올림(C)을 출력합니다.',
+                        '전가산기(FA): 자리올림 입력까지 포함한 덧셈기입니다.',
+                        'SR 래치: 메모리 소자의 기본입니다. S=1이면 저장, R=1이면 리셋.',
+                        'D 플립플롭: 클럭 신호에 따라 데이터를 저장합니다.',
+                        '전문가 모드에서 패키지 내부 구조를 확인할 수 있습니다!'
+                    ]
+                },
+                'advanced': {
+                    title: '전문가 모드',
+                    steps: [
+                        '전문가 모드에서는 트랜지스터 레벨 설계가 가능합니다.',
+                        'NPN 트랜지스터: 베이스에 전류가 흐르면 컬렉터→에미터 통전.',
+                        'PMOS 트랜지스터: 베이스가 LOW일 때 통전 (반대 동작).',
+                        'VCC(전원)와 GND(접지)를 사용해 전원을 공급합니다.',
+                        'CMOS 로직으로 직접 게이트를 구현해보세요!'
+                    ]
+                },
+                'projects': {
+                    title: '프로젝트 예제',
+                    steps: [
+                        '새 프로젝트를 만들어 다양한 회로를 설계해보세요!',
+                        '예제 1: 전가산기 4개를 연결해 4비트 가산기 만들기',
+                        '예제 2: D 플립플롭으로 4비트 레지스터 만들기',
+                        '예제 3: SR 래치로 디바운싱 회로 구현',
+                        '전문가 모드에서 직접 패키지를 만들어 재사용하세요!'
+                    ]
+                }
+            };
+
+            const tutorial = tutorials[type];
+            if (!tutorial) return;
+
+            let step = 0;
+            function showStep() {
+                if (step < tutorial.steps.length) {
+                    alert(`[${tutorial.title}] (${step + 1}/${tutorial.steps.length})\n\n${tutorial.steps[step]}`);
+                    step++;
+                    showStep();
+                } else {
+                    const goToSim = confirm('튜토리얼을 완료했습니다!\n\n시뮬레이터로 이동하여 직접 연습해보시겠습니까?');
+                    if (goToSim) {
+                        location.href = 'simulator.html?new=true&tutorial=' + type;
+                    }
+                }
+            }
+            showStep();
+        }
     </script>
+
 </body>
 
 </html>
