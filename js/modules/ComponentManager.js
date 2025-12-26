@@ -91,6 +91,7 @@ Object.assign(CircuitSimulator.prototype, {
                 this.addPin(el, 'out', 'output out');
             } else if (type === 'NOT') {
                 el.innerHTML = symbols[type];
+                label.innerText = 'NOT'; // 라벨 텍스트 추가
                 el.appendChild(label);
                 this.addPin(el, 'in-1', 'input center-in');
                 this.addPin(el, 'out', 'output center-out');

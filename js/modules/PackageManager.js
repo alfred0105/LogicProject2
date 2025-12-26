@@ -324,43 +324,15 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     loadUserPackages() {
-        try {
-            const saved = localStorage.getItem('logic_sim_user_packages');
-            if (saved) {
-                this.userPackages = JSON.parse(saved);
-                console.log(`✅ ${this.userPackages.length}개의 사용자 패키지 로드됨`);
-                setTimeout(() => this.updatePackageList(), 0);
-            }
-        } catch (e) {
-            console.warn('패키지 로드 실패:', e);
-            this.userPackages = [];
-        }
+        // 프로젝트 별 저장을 위해 전역 로드 제거
+        this.userPackages = [];
+        this.updatePackageList();
     },
 
     saveUserPackages() {
-        try {
-            const serializable = this.userPackages.map(pkg => ({
-                name: pkg.name,
-                desc: pkg.desc || '',
-                inputs: pkg.inputs,
-                outputs: pkg.outputs,
-                width: pkg.width,
-                height: pkg.height,
-                circuit: pkg.circuit ? {
-                    components: pkg.circuit.components,
-                    wires: pkg.circuit.wires?.map(w => ({
-                        fromId: w.fromId,
-                        toId: w.toId,
-                        fromPin: w.fromPin,
-                        toPin: w.toPin
-                    })) || []
-                } : null
-            }));
-            localStorage.setItem('logic_sim_user_packages', JSON.stringify(serializable));
-            console.log(`💾 ${this.userPackages.length}개의 패키지 저장됨`);
-        } catch (e) {
-            console.warn('패키지 저장 실패:', e);
-        }
+        // 프로젝트 데이터에 포함되므로 별도 로컬 저장은 하지 않음.
+        // 변경 사항 자동 저장 트리거
+        if (this.cloud) this.cloud.triggerAutoSave();
     },
 
     updatePackageList() {

@@ -871,7 +871,6 @@ body.expert-mode .component[data-type="JOINT"][data-value="1"] {
 /* Hide Labels for Gates too */
 .component[data-type="AND"] .comp-label,
 .component[data-type="OR"] .comp-label,
-.component[data-type="NOT"] .comp-label,
 .component[data-type="NAND"] .comp-label,
 .component[data-type="NOR"] .comp-label,
 .component[data-type="XOR"] .comp-label,
@@ -973,6 +972,7 @@ body.expert-mode .component[data-type="JOINT"][data-value="1"] {
 .component[data-type="NOT"] .pin.in-1 {
     left: -6px;
     top: 50%;
+    transform: translateY(-50%);
 }
 
 /* Hide Labels */

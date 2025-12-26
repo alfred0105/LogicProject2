@@ -152,7 +152,8 @@ Object.assign(CircuitSimulator.prototype, {
             name: this.currentProjectName,
             lastModified: new Date().toLocaleString(),
             components: componentsData,
-            wires: wiresData
+            wires: wiresData,
+            packages: this.userPackages || []
         };
 
         return projectData;
@@ -187,6 +188,10 @@ Object.assign(CircuitSimulator.prototype, {
 
         this.currentProjectName = projectData.name || "Untitled";
         this.updateProjectNameUI(this.currentProjectName); // UI 업데이트
+
+        // 패키지 로드 (프로젝트 종속)
+        this.userPackages = projectData.packages || [];
+        if (this.updatePackageList) this.updatePackageList();
 
         this.components.forEach(c => c.remove());
         this.components = [];
