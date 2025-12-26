@@ -15,8 +15,10 @@
             --primary: #3b82f6;
             --primary-glow: rgba(59, 130, 246, 0.5);
             --bg-dark: #0f172a;
+            --surface: #1e293b;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --accent: #8b5cf6;
         }
 
         body {
@@ -24,91 +26,146 @@
             padding: 0;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Nav Bar */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-sub);
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white;
         }
 
         /* Hero Section */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
             position: relative;
+            padding-top: 80px;
+            /* Nav height */
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            overflow: hidden;
         }
 
-        /* Animated Background Grid */
-        .hero::before {
-            content: '';
+        /* Background Grid Animation */
+        .bg-grid {
             position: absolute;
             inset: 0;
             background-image:
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            opacity: 0.5;
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
             z-index: 0;
-            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
         }
 
         .content {
             z-index: 10;
             padding: 0 20px;
-            max-width: 800px;
-            animation: fadeUp 1s ease-out;
+            max-width: 900px;
+            animation: fadeUp 0.8s ease-out;
         }
 
         h1 {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 24px;
-            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+            filter: drop-shadow(0 0 40px rgba(59, 130, 246, 0.3));
         }
 
-        p {
-            font-size: 1.25rem;
+        p.subtitle {
+            font-size: 1.4rem;
             color: var(--text-sub);
             margin-bottom: 48px;
             line-height: 1.6;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .cta-buttons {
             display: flex;
             gap: 16px;
             justify-content: center;
+            margin-bottom: 80px;
         }
 
         .btn {
-            padding: 16px 32px;
+            padding: 16px 36px;
             font-size: 1.1rem;
             font-weight: 600;
             border-radius: 12px;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
             overflow: hidden;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .btn-primary {
-            background: white;
-            color: #0f172a;
-            border: 1px solid white;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-            background: #f8fafc;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+            background: #2563eb;
         }
 
         .btn-secondary {
@@ -120,52 +177,148 @@
 
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
         }
 
-        /* Feature Cards */
+        /* Showcase Image */
+        .showcase {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            perspective: 1000px;
+            z-index: 5;
+        }
+
+        .showcase-inner {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
+            transform: rotateX(10deg) scale(0.9);
+            transition: transform 0.5s ease;
+            position: relative;
+        }
+
+        .hero:hover .showcase-inner {
+            transform: rotateX(2deg) scale(0.95);
+        }
+
+        .dummy-ui {
+            width: 100%;
+            height: 500px;
+            background: #0f172a;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #334155;
+            /* Simple CSS drawing of UI */
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .dummy-ui::after {
+            content: 'SIMULATOR PREVIEW';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #334155;
+            font-size: 3rem;
+            font-weight: 900;
+            opacity: 0.3;
+        }
+
+        /* Features Section */
+        .section {
+            padding: 100px 20px;
+            background: #0b1120;
+            position: relative;
+            z-index: 20;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
-            margin-top: 60px;
-            text-align: left;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .card {
-            background: rgba(30, 41, 59, 0.5);
-            padding: 24px;
-            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.4);
+            padding: 40px;
+            border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
             border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .card:hover::before {
+            opacity: 1;
         }
 
         .card-icon {
-            font-size: 2rem;
-            margin-bottom: 16px;
+            font-size: 3rem;
+            margin-bottom: 24px;
+            background: rgba(59, 130, 246, 0.1);
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            color: var(--primary);
         }
 
         .card h3 {
-            margin: 0 0 8px 0;
+            margin: 0 0 16px 0;
             color: white;
+            font-size: 1.5rem;
         }
 
         .card p {
             margin: 0;
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--text-sub);
+            line-height: 1.6;
         }
 
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
 
             to {
@@ -175,25 +328,37 @@
         }
 
         footer {
-            position: absolute;
-            bottom: 20px;
+            padding: 40px;
+            text-align: center;
             color: var(--text-sub);
             font-size: 0.9rem;
-            width: 100%;
-            text-align: center;
-            z-index: 10;
+            background: #0f172a;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
 
 <body>
+    <nav>
+        <div class="logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M13 3L4 14h7v7l9-11h-7V3z" />
+            </svg>
+            Logic Simulator
+        </div>
+        <div class="nav-links">
+            <a href="login.html" class="nav-link">로그인</a>
+            <a href="simulator.html" class="nav-link" style="color:var(--primary)">바로 시작하기</a>
+        </div>
+    </nav>
 
     <div class="hero">
+        <div class="bg-grid"></div>
         <div class="content">
             <h1>Logic Simulator</h1>
-            <p>
-                웹 브라우저에서 바로 실행하는 강력한 논리 회로 시뮬레이터.<br>
-                복잡한 회로를 설계하고, 실시간으로 시뮬레이션하세요.
+            <p class="subtitle">
+                웹 브라우저에서 실행되는 강력한 디지털 논리 회로 시뮬레이터.<br>
+                복잡한 회로를 직관적으로 설계하고, 실시간으로 시뮬레이션하세요.
             </p>
 
             <div class="cta-buttons" id="auth-buttons">
@@ -210,48 +375,143 @@
                 </a>
                 <a href="login.html" class="btn btn-secondary">로그인</a>
             </div>
+        </div>
 
-            <div class="features">
-                <div class="card">
-                    <div class="card-icon">⚡</div>
-                    <h3>실시간 시뮬레이션</h3>
-                    <p>회로를 수정하는 즉시 결과가 반영되는 초고속 엔진.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">💾</div>
-                    <h3>클라우드 저장</h3>
-                    <p>Supabase 연동으로 언제 어디서나 프로젝트를 저장하고 불러오세요.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🔧</div>
-                    <h3>다양한 컴포넌트</h3>
-                    <p>기본 게이트부터 트랜지스터, 커스텀 패키지까지 지원합니다.</p>
+        <div class="showcase">
+            <div class="showcase-inner">
+                <div class="dummy-ui">
+                    <!-- Placeholder for simulator screenshot or canvas -->
+                    <canvas id="circuit-demo" style="width:100%; height:100%; opacity: 0.6;"></canvas>
                 </div>
             </div>
         </div>
-
-        <footer>
-            Built with ❤️ by Ace06 | Powered by Supabase & Vercel
-        </footer>
     </div>
 
-    /* 로직 스크립트 연결 */
+    <div class="section">
+        <h2 class="section-title">주요 기능</h2>
+        <div class="features">
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <h3>실시간 시뮬레이션</h3>
+                <p>회로를 수정하는 즉시 시뮬레이션 결과가 반영됩니다. 끊김 없는 빠른 속도를 경험하세요.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">💾</div>
+                <h3>클라우드 동기화</h3>
+                <p>Supabase 기반의 안전한 클라우드 저장소를 통해 언제 어디서나 프로젝트를 불러오세요.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔧</div>
+                <h3>전문적인 도구</h3>
+                <p>기본 게이트부터 플립플롭, 트랜지스터, IC 패키징까지 전문적인 설계를 지원합니다.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📦</div>
+                <h3>커스텀 모듈</h3>
+                <p>나만의 회로를 하나의 칩(IC)으로 만들어 복잡한 설계를 단순화할 수 있습니다.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📱</div>
+                <h3>반응형 디자인</h3>
+                <p>PC, 태블릿 등 다양한 환경에서 최적화된 인터페이스를 제공합니다.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🚀</div>
+                <h3>오실로스코프</h3>
+                <p>내장된 4채널 오실로스코프로 신호 파형을 정밀하게 분석할 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Logic Simulator. All rights reserved.</p>
+        <p style="margin-top: 10px; opacity: 0.6;">Powered by Supabase & Vercel | Built by Ace06</p>
+    </footer>
+
+    <!-- 로직 스크립트 연결 -->
     <script src="js/modules/SupabaseClient.js"></script>
     <script>
+        // 간단한 회로 애니메이션 (Canvas)
+        const canvas = document.getElementById('circuit-demo');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let w, h;
+
+            const resize = () => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                w = canvas.width = rect.width;
+                h = canvas.height = rect.height;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            const nodes = [];
+            for (let i = 0; i < 20; i++) {
+                nodes.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = '#3b82f6';
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+
+                nodes.forEach(node => {
+                    node.x += node.vx;
+                    node.y += node.vy;
+                    if (node.x < 0 || node.x > w) node.vx *= -1;
+                    if (node.y < 0 || node.y > h) node.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    nodes.forEach(other => {
+                        const dx = node.x - other.x;
+                        const dy = node.y - other.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(node.x, node.y);
+                            ctx.lineTo(other.x, other.y);
+                            ctx.stroke();
+                        }
+                    });
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
         // 로그인 상태 체크하여 버튼 변경
         document.addEventListener('DOMContentLoaded', async () => {
             const updateUI = (user) => {
                 // 로그인 됨: 버튼 교체
                 const authBtns = document.getElementById('auth-buttons');
                 const userName = user.user_metadata.full_name || user.email.split('@')[0];
+                const avatar = user.user_metadata.avatar_url;
+
+                // Nav Link 교체
+                const loginLink = document.querySelector('.nav-link[href="login.html"]');
+                if (loginLink) {
+                    loginLink.textContent = userName;
+                    loginLink.href = 'dashboard.html';
+                }
 
                 authBtns.innerHTML = `
-                        <a href="simulator.html" class="btn btn-primary">
+                    <a href="simulator.html" class="btn btn-primary">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         시뮬레이터 시작
                     </a>
                     <a href="dashboard.html" class="btn btn-secondary">
-                        <span style="margin-right:4px">👤</span> ${userName}님
+                        <span style="display:flex; align-items:center; gap:6px;">
+                            ${avatar ? `<img src="${avatar}" style="width:20px; height:20px; border-radius:50%">` : '👤'} 
+                            대시보드
+                        </span>
                     </a>
                 `;
             };
