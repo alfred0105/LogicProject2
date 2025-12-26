@@ -1156,6 +1156,185 @@
         </div>
     </div>
 
+    <!-- ======== Feedback Floating Button & Modal ======== -->
+    <button class="feedback-fab" onclick="openFeedbackModal()" title="피드백 보내기">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </button>
+
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal feedback-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">💬 피드백 보내기</h2>
+                <button class="modal-close" onclick="closeFeedbackModal()">
+                    <svg width="16" height="16">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">
+                    LoCAD를 사용해주셔서 감사합니다!<br>
+                    버그 리포트, 기능 제안, 또는 의견을 자유롭게 남겨주세요.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">카테고리</label>
+                    <select id="feedback-category" class="form-input" style="width: 100%;">
+                        <option value="bug">🐛 버그 리포트</option>
+                        <option value="feature">💡 기능 제안</option>
+                        <option value="ux">🎨 UI/UX 개선</option>
+                        <option value="other">📝 기타 의견</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label">내용</label>
+                    <textarea id="feedback-content" class="form-input"
+                        style="width: 100%; min-height: 120px; resize: vertical;"
+                        placeholder="여기에 피드백을 작성해주세요..."></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="feedback-include-circuit" checked>
+                        현재 회로 상태 첨부 (디버깅에 도움됩니다)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeFeedbackModal()">취소</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    보내기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Feedback Floating Action Button */
+        .feedback-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .feedback-fab:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .feedback-fab:active {
+            transform: scale(0.95);
+        }
+
+        /* Feedback Modal Styles */
+        .feedback-modal {
+            max-width: 480px;
+        }
+
+        .feedback-modal .form-input {
+            background: var(--bg-tertiary, #1e293b);
+            border: 1px solid var(--border-default, #334155);
+            color: var(--text-primary, #f8fafc);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .feedback-modal .form-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .feedback-modal textarea {
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .feedback-modal .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary, #94a3b8);
+            margin-bottom: 8px;
+            display: block;
+        }
+    </style>
+
+    <script>
+        function openFeedbackModal() {
+            document.getElementById('feedback-modal').classList.add('show');
+        }
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.remove('show');
+        }
+        async function submitFeedback() {
+            const category = document.getElementById('feedback-category').value;
+            const content = document.getElementById('feedback-content').value.trim();
+            const includeCircuit = document.getElementById('feedback-include-circuit').checked;
+
+            if (!content) {
+                sim.showToast('피드백 내용을 입력해주세요', 'error');
+                return;
+            }
+
+            // 피드백 데이터 구성
+            const feedbackData = {
+                category: category,
+                content: content,
+                circuit_data: includeCircuit && window.sim ? sim.serializeCircuit?.() : null,
+                user_agent: navigator.userAgent,
+                url: window.location.href,
+                created_at: new Date().toISOString()
+            };
+
+            // 사용자 정보 추가 (로그인된 경우)
+            if (window.getCurrentUser) {
+                const user = await window.getCurrentUser();
+                if (user) {
+                    feedbackData.user_id = user.id;
+                    feedbackData.user_email = user.email;
+                }
+            }
+
+            // Supabase에 저장
+            if (window.sb) {
+                try {
+                    const { error } = await window.sb.from('feedback').insert([feedbackData]);
+                    if (error) throw error;
+
+                    sim.showToast('✅ 피드백이 전송되었습니다. 감사합니다!', 'success');
+                    document.getElementById('feedback-content').value = '';
+                    closeFeedbackModal();
+                } catch (err) {
+                    console.error('Feedback submission error:', err);
+                    sim.showToast('피드백 전송 실패: ' + err.message, 'error');
+                }
+            } else {
+                // Supabase 미연결 시 로컬 저장 또는 콘솔 출력
+                console.log('Feedback (local):', feedbackData);
+                sim.showToast('✅ 피드백이 기록되었습니다 (오프라인 모드)', 'info');
+                closeFeedbackModal();
+            }
+        }
+    </script>
+
     <!-- Error Handler -->
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -1205,6 +1384,7 @@
     <script src="js/modules/UIManager.js"></script>
     <script src="js/modules/HistoryManager.js"></script>
     <script src="js/modules/Oscilloscope.js"></script>
+    <script src="js/modules/TutorialSystem.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/SupabaseClient.js"></script>
     <script src="js/modules/Main.js"></script>
