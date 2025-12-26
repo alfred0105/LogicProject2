@@ -124,7 +124,7 @@
 
     // CloudManager 자동 로드
     const script = document.createElement('script');
-    script.src = 'js/modules/CloudManager.js?v=2';
+    script.src = 'js/modules/CloudManager.js?v=3';
     script.onload = () => {
         console.log('✅ CloudManager module loaded');
         const checkSim = setInterval(() => {
