@@ -128,10 +128,14 @@
     script.onload = () => {
         console.log('✅ CloudManager module loaded');
         const checkSim = setInterval(() => {
-            if (window.sim && window.CloudManager) {
+            // window.sim이 존재하고, 실제 시뮬레이터 인스턴스인지(components 배열 존재) 확인
+            if (window.sim && window.sim.components && window.CloudManager) {
                 clearInterval(checkSim);
-                window.sim.cloud = new window.CloudManager(window.sim);
-                console.log('☁️ Cloud functionality attached to Simulator');
+                // 기존에 붙어있지 않다면 새로 부착
+                if (!window.sim.cloud) {
+                    window.sim.cloud = new window.CloudManager(window.sim);
+                    console.log('☁️ Cloud functionality attached to Simulator');
+                }
             }
         }, 500);
     };
