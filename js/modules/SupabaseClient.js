@@ -25,14 +25,19 @@
 
     // 전역 노출 (필요한 것만)
     window.sb = _supabaseClient;
+    window.currentUser = null; // 현재 로그인한 유저 정보 캐싱
 
     /**
-     * 로그인 상태 확인 및 유저 정보 반환
+     * 로그인 상태 확인 및 유저 정보 반환 (개선됨)
      */
     window.getCurrentUser = async function () {
         if (!_supabaseClient) return null;
-        const { data: { user } } = await _supabaseClient.auth.getUser();
-        return user;
+        const { data: { session } } = await _supabaseClient.auth.getSession();
+        if (session && session.user) {
+            window.currentUser = session.user;
+            return session.user;
+        }
+        return null;
     };
 
     /**
@@ -43,7 +48,11 @@
         const { data, error } = await _supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/dashboard.html'
+                redirectTo: window.location.origin + '/dashboard.html',
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
             }
         });
         if (error) alert('로그인 오류: ' + error.message);
@@ -56,9 +65,57 @@
         if (!_supabaseClient) return;
         const { error } = await _supabaseClient.auth.signOut();
         if (!error) {
+            window.currentUser = null;
             window.location.href = 'index.html';
         }
     };
+
+    /**
+     * UI 업데이트 헬퍼 (각 페이지에서 호출)
+     */
+    window.updateProfileUI = function (user) {
+        if (!user) return;
+
+        // 공통: 사용자 이름 가져오기 (메타데이터 우선)
+        const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+        const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+
+        // 1. Simulator.html 사이드바 업데이트
+        const accountName = document.getElementById('account-name');
+        const accountAvatar = document.querySelector('.account-avatar');
+
+        if (accountName) accountName.textContent = name;
+        if (accountAvatar) {
+            if (avatar) {
+                accountAvatar.innerHTML = `<img src="${avatar}" style="width:100%; height:100%; border-radius:50%;">`;
+            } else {
+                accountAvatar.textContent = name.charAt(0).toUpperCase();
+            }
+        }
+
+        // 2. Dashboard.html 프로필 업데이트
+        const dashName = document.getElementById('user-name');
+        const dashEmail = document.getElementById('user-email');
+        const dashAvatar = document.getElementById('user-avatar-img'); // 이미지 태그 ID 가정
+
+        if (dashName) dashName.textContent = name;
+        if (dashEmail) dashEmail.textContent = user.email;
+        if (dashAvatar && avatar) dashAvatar.src = avatar;
+    };
+
+    // 초기화 시 세션 리스너 등록
+    if (_supabaseClient) {
+        _supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                window.currentUser = session.user;
+                console.log('👤 로그인 감지:', session.user.email);
+                window.updateProfileUI(session.user);
+            } else if (event === 'SIGNED_OUT') {
+                window.currentUser = null;
+                console.log('👋 로그아웃');
+            }
+        });
+    }
 
     // CloudManager 자동 로드
     const script = document.createElement('script');

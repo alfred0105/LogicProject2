@@ -212,8 +212,11 @@
             const userArea = document.getElementById('userArea');
             userArea.innerHTML = `
                 <div class="user-info">
-                    <img src="${user.user_metadata.avatar_url || ''}" class="user-avatar" alt="User">
-                    <span>${user.user_metadata.full_name || user.email}</span>
+                    <img src="${user.user_metadata.avatar_url || ''}" class="user-avatar" id="user-avatar-img" alt="User">
+                    <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                        <span id="user-name" style="font-weight:600;">${user.user_metadata.full_name || 'User'}</span>
+                        <span id="user-email" style="font-size:12px; color:var(--text-muted);">${user.email}</span>
+                    </div>
                 </div>
                 <button class="btn-logout" onclick="signOut()">로그아웃</button>
             `;
@@ -226,7 +229,7 @@
             const grid = document.getElementById('projectGrid');
 
             // Supabase에서 데이터 조회
-            const { data, error } = await supabase
+            const { data, error } = await window.sb
                 .from('projects')
                 .select('*')
                 .eq('user_id', userId)
