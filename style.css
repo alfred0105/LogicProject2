@@ -899,8 +899,8 @@ body.expert-mode .component[data-type="JOINT"][data-value="1"] {
 
 /* NOT Gate: 1 + 반전 버블 */
 .component[data-type="NOT"] {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 50'%3E%3Crect x='15' y='5' width='40' height='40' fill='%23fff' stroke='%23333' stroke-width='2' rx='2'/%3E%3Ctext x='35' y='32' font-size='16' font-family='Arial' font-weight='bold' text-anchor='middle' fill='%23333'%3E1%3C/text%3E%3Ccircle cx='62' cy='25' r='5' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Cline x1='0' y1='25' x2='15' y2='25' stroke='%23333' stroke-width='2'/%3E%3Cline x1='67' y1='25' x2='80' y2='25' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
-    background-size: 100% 100%;
+    /* background-image removed as per user request */
+    background: none !important;
     background-repeat: no-repeat;
     background-color: transparent;
 }
