@@ -41,8 +41,20 @@
         const { data: { session } } = await _supabaseClient.auth.getSession();
         if (session && session.user) {
             window.currentUser = session.user;
+
+            // Security.js에 어드민 상태 알림
+            if (typeof window.setAdminStatus === 'function') {
+                window.setAdminStatus(session.user.email);
+            }
+
             return session.user;
         }
+
+        // 로그아웃 상태일 때도 어드민 상태 초기화
+        if (typeof window.setAdminStatus === 'function') {
+            window.setAdminStatus(null);
+        }
+
         return null;
     };
 

@@ -243,9 +243,9 @@ Object.assign(CircuitSimulator.prototype, {
             const component = target?.closest('.component');
             const pin = target?.closest('.pin');
 
-            // 핀 탭 - 와이어 연결
+            // 핀 탭 - 와이어 연결 완료
             if (pin && this.isWiring) {
-                this.handlePinUp(e, pin);
+                this.tryFinishWiring(pin);
             }
             // 스위치 토글
             else if (component && component.getAttribute('data-type') === 'SWITCH') {
