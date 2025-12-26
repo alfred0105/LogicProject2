@@ -225,12 +225,12 @@
         <!-- ======== Header ======== -->
         <header class="header">
             <div class="brand">
-                <a href="index.html" class="icon-btn" style="width: 32px; height: 32px; min-width: auto; padding: 0;"
-                    title="홈으로">
+                <button class="icon-btn" style="width: 32px; height: 32px; min-width: auto; padding: 0;" title="홈으로"
+                    onclick="goHome()">
                     <svg>
                         <use href="#icon-home" />
                     </svg>
-                </a>
+                </button>
                 <div class="brand-divider"
                     style="width: 1px; height: 16px; background: var(--border-default); margin: 0 8px;"></div>
                 <div class="brand-logo">
@@ -249,11 +249,17 @@
                     </svg>
                     <span class="btn-text">새 파일</span>
                 </button>
-                <button class="icon-btn" onclick="sim.saveProject()" title="파이 저장 (S)">
+                <button class="icon-btn" onclick="sim.saveProject()" title="파일 저장 (S)">
                     <svg>
                         <use href="#icon-save" />
                     </svg>
                     <span class="btn-text">저장</span>
+                </button>
+                <button class="icon-btn"
+                    onclick="if(sim.cloud) sim.cloud.saveProjectToCloud(prompt('프로젝트 이름을 입력하세요:', sim.currentProjectName));"
+                    title="클라우드 저장" style="color: #64b5f6;">
+                    <span style="font-size: 1.2rem; margin-right:4px;">☁️</span>
+                    <span class="btn-text">CLOUD</span>
                 </button>
                 <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
                     <svg>
@@ -1171,6 +1177,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/SupabaseClient.js"></script>
     <script src="js/modules/Main.js"></script>
+    <script>
+        async function goHome() {
+            if (window.getCurrentUser) {
+                const user = await window.getCurrentUser();
+                if (user) {
+                    location.href = 'dashboard.html';
+                    return;
+                }
+            }
+            location.href = 'index.html';
+        }
+    </script>
 </body>
 
 </html>
