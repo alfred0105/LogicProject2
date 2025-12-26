@@ -39,7 +39,8 @@ class CloudManager {
         }
 
         if (!this.user) {
-            // console.log('Auto-save skipped: Not logged in');
+            console.warn('Auto-save skipped: Not logged in');
+            this.updateSaveStatusUI('error', '저장 실패: 로그인 필요');
             return;
         }
 
@@ -97,6 +98,7 @@ class CloudManager {
         // 로그인 확인
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) {
+            this.updateSaveStatusUI('error', '로그인 필요');
             if (!silent && confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동하시겠습니까?')) {
                 window.location.href = 'login.html';
             }
