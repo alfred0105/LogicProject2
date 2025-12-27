@@ -1126,13 +1126,34 @@
             };
 
             window.saveComment = async function (id) {
+                if (window.log) window.log(`Saving comment for ID: ${id}`);
                 const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
-                if (!textarea) return;
+                if (!textarea) {
+                    if (window.log) window.log('Error: Textarea not found');
+                    return;
+                }
                 const comment = textarea.value;
+                if (window.log) window.log(`Content: "${comment}"`);
+
                 try {
-                    const { error } = await window.sb.from('feedback').update({ comment }).eq('id', id);
+                    // .select()를 추가해서 실제로 저장된 값을 받아옴
+                    const { data, error } = await window.sb.from('feedback').update({ comment: comment }).eq('id', id).select();
+
                     if (error) throw error;
-                    alert('코멘트가 저장되었습니다.');
+
+                    if (window.log) window.log('Update response: ' + JSON.stringify(data));
+
+                    if (data && data.length > 0) {
+                        if (data[0].comment === comment) {
+                            alert('코멘트가 저장되었습니다.');
+                        } else {
+                            alert('⚠️ 경고: 저장 요청은 성공했으나, DB가 변경된 값을 반환하지 않았습니다.\nRLS 정책을 확인해주세요.');
+                        }
+                    } else {
+                        // RLS 정책 때문에 update된 row를 클라이언트가 못 보는 경우 (빈 배열 반환)
+                        alert('코멘트가 저장되었습니다. (단, RLS 정책으로 인해 확인 불가)');
+                    }
+
                     // Local update
                     if (window._allFeedback) {
                         const item = window._allFeedback.find(i => i.id === id);
@@ -1140,8 +1161,10 @@
                     }
                 } catch (err) {
                     console.error('Comment save error:', err);
+                    if (window.log) window.log('Save Error: ' + err.message);
+
                     if (err.message && err.message.includes('column')) {
-                        alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.\nSupabase 대시보드에서 comment (Text) 컬럼을 추가해주세요.');
+                        alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.');
                     } else {
                         alert('저장 실패: ' + err.message);
                     }
