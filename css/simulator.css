@@ -4259,20 +4259,6 @@ div.component[data-type="NOT"] {
     }
 }
 
-
-/* Feedback Button Position Override - Move above Minimap */
-#channel-io-app-wrapper,
-#channel-io-launcher,
-.channel-io-launcher,
-#intercom-container,
-.intercom-lightweight-app,
-#feedback-btn,
-.feedback-btn {
-    bottom: 180px !important;
-    right: 16px !important;
-    z-index: 2000 !important;
-}
-
 /* Force Scrollbar on Sidebar */
 .sidebar-content::-webkit-scrollbar {
     width: 6px;
@@ -4295,4 +4281,40 @@ div.component[data-type="NOT"] {
 /* Sidebar Padding to prevent occlusion */
 .sidebar-content {
     padding-bottom: 50px !important;
+}
+
+/* Grid/Wire Mode Button Labels */
+.edit-options .icon-btn.small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
+    min-width: 48px;
+    height: auto;
+}
+
+.edit-options .icon-btn.small .btn-text {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+}
+
+/* Feedback Button in Status Bar */
+.statusbar .feedback-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 20px;
+}
+
+.statusbar .feedback-btn .btn-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent-blue);
 }
