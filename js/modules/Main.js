@@ -21,4 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
+
+    // 로딩 화면 숨기기 (초기화 완료 후)
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            // 애니메이션 완료 후 DOM에서 제거
+            setTimeout(() => loadingScreen.remove(), 500);
+        }
+    }, 1500); // 로딩 애니메이션이 자연스럽게 완료되도록 지연
 });
