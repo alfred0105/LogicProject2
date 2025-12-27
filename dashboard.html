@@ -6,6 +6,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoCAD - Dashboard</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:;">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/Security.js"></script>
     <script src="js/modules/SupabaseClient.js"></script>
@@ -1131,7 +1132,11 @@
                     }
                 } catch (err) {
                     console.error('Comment save error:', err);
-                    alert('저장 실패: ' + err.message);
+                    if (err.message && err.message.includes('column')) {
+                        alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.\nSupabase 대시보드에서 comment (Text) 컬럼을 추가해주세요.');
+                    } else {
+                        alert('저장 실패: ' + err.message);
+                    }
                 }
             };
 
