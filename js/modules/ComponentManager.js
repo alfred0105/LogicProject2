@@ -18,9 +18,30 @@ Object.assign(CircuitSimulator.prototype, {
             el.setAttribute('data-delay', '10');
             el.setAttribute('data-transistors', this.getDefaultTransistors(type));
 
-            // 위치 설정
-            const finalX = x !== null ? x : (Math.abs(this.panX) + 100) / this.scale;
-            const finalY = y !== null ? y : (Math.abs(this.panY) + 100) / this.scale;
+            // 위치 설정 - 겹침 방지를 위한 오프셋 추가
+            if (!this._componentPlacementOffset) {
+                this._componentPlacementOffset = 0;
+            }
+
+            let finalX, finalY;
+            if (x !== null && y !== null) {
+                // 명시적 좌표가 주어진 경우
+                finalX = x;
+                finalY = y;
+            } else {
+                // 기본 위치 + 오프셋 (겹침 방지)
+                const baseX = (Math.abs(this.panX) + 150) / this.scale;
+                const baseY = (Math.abs(this.panY) + 150) / this.scale;
+                finalX = baseX + (this._componentPlacementOffset % 5) * 80;
+                finalY = baseY + Math.floor(this._componentPlacementOffset / 5) * 60;
+                this._componentPlacementOffset++;
+
+                // 20개마다 초기화
+                if (this._componentPlacementOffset >= 20) {
+                    this._componentPlacementOffset = 0;
+                }
+            }
+
             el.style.left = finalX + 'px';
             el.style.top = finalY + 'px';
 
