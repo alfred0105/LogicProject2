@@ -697,311 +697,278 @@
 
 
 
-        async function loadFeedback() {
-        console.log('🔄 Loading feedback...');
-        if (!window.sb) {
-        console.error('❌ Supabase client not ready');
-        alert('데이터베이스 연결 대기 중... 잠시 후 다시 시도해주세요.');
-        return;
-        }
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-window">
+                <div class="modal-title" data-i18n="settings_title">Settings</div>
 
-        try {
-        const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
+                <div class="settings-group">
+                    <label class="settings-label" data-i18n="language">Language</label>
+                    <select id="setting-language" class="settings-select" onchange="changeLanguage(this.value)">
+                        <option value="ko">한국어 (Korean)</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語 (Japanese)</option>
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="es">Español (Spanish)</option>
+                    </select>
+                </div>
 
-        if (error) {
-        console.error('❌ Feedback load error:', error);
-        console.log('Error details:', JSON.stringify(error));
-        // 404 or Table not found?
-        alert('피드백 데이터를 불러오는데 실패했습니다.\n오류: ' + error.message);
-        return;
-        }
-
-        console.log('✅ Feedback loaded:', data?.length, 'items');
-        _allFeedback = data || [];
-        populateCategoryFilter(_allFeedback);
-        renderFeedbackList(_allFeedback);
-        } catch (e) {
-        console.error('❌ Unexpected error loading feedback:', e);
-        alert('예기치 않은 오류가 발생했습니다: ' + e.message);
-        }
-        }
-
-
-
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-window">
-            <div class="modal-title" data-i18n="settings_title">Settings</div>
-
-            <div class="settings-group">
-                <label class="settings-label" data-i18n="language">Language</label>
-                <select id="setting-language" class="settings-select" onchange="changeLanguage(this.value)">
-                    <option value="ko">한국어 (Korean)</option>
-                    <option value="en">English</option>
-                    <option value="ja">日本語 (Japanese)</option>
-                    <option value="zh">中文 (Chinese)</option>
-                    <option value="es">Español (Spanish)</option>
-                </select>
+                <button class="btn-primary" onclick="closeSettings()" data-i18n="confirm">Confirm</button>
             </div>
-
-            <button class="btn-primary" onclick="closeSettings()" data-i18n="confirm">Confirm</button>
         </div>
-    </div>
 
-    <!-- Logic Script -->
-    <script src="js/modules/SupabaseClient.js"></script>
-    <script>
-        // === I18N Handling ===
-        const translations = {
-            en: {
-                welcome: "Welcome", settings: "Settings", logout: "Logout",
-                my_projects: "My Projects", new_project: "New Project", loading: "Loading...",
-                learn: "Learn", interactive: "Interactive",
-                tut_basics_title: "Basics: First Circuit", tut_basics_desc: "Connecting switches and LEDs",
-                tut_gates_title: "Logic Gates", tut_gates_desc: "Understanding AND, OR, NOT",
-                tut_packages_title: "Packages", tut_packages_desc: "Creating reusable ICs",
-                tut_expert_title: "Expert Mode", tut_expert_desc: "Transistor level design",
-                feedback: "Feedback", refresh: "Refresh",
-                settings_title: "Settings", language: "Language", confirm: "Confirm",
-                untitled: "Untitled Project", empty_projects: "No projects yet. Create one!",
-                confirm_delete: "Are you sure you want to delete this project?"
-            },
-            ko: {
-                welcome: "환영합니다", settings: "설정", logout: "로그아웃",
-                my_projects: "내 프로젝트", new_project: "새 프로젝트", loading: "로딩 중...",
-                learn: "학습 자료", interactive: "인터랙티브",
-                tut_basics_title: "기초: 첫 번째 회로", tut_basics_desc: "스위치와 LED 연결해보기",
-                tut_gates_title: "논리 게이트", tut_gates_desc: "AND, OR, NOT 게이트 이해하기",
-                tut_packages_title: "패키지 만들기", tut_packages_desc: "나만의 IC 칩 만들기",
-                tut_expert_title: "전문가 모드", tut_expert_desc: "트랜지스터 레벨 회로 설계",
-                feedback: "피드백", refresh: "새로고침",
-                settings_title: "설정", language: "언어 (Language)", confirm: "확인",
-                untitled: "제목 없는 프로젝트", empty_projects: "아직 프로젝트가 없습니다.",
-                confirm_delete: "정말 삭제하시겠습니까?"
-            },
-            ja: {
-                welcome: "ようこそ", settings: "設定", logout: "ログアウト",
-                my_projects: "マイプロジェクト", new_project: "新規作成", loading: "読み込み中...",
-                learn: "学習", interactive: "インタラクティブ",
-                tut_basics_title: "基本: 初めての回路", tut_basics_desc: "スイッチとLEDの接続",
-                tut_gates_title: "論理ゲート", tut_gates_desc: "AND, OR, NOTゲートの理解",
-                tut_packages_title: "パッケージ作成", tut_packages_desc: "再利用可能なICチップの作成",
-                tut_expert_title: "エキスパートモード", tut_expert_desc: "トランジスタレベルの設計",
-                feedback: "フィードバック", refresh: "更新",
-                settings_title: "設定", language: "言語 (Language)", confirm: "確認",
-                untitled: "無題のプロジェクト", empty_projects: "プロジェクトはありません",
-                confirm_delete: "本当に削除しますか？"
-            },
-            zh: {
-                welcome: "欢迎", settings: "设置", logout: "登出",
-                my_projects: "我的项目", new_project: "新建项目", loading: "加载中...",
-                learn: "学习", interactive: "互动",
-                tut_basics_title: "基础: 第一个电路", tut_basics_desc: "连接开关和LED",
-                tut_gates_title: "逻辑门", tut_gates_desc: "理解 AND, OR, NOT 门",
-                tut_packages_title: "封装", tut_packages_desc: "创建可重用的IC",
-                tut_expert_title: "专家模式", tut_expert_desc: "晶体管级电路设计",
-                feedback: "反馈", refresh: "刷新",
-                settings_title: "设置", language: "语言 (Language)", confirm: "确认",
-                untitled: "无标题项目", empty_projects: "暂无项目",
-                confirm_delete: "确定要删除吗？"
-            },
-            es: {
-                welcome: "Bienvenido", settings: "Ajustes", logout: "Cerrar sesión",
-                my_projects: "Mis Proyectos", new_project: "Nuevo Proyecto", loading: "Cargando...",
-                learn: "Aprender", interactive: "Interactivo",
-                tut_basics_title: "Básico: Primer Circuito", tut_basics_desc: "Conectar interruptores y LEDs",
-                tut_gates_title: "Puertas Lógicas", tut_gates_desc: "Entender AND, OR, NOT",
-                tut_packages_title: "Paquetes", tut_packages_desc: "Crear ICs reutilizables",
-                tut_expert_title: "Modo Experto", tut_expert_desc: "Diseño a nivel de transistor",
-                feedback: "Comentarios", refresh: "Actualizar",
-                settings_title: "Ajustes", language: "Idioma (Language)", confirm: "Confirmar",
-                untitled: "Proyecto sin título", empty_projects: "No hay proyectos todavía.",
-                confirm_delete: "¿Estás seguro de que quieres eliminarlo?"
-            }
-        };
-
-        let currentLang = 'ko';
-
-        function applyLanguage(lang) {
-            currentLang = lang;
-            document.documentElement.lang = lang;
-            localStorage.setItem('locad_language', lang);
-
-            // 번역 적용
-            const elements = document.querySelectorAll('[data-i18n]');
-            elements.forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
-                    el.textContent = translations[lang][key];
+        <!-- Logic Script -->
+        <script src="js/modules/SupabaseClient.js"></script>
+        <script>
+            // === I18N Handling ===
+            const translations = {
+                en: {
+                    welcome: "Welcome", settings: "Settings", logout: "Logout",
+                    my_projects: "My Projects", new_project: "New Project", loading: "Loading...",
+                    learn: "Learn", interactive: "Interactive",
+                    tut_basics_title: "Basics: First Circuit", tut_basics_desc: "Connecting switches and LEDs",
+                    tut_gates_title: "Logic Gates", tut_gates_desc: "Understanding AND, OR, NOT",
+                    tut_packages_title: "Packages", tut_packages_desc: "Creating reusable ICs",
+                    tut_expert_title: "Expert Mode", tut_expert_desc: "Transistor level design",
+                    feedback: "Feedback", refresh: "Refresh",
+                    settings_title: "Settings", language: "Language", confirm: "Confirm",
+                    untitled: "Untitled Project", empty_projects: "No projects yet. Create one!",
+                    confirm_delete: "Are you sure you want to delete this project?"
+                },
+                ko: {
+                    welcome: "환영합니다", settings: "설정", logout: "로그아웃",
+                    my_projects: "내 프로젝트", new_project: "새 프로젝트", loading: "로딩 중...",
+                    learn: "학습 자료", interactive: "인터랙티브",
+                    tut_basics_title: "기초: 첫 번째 회로", tut_basics_desc: "스위치와 LED 연결해보기",
+                    tut_gates_title: "논리 게이트", tut_gates_desc: "AND, OR, NOT 게이트 이해하기",
+                    tut_packages_title: "패키지 만들기", tut_packages_desc: "나만의 IC 칩 만들기",
+                    tut_expert_title: "전문가 모드", tut_expert_desc: "트랜지스터 레벨 회로 설계",
+                    feedback: "피드백", refresh: "새로고침",
+                    settings_title: "설정", language: "언어 (Language)", confirm: "확인",
+                    untitled: "제목 없는 프로젝트", empty_projects: "아직 프로젝트가 없습니다.",
+                    confirm_delete: "정말 삭제하시겠습니까?"
+                },
+                ja: {
+                    welcome: "ようこそ", settings: "設定", logout: "ログアウト",
+                    my_projects: "マイプロジェクト", new_project: "新規作成", loading: "読み込み中...",
+                    learn: "学習", interactive: "インタラクティブ",
+                    tut_basics_title: "基本: 初めての回路", tut_basics_desc: "スイッチとLEDの接続",
+                    tut_gates_title: "論理ゲート", tut_gates_desc: "AND, OR, NOTゲートの理解",
+                    tut_packages_title: "パッケージ作成", tut_packages_desc: "再利用可能なICチップの作成",
+                    tut_expert_title: "エキスパートモード", tut_expert_desc: "トランジスタレベルの設計",
+                    feedback: "フィードバック", refresh: "更新",
+                    settings_title: "設定", language: "言語 (Language)", confirm: "確認",
+                    untitled: "無題のプロジェクト", empty_projects: "プロジェクトはありません",
+                    confirm_delete: "本当に削除しますか？"
+                },
+                zh: {
+                    welcome: "欢迎", settings: "设置", logout: "登出",
+                    my_projects: "我的项目", new_project: "新建项目", loading: "加载中...",
+                    learn: "学习", interactive: "互动",
+                    tut_basics_title: "基础: 第一个电路", tut_basics_desc: "连接开关和LED",
+                    tut_gates_title: "逻辑门", tut_gates_desc: "理解 AND, OR, NOT 门",
+                    tut_packages_title: "封装", tut_packages_desc: "创建可重用的IC",
+                    tut_expert_title: "专家模式", tut_expert_desc: "晶体管级电路设计",
+                    feedback: "反馈", refresh: "刷新",
+                    settings_title: "设置", language: "语言 (Language)", confirm: "确认",
+                    untitled: "无标题项目", empty_projects: "暂无项目",
+                    confirm_delete: "确定要删除吗？"
+                },
+                es: {
+                    welcome: "Bienvenido", settings: "Ajustes", logout: "Cerrar sesión",
+                    my_projects: "Mis Proyectos", new_project: "Nuevo Proyecto", loading: "Cargando...",
+                    learn: "Aprender", interactive: "Interactivo",
+                    tut_basics_title: "Básico: Primer Circuito", tut_basics_desc: "Conectar interruptores y LEDs",
+                    tut_gates_title: "Puertas Lógicas", tut_gates_desc: "Entender AND, OR, NOT",
+                    tut_packages_title: "Paquetes", tut_packages_desc: "Crear ICs reutilizables",
+                    tut_expert_title: "Modo Experto", tut_expert_desc: "Diseño a nivel de transistor",
+                    feedback: "Comentarios", refresh: "Actualizar",
+                    settings_title: "Ajustes", language: "Idioma (Language)", confirm: "Confirmar",
+                    untitled: "Proyecto sin título", empty_projects: "No hay proyectos todavía.",
+                    confirm_delete: "¿Estás seguro de que quieres eliminarlo?"
                 }
+            };
+
+            let currentLang = 'ko';
+
+            function applyLanguage(lang) {
+                currentLang = lang;
+                document.documentElement.lang = lang;
+                localStorage.setItem('locad_language', lang);
+
+                // 번역 적용
+                const elements = document.querySelectorAll('[data-i18n]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (translations[lang] && translations[lang][key]) {
+                        el.textContent = translations[lang][key];
+                    }
+                });
+
+                // 설정 드롭다운 동기화
+                const langSelect = document.getElementById('setting-language');
+                if (langSelect) langSelect.value = lang;
+            }
+
+            function changeLanguage(lang) {
+                applyLanguage(lang);
+            }
+
+            // === UI Interactions ===
+            function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+            function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+            function toggleSection(sectionId) {
+                const section = document.getElementById(sectionId);
+                section.classList.toggle('section-collapsed');
+            }
+
+            function t(key) {
+                return (translations[currentLang] && translations[currentLang][key]) || key;
+            }
+
+            // === Logic ===
+            document.addEventListener('DOMContentLoaded', async () => {
+                // 언어 로드
+                const savedLang = localStorage.getItem('locad_language') || 'ko';
+                applyLanguage(savedLang);
+
+                setTimeout(checkLogin, 100);
             });
 
-            // 설정 드롭다운 동기화
-            const langSelect = document.getElementById('setting-language');
-            if (langSelect) langSelect.value = lang;
-        }
-
-        function changeLanguage(lang) {
-            applyLanguage(lang);
-        }
-
-        // === UI Interactions ===
-        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
-        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
-
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            section.classList.toggle('section-collapsed');
-        }
-
-        function t(key) {
-            return (translations[currentLang] && translations[currentLang][key]) || key;
-        }
-
-        // === Logic ===
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 언어 로드
-            const savedLang = localStorage.getItem('locad_language') || 'ko';
-            applyLanguage(savedLang);
-
-            setTimeout(checkLogin, 100);
-        });
-
-        async function checkLogin() {
-            if (typeof window.sb === 'undefined' || typeof window.getCurrentUser !== 'function') {
-                setTimeout(checkLogin, 100);
-                return;
-            }
-
-            const user = await window.getCurrentUser();
-            if (!user) {
-                location.href = 'index.html'; // Redirect to login
-                return;
-            }
-
-            // 사용자 이름 표시 (이메일 앞부분)
-            const userName = user.email.split('@')[0];
-            document.getElementById('user-display').innerHTML = `<span data-i18n="welcome">${t('welcome')}</span>, <strong>${userName}</strong>`;
-
-            // 프로젝트 로드
-            loadProjects(user.id);
-
-            // 관리자 체크
-            if (user.email === 'ace060408@gmail.com') {
-                document.getElementById('admin-feedback-section').style.display = 'block';
-                loadFeedback();
-            }
-        }
-
-        async function createNewProject() {
-            const title = prompt(currentLang === 'ko' ? "프로젝트 이름을 입력하세요:" : "Enter project name:");
-            if (!title) return;
-
-            const user = await window.getCurrentUser();
-            if (!user) return;
-
-            try {
-                const { data, error } = await window.sb
-                    .from('projects')
-                    .insert([{ user_id: user.id, title: title, content: {} }])
-                    .select();
-
-                if (error) throw error;
-                if (data && data.length > 0) {
-                    location.href = `simulator.html?id=${data[0].id}`;
-                }
-            } catch (err) {
-                alert('Error creating project: ' + err.message);
-            }
-        }
-
-        async function deleteProject(projectId, event) {
-            event.stopPropagation();
-            if (!confirm(t('confirm_delete'))) return;
-
-            try {
-                const { error } = await window.sb.from('projects').delete().eq('id', projectId);
-                if (error) throw error;
-
-                // Reload list
-                const user = await window.getCurrentUser();
-                if (user) loadProjects(user.id);
-            } catch (err) {
-                alert('Error deleting: ' + err.message);
-            }
-        }
-
-        async function handleLogout() {
-            await window.signOut();
-            location.href = 'index.html';
-        }
-
-        // 튜토리얼 이동
-        function goToInteractiveTutorial(type) {
-            location.href = `simulator.html?tutorial=${type}`;
-        }
-
-        function startTutorial(type) {
-            // Basic tutorial logic - direct to simulator with tutorial flag
-            location.href = `simulator.html?tutorial=${type}`;
-        }
-
-        // === Admin Feedback Logic (Restored) ===
-        let _allFeedback = [];
-
-        async function loadFeedback() {
-            console.log('🔄 Loading feedback...');
-            if (!window.sb) {
-                console.error('❌ Supabase client not ready');
-                return;
-            }
-
-            try {
-                const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
-
-                if (error) {
-                    console.error('❌ Feedback load error:', error);
+            async function checkLogin() {
+                if (typeof window.sb === 'undefined' || typeof window.getCurrentUser !== 'function') {
+                    setTimeout(checkLogin, 100);
                     return;
                 }
 
-                console.log('✅ Feedback loaded:', data?.length, 'items');
-                _allFeedback = data || [];
-                populateCategoryFilter(_allFeedback);
-                renderFeedbackList(_allFeedback);
-            } catch (e) {
-                console.error('❌ Unexpected error loading feedback:', e);
+                const user = await window.getCurrentUser();
+                if (!user) {
+                    location.href = 'index.html'; // Redirect to login
+                    return;
+                }
+
+                // 사용자 이름 표시 (이메일 앞부분)
+                const userName = user.email.split('@')[0];
+                document.getElementById('user-display').innerHTML = `<span data-i18n="welcome">${t('welcome')}</span>, <strong>${userName}</strong>`;
+
+                // 프로젝트 로드
+                loadProjects(user.id);
+
+                // 관리자 체크
+                if (user.email === 'ace060408@gmail.com') {
+                    document.getElementById('admin-feedback-section').style.display = 'block';
+                    loadFeedback();
+                }
             }
-        }
 
-        function populateCategoryFilter(items) {
-            const select = document.getElementById('feedback-category-filter');
-            if (!select) return;
-            const categories = [...new Set(items.map(i => i.category || '기타'))];
-            select.innerHTML = '<option value="all">전체</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        }
+            async function createNewProject() {
+                const title = prompt(currentLang === 'ko' ? "프로젝트 이름을 입력하세요:" : "Enter project name:");
+                if (!title) return;
 
-        function filterFeedback() {
-            const filter = document.getElementById('feedback-category-filter').value;
-            const filtered = filter === 'all' ? _allFeedback : _allFeedback.filter(i => (i.category || '기타') === filter);
-            renderFeedbackList(filtered);
-        }
+                const user = await window.getCurrentUser();
+                if (!user) return;
 
-        function renderFeedbackList(items) {
-            const container = document.getElementById('feedback-list');
-            if (!container) return;
-            container.innerHTML = '';
-            if (items.length === 0) {
-                container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
-                return;
+                try {
+                    const { data, error } = await window.sb
+                        .from('projects')
+                        .insert([{ user_id: user.id, title: title, content: {} }])
+                        .select();
+
+                    if (error) throw error;
+                    if (data && data.length > 0) {
+                        location.href = `simulator.html?id=${data[0].id}`;
+                    }
+                } catch (err) {
+                    alert('Error creating project: ' + err.message);
+                }
             }
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.style.height = 'auto';
-                card.style.cursor = 'default';
-                card.innerHTML = `
+
+            async function deleteProject(projectId, event) {
+                event.stopPropagation();
+                if (!confirm(t('confirm_delete'))) return;
+
+                try {
+                    const { error } = await window.sb.from('projects').delete().eq('id', projectId);
+                    if (error) throw error;
+
+                    // Reload list
+                    const user = await window.getCurrentUser();
+                    if (user) loadProjects(user.id);
+                } catch (err) {
+                    alert('Error deleting: ' + err.message);
+                }
+            }
+
+            async function handleLogout() {
+                await window.signOut();
+                location.href = 'index.html';
+            }
+
+            // 튜토리얼 이동
+            function goToInteractiveTutorial(type) {
+                location.href = `simulator.html?tutorial=${type}`;
+            }
+
+            function startTutorial(type) {
+                // Basic tutorial logic - direct to simulator with tutorial flag
+                location.href = `simulator.html?tutorial=${type}`;
+            }
+
+            // === Admin Feedback Logic (Restored) ===
+            let _allFeedback = [];
+
+            async function loadFeedback() {
+                console.log('🔄 Loading feedback...');
+                if (!window.sb) {
+                    console.error('❌ Supabase client not ready');
+                    return;
+                }
+
+                try {
+                    const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('❌ Feedback load error:', error);
+                        return;
+                    }
+
+                    console.log('✅ Feedback loaded:', data?.length, 'items');
+                    _allFeedback = data || [];
+                    populateCategoryFilter(_allFeedback);
+                    renderFeedbackList(_allFeedback);
+                } catch (e) {
+                    console.error('❌ Unexpected error loading feedback:', e);
+                }
+            }
+
+            function populateCategoryFilter(items) {
+                const select = document.getElementById('feedback-category-filter');
+                if (!select) return;
+                const categories = [...new Set(items.map(i => i.category || '기타'))];
+                select.innerHTML = '<option value="all">전체</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            function filterFeedback() {
+                const filter = document.getElementById('feedback-category-filter').value;
+                const filtered = filter === 'all' ? _allFeedback : _allFeedback.filter(i => (i.category || '기타') === filter);
+                renderFeedbackList(filtered);
+            }
+
+            function renderFeedbackList(items) {
+                const container = document.getElementById('feedback-list');
+                if (!container) return;
+                container.innerHTML = '';
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
+                    return;
+                }
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.height = 'auto';
+                    card.style.cursor = 'default';
+                    card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                         <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
                         <span style="font-size:11px; color:var(--text-sub);">${new Date(item.created_at).toLocaleString()}</span>
@@ -1011,56 +978,56 @@
                     <textarea class="comment-input" data-id="${item.id}" placeholder="관리자 코멘트" style="width:100%; height:50px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
                     <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px; width:100%;">저장</button>
                 `;
-                container.appendChild(card);
-            });
-        }
-
-        async function saveComment(id) {
-            const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
-            if (!textarea) return;
-            const comment = textarea.value;
-            try {
-                const { error } = await window.sb.from('feedback').update({ comment }).eq('id', id);
-                if (error) throw error;
-                alert('코멘트가 저장되었습니다.');
-                // 로컬 데이터도 업데이트 (필터링 시 유지되도록)
-                const item = _allFeedback.find(i => i.id === id);
-                if (item) item.comment = comment;
-            } catch (err) {
-                console.error('Comment save error:', err);
-                alert('저장 실패: ' + err.message);
+                    container.appendChild(card);
+                });
             }
-        }
 
-        async function loadProjects(userId) {
-            const list = document.getElementById('project-list');
-            try {
-                const { data, error } = await window.sb
-                    .from('projects')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                list.innerHTML = '';
-                if (!data || data.length === 0) {
-                    list.innerHTML = `<div class="empty-state">${t('empty_projects')}</div>`;
-                    return;
+            async function saveComment(id) {
+                const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
+                if (!textarea) return;
+                const comment = textarea.value;
+                try {
+                    const { error } = await window.sb.from('feedback').update({ comment }).eq('id', id);
+                    if (error) throw error;
+                    alert('코멘트가 저장되었습니다.');
+                    // 로컬 데이터도 업데이트 (필터링 시 유지되도록)
+                    const item = _allFeedback.find(i => i.id === id);
+                    if (item) item.comment = comment;
+                } catch (err) {
+                    console.error('Comment save error:', err);
+                    alert('저장 실패: ' + err.message);
                 }
+            }
 
-                data.forEach(project => {
-                    const date = new Date(project.created_at).toLocaleDateString();
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.onclick = () => location.href = `simulator.html?id=${project.id}`;
+            async function loadProjects(userId) {
+                const list = document.getElementById('project-list');
+                try {
+                    const { data, error } = await window.sb
+                        .from('projects')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false });
 
-                    // 미리보기 이미지 로직 (thumbnail 필드가 있다면 사용)
-                    const thumbnailHtml = project.thumbnail
-                        ? `<img src="${project.thumbnail}" alt="Circuit Preview">`
-                        : `<svg class="card-icon-svg"><use href="#icon-circuit"/></svg>`;
+                    if (error) throw error;
 
-                    card.innerHTML = `
+                    list.innerHTML = '';
+                    if (!data || data.length === 0) {
+                        list.innerHTML = `<div class="empty-state">${t('empty_projects')}</div>`;
+                        return;
+                    }
+
+                    data.forEach(project => {
+                        const date = new Date(project.created_at).toLocaleDateString();
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.onclick = () => location.href = `simulator.html?id=${project.id}`;
+
+                        // 미리보기 이미지 로직 (thumbnail 필드가 있다면 사용)
+                        const thumbnailHtml = project.thumbnail
+                            ? `<img src="${project.thumbnail}" alt="Circuit Preview">`
+                            : `<svg class="card-icon-svg"><use href="#icon-circuit"/></svg>`;
+
+                        card.innerHTML = `
                         <button class="btn-delete" onclick="deleteProject('${project.id}', event)">
                             <svg><use href="#icon-trash"/></svg>
                         </button>
@@ -1074,21 +1041,106 @@
                             </div>
                         </div>
                     `;
-                    list.appendChild(card);
-                });
-            } catch (err) {
-                console.error(err);
-                list.innerHTML = `<div class="empty-state" style="color:var(--accent-danger)">Error loading projects</div>`;
+                        list.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error(err);
+                    list.innerHTML = `<div class="empty-state" style="color:var(--accent-danger)">Error loading projects</div>`;
+                }
             }
-        }
 
+            // === Admin Feedback Logic ===
+            async function loadFeedback() {
+                console.log('🔄 Loading feedback...');
+                if (!window.sb) {
+                    console.error('❌ Supabase client not ready');
+                    return;
+                }
 
-        // Apply UI Scale on load
-        (function () {
-            const s = localStorage.getItem('locad_ui_scale');
-            if (s) document.body.style.zoom = s;
-        })();
-    </script>
+                try {
+                    const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('❌ Feedback load error:', error);
+                        return;
+                    }
+
+                    console.log('✅ Feedback loaded:', data?.length, 'items');
+                    window._allFeedback = data || [];
+                    populateCategoryFilter(window._allFeedback);
+                    renderFeedbackList(window._allFeedback);
+                } catch (e) {
+                    console.error('❌ Unexpected error loading feedback:', e);
+                }
+            }
+
+            function populateCategoryFilter(items) {
+                const select = document.getElementById('feedback-category-filter');
+                if (!select) return;
+                const categories = [...new Set(items.map(i => i.category || '기타'))];
+                select.innerHTML = '<option value="all">전체</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            window.filterFeedback = function () {
+                const select = document.getElementById('feedback-category-filter');
+                const filter = select ? select.value : 'all';
+                const items = window._allFeedback || [];
+                const filtered = filter === 'all' ? items : items.filter(i => (i.category || '기타') === filter);
+                renderFeedbackList(filtered);
+            };
+
+            function renderFeedbackList(items) {
+                const container = document.getElementById('feedback-list');
+                if (!container) return;
+                container.innerHTML = '';
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
+                    return;
+                }
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.height = 'auto';
+                    card.style.cursor = 'default';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
+                            <span style="font-size:11px; color:var(--text-sub);">${new Date(item.created_at).toLocaleString()}</span>
+                        </div>
+                        <div style="margin-bottom:12px; color:var(--text-main); line-height:1.5;">${item.content}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">사용자: ${item.user_email || '익명'}</div>
+                        <textarea class="comment-input" data-id="${item.id}" placeholder="관리자 코멘트" style="width:100%; height:50px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
+                        <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px; width:100%;">저장</button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            window.saveComment = async function (id) {
+                const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
+                if (!textarea) return;
+                const comment = textarea.value;
+                try {
+                    const { error } = await window.sb.from('feedback').update({ comment }).eq('id', id);
+                    if (error) throw error;
+                    alert('코멘트가 저장되었습니다.');
+                    // Local update
+                    if (window._allFeedback) {
+                        const item = window._allFeedback.find(i => i.id === id);
+                        if (item) item.comment = comment;
+                    }
+                } catch (err) {
+                    console.error('Comment save error:', err);
+                    alert('저장 실패: ' + err.message);
+                }
+            };
+
+            // Apply UI Scale on load
+            (function () {
+                const s = localStorage.getItem('locad_ui_scale');
+                if (s) document.body.style.zoom = s;
+            })();
+        </script>
 </body>
 
 </html>
