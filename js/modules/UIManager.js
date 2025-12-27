@@ -590,7 +590,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.wireMode = this.wireMode === 'pin' ? 'grid' : 'pin';
         const btn = document.getElementById('btn-wire-mode');
         if (btn) {
-            btn.textContent = this.wireMode === 'pin' ? 'Pin' : 'Grid';
+            btn.innerHTML = this.wireMode === 'pin' ? '<svg><use href="#icon-wire" /></svg>' : '<svg><use href="#icon-grid" /></svg>';
         }
         this.showToast(this.wireMode === 'pin' ? '핀 직접 연결 모드' : '격자 기준 연결 모드', 'info');
     },

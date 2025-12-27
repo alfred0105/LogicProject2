@@ -1,0 +1,96 @@
+/* ============================================
+   📑 TAB SYSTEM STYLES
+   ============================================ */
+
+.workspace-tabs {
+    display: flex;
+    overflow-x: auto;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-default);
+    padding: 0;
+    margin: 0;
+    height: 48px;
+    /* 고정 높이 */
+}
+
+.workspace-tabs .tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    min-width: 120px;
+    height: 100%;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-subtle);
+    background: transparent;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    white-space: nowrap;
+}
+
+.workspace-tabs .tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.workspace-tabs .tab.active {
+    background: var(--bg-default);
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-blue);
+}
+
+.workspace-tabs .tab.readonly .tab-title {
+    color: #94a3b8;
+}
+
+/* 탭 아이콘 스타일 (SVG 대응) */
+.workspace-tabs .tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    /* 이모티콘 제거로 인한 배경 스타일 제거 */
+}
+
+.workspace-tabs .tab-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.workspace-tabs .tab-title {
+    flex: 1;
+}
+
+.workspace-tabs .tab-close {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.workspace-tabs .tab-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent-red);
+}
+
+.workspace-tabs::-webkit-scrollbar {
+    height: 4px;
+}
