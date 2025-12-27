@@ -696,10 +696,22 @@
         <script>
             let _allFeedback = [];
 
-            // Check for pending admin email from SupabaseClient
-            if (typeof window.__adminEmail !== 'undefined') {
-                setTimeout(() => window.setAdminStatus(window.__adminEmail), 100);
+            // Robust Admin Check
+            function tryInitAdmin() {
+                if (typeof window.__adminEmail !== 'undefined' && window.__adminEmail) {
+                    window.setAdminStatus(window.__adminEmail);
+                } else if (window.currentUser) {
+                    window.setAdminStatus(window.currentUser.email);
+                } else if (window.sb) {
+                    window.sb.auth.getUser().then(({ data }) => {
+                        if (data && data.user) window.setAdminStatus(data.user.email);
+                    });
+                }
             }
+            // Multiple attempts to catch async loading
+            tryInitAdmin();
+            setTimeout(tryInitAdmin, 500);
+            setTimeout(tryInitAdmin, 2000);
 
             // Ensure setAdminStatus updates visibility and loads feedback
             const originalSetAdmin = window.setAdminStatus || function () { };
