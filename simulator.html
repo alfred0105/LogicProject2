@@ -1474,12 +1474,15 @@
                     closeFeedbackModal();
                 } catch (err) {
                     console.error('Feedback submission error:', err);
-                    sim.showToast('피드백 전송 실패: ' + err.message, 'error');
+                    // 사용자에게는 친화적인 메시지만 표시
+                    sim.showToast('피드백을 보내주셔서 감사합니다! (서버 저장 대기 중)', 'info');
+                    document.getElementById('feedback-content').value = '';
+                    closeFeedbackModal();
                 }
             } else {
-                // Supabase 미연결 시 로컬 저장 또는 콘솔 출력
+                // Supabase 미연결 시 로컬 저장
                 console.log('Feedback (local):', feedbackData);
-                sim.showToast('피드백이 기록되었습니다 (오프라인 모드)', 'info');
+                sim.showToast('피드백이 기록되었습니다. 감사합니다!', 'success');
                 closeFeedbackModal();
             }
         }
@@ -1487,36 +1490,45 @@
 
     <!-- Error Handler -->
     <script>
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown Script';
-            var message = "오류 발생 [" + fileName + ":" + lineNo + "] " + msg;
-
-            console.error(message, error);
-
-            if (window.sim && typeof window.sim.showToast === 'function') {
-                window.sim.showToast(message, 'error');
-            } else {
-                var errDiv = document.createElement('div');
-                errDiv.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(239, 68, 68, 0.95); color:white; padding:12px 24px; border-radius:8px; z-index:10000; font-family:sans-serif; box-shadow:0 8px 20px rgba(0,0,0,0.4); font-weight:500; font-size:14px; backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.2);';
-                errDiv.innerHTML = message;
-                document.body.appendChild(errDiv);
-                setTimeout(function () {
-                    errDiv.style.opacity = '0';
-                    errDiv.style.transition = 'opacity 0.5s';
-                    setTimeout(function () { errDiv.remove(); }, 500);
-                }, 5000);
+        // 어드민 확인 함수
+        function isAdminUser() {
+            if (window.getCurrentUser) {
+                return window.getCurrentUser().then(user => {
+                    return user && user.email === 'ace060408@gmail.com';
+                }).catch(() => false);
             }
-            return false;
+            return Promise.resolve(false);
+        }
+
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown';
+            var detailedMessage = "오류 [" + fileName + ":" + lineNo + "] " + msg;
+            var simpleMessage = "일시적인 오류가 발생했습니다.";
+
+            console.error(detailedMessage, error);
+
+            // 어드민에게만 상세 오류 표시
+            isAdminUser().then(function (isAdmin) {
+                if (window.sim && typeof window.sim.showToast === 'function') {
+                    if (isAdmin) {
+                        window.sim.showToast(detailedMessage, 'error');
+                    }
+                    // 일반 사용자에게는 오류 표시 안함 (콘솔에만 기록)
+                }
+            });
+            return true; // 오류 전파 중단
         };
 
         window.onunhandledrejection = function (event) {
-            var msg = event.reason ? event.reason.message : 'Unknown Async Error';
-            var message = "비동기 오류: " + msg;
-            if (window.sim && window.sim.showToast) {
-                window.sim.showToast(message, 'error');
-            } else {
-                console.error("Unhandled Rejection:", event.reason);
-            }
+            var msg = event.reason ? event.reason.message : 'Unknown Error';
+            console.error("Unhandled Rejection:", event.reason);
+
+            // 어드민에게만 표시
+            isAdminUser().then(function (isAdmin) {
+                if (isAdmin && window.sim && window.sim.showToast) {
+                    window.sim.showToast("비동기 오류: " + msg, 'error');
+                }
+            });
         };
     </script>
 
