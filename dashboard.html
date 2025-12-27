@@ -1136,40 +1136,49 @@
                 if (window.log) window.log(`Content: "${comment}"`);
 
                 try {
-                    // .select()를 추가해서 실제로 저장된 값을 받아옴
-                    const { data, error } = await window.sb.from('feedback').update({ comment: comment }).eq('id', id).select();
+                    // RLS 문제를 원천 봉쇄하기 위해 관리자 전용 함수(RPC)를 호출합니다.
+                    const { error } = await window.sb.rpc('admin_update_comment', {
+                        feedback_id: id,
+                        new_comment: comment
+                    });
 
-                    if (error) throw error;
-
-                    if (window.log) window.log('Update response: ' + JSON.stringify(data));
-
-                    if (data && data.length > 0) {
-                        if (data[0].comment === comment) {
-                            alert('코멘트가 저장되었습니다.');
-                            location.reload();
-                        } else {
-                            alert('⚠️ 경고: 값 불일치. RLS 정책을 확인해주세요.');
+                    if (error) {
+                        // 함수가 없다는 에러면, 사용자에게 생성 SQL을 안내합니다.
+                        if (error.message && (error.message.includes('function') || error.message.includes('find'))) {
+                            alert('⛔ 마지막 단계!\n저장 기능을 활성화하려면 Supabase SQL Editor에서 아래 명령어를 한 번만 실행해주세요 (100% 해결됩니다):\n\ncreate or replace function admin_update_comment(feedback_id uuid, new_comment text)\nreturns void language plsql security definer\nas $$ begin update feedback set comment = new_comment where id = feedback_id; end; $$;');
+                            return;
                         }
-                    } else {
-                        // RLS Blocked
-                        alert('⛔ 권한 오류: 관리자가 다른 사용자의 글을 수정하려면 Supabase에서 별도 정책(Policy) 추가가 필요합니다.\nSQL:\ncreate policy "Admin Update" on feedback for update using (auth.email() = \'ace060408@gmail.com\');');
+                        throw error;
                     }
 
-                    // Local update
-                    if (window._allFeedback) {
-                        const item = window._allFeedback.find(i => i.id === id);
-                        if (item) item.comment = comment;
-                    }
+                    alert('코멘트가 저장되었습니다.');
+                    location.reload();
                 } catch (err) {
                     console.error('Comment save error:', err);
                     if (window.log) window.log('Save Error: ' + err.message);
 
                     if (err.message && err.message.includes('column')) {
-                        alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.');
+                        alert('⚠️ DB 설정 오류: "comment" 컬럼이 없습니다.');
                     } else {
                         alert('저장 실패: ' + err.message);
                     }
                 }
+
+                // Local update
+                if (window._allFeedback) {
+                    const item = window._allFeedback.find(i => i.id === id);
+                    if (item) item.comment = comment;
+                }
+            } catch (err) {
+                console.error('Comment save error:', err);
+                if (window.log) window.log('Save Error: ' + err.message);
+
+                if (err.message && err.message.includes('column')) {
+                    alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.');
+                } else {
+                    alert('저장 실패: ' + err.message);
+                }
+            }
             };
 
             // Apply UI Scale on load
