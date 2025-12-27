@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-    <!-- Blue Rounded Square -->
-    <rect x="2" y="2" width="60" height="60" rx="16" fill="#1e3a8a"/>
-    <!-- Text 'Lo' -->
-    <text x="32" y="44" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="900" font-size="36">Lo</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    <circle cx="9" cy="11" r="2.5"></circle>
+    <circle cx="15" cy="11" r="2.5"></circle>
+    <path d="M11.5 11h1"></path>
 </svg>
