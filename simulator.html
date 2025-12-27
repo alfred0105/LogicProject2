@@ -698,14 +698,14 @@
                                     </svg></div>
                                 <span class="name">D Flip-Flop</span>
                             </button>
+                            <button class="comp-btn dashed" onclick="sim.startNewModule()">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">새 모듈</span>
+                            </button>
                         </div>
                         <div id="user-packages" style="margin-top: 8px;"></div>
-                        <button class="comp-btn dashed" onclick="sim.startNewModule()" style="margin-top: 8px;">
-                            <div class="icon"><svg>
-                                    <use href="#icon-plus" />
-                                </svg></div>
-                            <span class="name">새 모듈</span>
-                        </button>
                     </div>
                 </section>
 
@@ -990,24 +990,11 @@
             </div>
 
             <div class="status-right">
-                <div class="zoom-controls">
-                    <button class="icon-btn" onclick="sim.zoom(-0.1)">
-                        <svg>
-                            <use href="#icon-zoom-out" />
-                        </svg>
-                    </button>
-                    <span class="zoom-value" id="zoom-level">100%</span>
-                    <button class="icon-btn" onclick="sim.zoom(0.1)">
-                        <svg>
-                            <use href="#icon-zoom-in" />
-                        </svg>
-                    </button>
-                    <button class="icon-btn" onclick="sim.resetZoom()" title="화면 맞춤">
-                        <svg>
-                            <use href="#icon-zoom-fit" />
-                        </svg>
-                    </button>
-                </div>
+                <button class="icon-btn" onclick="openFeedbackModal()" title="피드백 보내기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
             </div>
         </footer>
     </div>
@@ -1235,11 +1222,7 @@
     </div>
 
     <!-- ======== Feedback Floating Button & Modal ======== -->
-    <button class="feedback-fab" onclick="openFeedbackModal()" title="피드백 보내기">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-    </button>
+    <!-- FAB Removed -->
 
     <div class="modal-overlay" id="feedback-modal">
         <div class="modal feedback-modal">

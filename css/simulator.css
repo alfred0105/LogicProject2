@@ -4333,3 +4333,24 @@ div.component[data-type="NOT"] {
     right: 16px !important;
     z-index: 2000 !important;
 }
+
+/* Force Scrollbar on Sidebar */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+    display: block;
+}
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Sidebar Padding to prevent occlusion */
+.sidebar-content {
+    padding-bottom: 50px !important;
+}
