@@ -356,32 +356,28 @@ Object.assign(CircuitSimulator.prototype, {
 
     /**
      * 헬퍼: 핀 중심 좌표 구하기 (Workspace 기준)
+     * Transform과 무관하게 정확한 SVG 로컬 좌표 반환
      */
     getPinCenter(pin) {
-        // getBoundingClientRect는 뷰포트 기준
-        // workspace 자체를 기준으로 좌표 계산
-        // (val - wsVal - pan) / scale = localVal
-
-        // 모듈 편집 모드인지 확인 (다중 탭 지원)
-        const isModuleEditMode = this.currentTab && this.currentTab.startsWith('module_');
-
-        let wsRect;
-        if (isModuleEditMode && this.moduleCanvas) {
-            wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace && this.workspace.parentElement) {
-            // transform 없는 고정 컨테이너 기준 (parentElement)
-            wsRect = this.workspace.parentElement.getBoundingClientRect();
-        } else {
+        // 핀이 속한 컴포넌트 찾기
+        const comp = pin.closest('.component');
+        if (!comp) {
+            console.warn('Pin has no parent component:', pin);
             return { x: 0, y: 0 };
         }
 
-        const pan = isModuleEditMode ? { x: 0, y: 0 } : { x: this.panX || 0, y: this.panY || 0 };
-        const scale = isModuleEditMode ? 1 : (this.scale || 1);
+        // 컴포넌트의 SVG 로컬 좌표 (style.left/top은 이미 workspace 좌표)
+        const compX = parseFloat(comp.style.left) || 0;
+        const compY = parseFloat(comp.style.top) || 0;
 
-        const pinRect = pin.getBoundingClientRect();
+        // 핀의 컴포넌트 내 상대 위치
+        const pinRelX = pin.offsetLeft + pin.offsetWidth / 2;
+        const pinRelY = pin.offsetTop + pin.offsetHeight / 2;
+
+        // 절대 좌표 = 컴포넌트 좌표 + 핀 상대 좌표
         return {
-            x: (pinRect.left + pinRect.width / 2 - wsRect.left - pan.x) / scale,
-            y: (pinRect.top + pinRect.height / 2 - wsRect.top - pan.y) / scale
+            x: compX + pinRelX,
+            y: compY + pinRelY
         };
     },
 
