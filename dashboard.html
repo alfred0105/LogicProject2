@@ -657,15 +657,16 @@
                             <div class="t-desc" data-i18n="tut_gates_desc">Understanding AND, OR, NOT</div>
                         </div>
                     </div>
-                    <div class="tutorial-card" onclick="startTutorial('packages')">
+                    <div class="tutorial-card" onclick="goToInteractiveTutorial('modules')">
                         <div class="tutorial-header">
                             <div class="tutorial-icon"><svg>
                                     <use href="#icon-circuit" />
                                 </svg></div>
+                            <span class="badge-new" data-i18n="interactive">Interactive</span>
                         </div>
                         <div class="tutorial-body">
-                            <div class="t-title" data-i18n="tut_packages_title">Packages</div>
-                            <div class="t-desc" data-i18n="tut_packages_desc">Creating reusable ICs</div>
+                            <div class="t-title" data-i18n="tut_modules_title">모듈 만들기</div>
+                            <div class="t-desc" data-i18n="tut_modules_desc">재사용 가능한 커스텀 IC 만들기</div>
                         </div>
                     </div>
 
@@ -676,49 +677,85 @@
         <!-- Admin Feedback Section -->
         <div class="section-container" id="admin-feedback-section" style="display:none;">
             <div class="section-header">
-                <h2><span data-i18n="feedback">Feedback</span></h2>
-                <button class="btn-text" onclick="loadFeedback()" data-i18n="refresh">Refresh</button>
+                <div class="section-title-group">
+                    <h2><span data-i18n="feedback">피드백</span></h2>
+                </div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <select id="feedback-category-filter" onchange="filterFeedback()"
+                        style="padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main);">
+                        <option value="all">전체</option>
+                    </select>
+                    <button class="btn-text" onclick="loadFeedback()" data-i18n="refresh">새로고침</button>
+                </div>
             </div>
             <div class="section-content">
                 <div id="feedback-list" class="grid"></div>
             </div>
         </div>
         <script>
-            // Ensure setAdminStatus updates visibility
+            let _allFeedback = [];
+
+            // Ensure setAdminStatus updates visibility and loads feedback
             const originalSetAdmin = window.setAdminStatus || function () { };
             window.setAdminStatus = function (email) {
                 originalSetAdmin(email);
                 const isAdmin = email === 'ace060408@gmail.com';
                 const section = document.getElementById('admin-feedback-section');
-                if (section) section.style.display = isAdmin ? 'block' : 'none';
+                if (section) {
+                    section.style.display = isAdmin ? 'block' : 'none';
+                    if (isAdmin) loadFeedback();
+                }
             };
+
             async function loadFeedback() {
                 if (!window.sb) return;
-                const { data, error } = await window.sb.from('feedback').select('*');
+                const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
                 if (error) {
                     console.error('Feedback load error:', error);
                     return;
                 }
+                _allFeedback = data;
+                populateCategoryFilter(data);
                 renderFeedbackList(data);
             }
+
+            function populateCategoryFilter(items) {
+                const select = document.getElementById('feedback-category-filter');
+                const categories = [...new Set(items.map(i => i.category || '기타'))];
+                select.innerHTML = '<option value="all">전체</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            function filterFeedback() {
+                const filter = document.getElementById('feedback-category-filter').value;
+                const filtered = filter === 'all' ? _allFeedback : _allFeedback.filter(i => (i.category || '기타') === filter);
+                renderFeedbackList(filtered);
+            }
+
             function renderFeedbackList(items) {
                 const container = document.getElementById('feedback-list');
                 container.innerHTML = '';
+                if (items.length === 0) {
+                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
+                    return;
+                }
                 items.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'card';
+                    card.style.height = 'auto';
                     card.innerHTML = `
-                        <div class="fb-header" style="margin-bottom:8px;">
-                            <span class="fb-category" style="font-weight:600;">${item.category || '기타'}</span>
-                            <span class="fb-date" style="float:right; font-size:12px; color:var(--text-muted);">${new Date(item.created_at).toLocaleString()}</span>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
+                            <span style="font-size:11px; color:var(--text-sub);">${new Date(item.created_at).toLocaleString()}</span>
                         </div>
-                        <div class="fb-content" style="margin-bottom:8px;">${item.content}</div>
-                        <textarea class="comment-input" data-id="${item.id}" placeholder="관리자 코멘트" style="width:100%; height:60px; margin-bottom:4px;">${item.comment || ''}</textarea>
-                        <button class="icon-btn" onclick="saveComment('${item.id}')">저장</button>
+                        <div style="margin-bottom:12px; color:var(--text-main); line-height:1.5;">${item.content}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">사용자: ${item.user_email || '익명'}</div>
+                        <textarea class="comment-input" data-id="${item.id}" placeholder="관리자 코멘트" style="width:100%; height:50px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
+                        <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px;">저장</button>
                     `;
                     container.appendChild(card);
                 });
             }
+
             async function saveComment(id) {
                 const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
                 if (!textarea) return;
@@ -726,9 +763,9 @@
                 const { error } = await window.sb.from('feedback').update({ comment }).eq('id', id);
                 if (error) {
                     console.error('Comment save error:', error);
-                    if (window.sim) window.sim.showToast('코멘트 저장 실패', 'error');
+                    alert('코멘트 저장 실패');
                 } else {
-                    if (window.sim) window.sim.showToast('코멘트 저장됨', 'success');
+                    alert('코멘트 저장됨');
                 }
             }
         </script>

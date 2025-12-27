@@ -17,7 +17,7 @@ Object.assign(CircuitSimulator.prototype, {
     /**
      * 튜토리얼 순서 정의
      */
-    tutorialOrder: ['basics', 'gates'],
+    tutorialOrder: ['basics', 'gates', 'modules'],
 
     /**
      * 튜토리얼 목록 정의
@@ -71,7 +71,7 @@ Object.assign(CircuitSimulator.prototype, {
         'gates': {
             title: 'AND 게이트 만들기',
             description: '논리 게이트를 사용해 봅시다!',
-            nextTutorial: null,
+            nextTutorial: 'modules',
             steps: [
                 {
                     title: '스위치 2개 추가',
@@ -109,6 +109,57 @@ Object.assign(CircuitSimulator.prototype, {
                         const led = window.sim?.components?.find(c => c.getAttribute('data-type') === 'LED');
                         return led && led.getAttribute('data-value') === '1';
                     },
+                    position: 'center'
+                }
+            ]
+        },
+        'modules': {
+            title: '모듈 만들기',
+            description: '재사용 가능한 커스텀 IC를 만들어 봅시다!',
+            nextTutorial: null,
+            steps: [
+                {
+                    title: 'AND 게이트 추가',
+                    instruction: '먼저 **AND 게이트**를 캔버스에 추가하세요. 이것이 모듈의 핵심 로직이 됩니다.',
+                    highlight: '#sec-gates',
+                    condition: () => window.sim?.components?.some(c => c.getAttribute('data-type') === 'AND'),
+                    position: 'right'
+                },
+                {
+                    title: '입력 연결하기',
+                    instruction: '**스위치 2개**를 추가하고 AND 게이트의 입력에 연결하세요.',
+                    highlight: '.comp-btn.io:first-child',
+                    condition: () => {
+                        const switches = window.sim?.components?.filter(c => c.getAttribute('data-type') === 'SWITCH');
+                        return switches?.length >= 2 && window.sim?.wires?.length >= 2;
+                    },
+                    position: 'right'
+                },
+                {
+                    title: '출력 연결하기',
+                    instruction: '**LED**를 추가하고 AND 게이트의 출력에 연결하세요.',
+                    highlight: '.comp-btn.io:nth-child(2)',
+                    condition: () => {
+                        const led = window.sim?.components?.some(c => c.getAttribute('data-type') === 'LED');
+                        return led && window.sim?.wires?.length >= 3;
+                    },
+                    position: 'right'
+                },
+                {
+                    title: '회로 테스트',
+                    instruction: '**스위치를 모두 ON**으로 해서 LED가 켜지는지 확인하세요!',
+                    highlight: null,
+                    condition: () => {
+                        const led = window.sim?.components?.find(c => c.getAttribute('data-type') === 'LED');
+                        return led && led.getAttribute('data-value') === '1';
+                    },
+                    position: 'center'
+                },
+                {
+                    title: '모듈로 만들기',
+                    instruction: '이제 이 회로를 모듈로 저장해봅시다! 상단 메뉴에서 **파일 → 모듈로 저장** 또는 Ctrl+Shift+S를 누르세요.',
+                    highlight: null,
+                    condition: () => window._moduleCreated === true,
                     position: 'center'
                 }
             ]
