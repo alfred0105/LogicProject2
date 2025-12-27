@@ -161,11 +161,21 @@
     }
 
 
-    // CloudManager 자동 로드
-    const script = document.createElement('script');
-    script.src = 'js/modules/CloudManager.js?v=10';
-    script.onload = () => {
-        console.log('CloudManager module loaded');
+    // CloudManager 자동 로드 (Avoid duplicate load)
+    if (!window.CloudManager && !document.querySelector('script[src*="CloudManager.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'js/modules/CloudManager.js?v=10';
+        script.onload = () => {
+            console.log('CloudManager module loaded');
+            initCloudManager();
+        };
+        document.head.appendChild(script);
+    } else {
+        // 이미 로드되어 있거나 로드 중이면 초기화 시도
+        initCloudManager();
+    }
+
+    function initCloudManager() {
         const checkSim = setInterval(() => {
             // window.sim이 존재하고, 실제 시뮬레이터 인스턴스인지(components 배열 존재) 확인
             if (window.sim && window.sim.components && window.CloudManager) {
@@ -182,7 +192,6 @@
                 }
             }
         }, 500);
-    };
-    document.head.appendChild(script);
+    }
 
 })();
