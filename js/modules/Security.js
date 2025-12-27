@@ -1,5 +1,5 @@
 /**
- * 🔒 Security.js - 클라이언트 측 보안 강화
+ * Security.js - 클라이언트 측 보안 강화
  * 
  * 기능:
  * - 어드민 전용 오류 메시지 표시
@@ -95,7 +95,7 @@
             panel.id = 'admin-debug-panel';
             panel.innerHTML = `
                 <div class="admin-debug-header">
-                    <span>🔧 Admin Debug Console</span>
+                    <span>Admin Debug Console</span>
                     <button onclick="document.getElementById('admin-debug-panel').classList.toggle('minimized')">_</button>
                     <button onclick="document.getElementById('admin-debug-panel').remove()">✕</button>
                 </div>
@@ -275,7 +275,7 @@
 
         // 어드민에게는 상세 정보 표시
         if (window.sim && window.sim.showToast) {
-            window.sim.showToast(`❌ ${message}\n${details || ''}`, 'error');
+            window.sim.showToast(`${message}\n${details || ''}`, 'error');
         }
         console.error('[Admin Debug]', message, details);
     };
@@ -285,7 +285,7 @@
      */
     window.getErrorLog = function () {
         if (!_isAdmin && !isDev) {
-            return '🔒 접근이 거부되었습니다.';
+            return '접근이 거부되었습니다.';
         }
         return window._errorLog;
     };
@@ -295,7 +295,7 @@
      */
     window.printErrorLog = function () {
         if (!_isAdmin && !isDev) {
-            console.log('🔒 접근이 거부되었습니다.');
+            console.log('접근이 거부되었습니다.');
             return;
         }
         console.table(window._errorLog);

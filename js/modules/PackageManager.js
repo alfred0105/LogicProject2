@@ -370,7 +370,7 @@ Object.assign(CircuitSimulator.prototype, {
             this.userPackages.splice(index, 1);
             this.saveUserPackages();
             this.updatePackageList();
-            this.showToast(`🗑️ "${pkg.name}" 모듈이 삭제되었습니다`, 'info');
+            this.showToast(`"${pkg.name}" 모듈이 삭제되었습니다`, 'info');
         }
     },
 
@@ -387,12 +387,12 @@ Object.assign(CircuitSimulator.prototype, {
                 if (editingPkgId !== null && editingPkgId !== undefined) {
                     // 추가하려는 패키지가 현재 편집 중인 모듈을 참조하는지 재귀 검사
                     if (this.hasCircularReference(index, parseInt(editingPkgId), new Set())) {
-                        this.showToast('⚠️ 순환 참조 감지: 이 모듈은 현재 편집 중인 모듈을 포함하고 있어 추가할 수 없습니다.', 'error');
+                        this.showToast('순환 참조 감지: 이 모듈은 현재 편집 중인 모듈을 포함하고 있어 추가할 수 없습니다.', 'error');
                         return;
                     }
                     // 자기 자신 추가 방지
                     if (parseInt(editingPkgId) === index) {
-                        this.showToast('⚠️ 모듈은 자기 자신을 포함할 수 없습니다.', 'error');
+                        this.showToast('모듈은 자기 자신을 포함할 수 없습니다.', 'error');
                         return;
                     }
                 }
@@ -658,7 +658,7 @@ Object.assign(CircuitSimulator.prototype, {
 
         const compType = comp.getAttribute('data-type');
         if (this.internalTitle) {
-            this.internalTitle.innerText = `🔍 ${compType} 내부 구조 (보기 전용)`;
+            this.internalTitle.innerText = `${compType} 내부 구조 (보기 전용)`;
         }
 
         this.currentScopeComp = comp;

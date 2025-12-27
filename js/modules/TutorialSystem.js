@@ -495,7 +495,7 @@ Object.assign(CircuitSimulator.prototype, {
                 if (this.tutorialStep >= this.tutorialData.steps.length) {
                     this.completeTutorial();
                 } else {
-                    this.showToast('✅ 잘했어요! 다음 단계로...', 'success');
+                    this.showToast('잘했어요! 다음 단계로...', 'success');
                     setTimeout(() => this.showTutorialStep(), 500);
                 }
             }
@@ -516,7 +516,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (panel) {
             let buttonsHtml = `
                 <button class="tutorial-complete-btn" onclick="sim.endTutorial()">
-                    자유롭게 사용하기 🚀
+                    자유롭게 사용하기
                 </button>
             `;
 
@@ -530,7 +530,7 @@ Object.assign(CircuitSimulator.prototype, {
 
             panel.innerHTML = `
                 <div class="tutorial-complete">
-                    <h3>🎉 튜토리얼 완료!</h3>
+                    <h3>튜토리얼 완료!</h3>
                     <p>${this.tutorialData.title}을(를) 성공적으로 완료했습니다!</p>
                     <div class="tutorial-btn-group">
                         ${buttonsHtml}

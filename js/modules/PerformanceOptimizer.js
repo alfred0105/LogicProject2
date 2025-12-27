@@ -475,7 +475,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.perfMonitorEnabled = enable;
         if (enable) {
             this.initPerformanceMonitor();
-            console.log('🚀 Performance Monitor Enabled');
+            console.log('Performance Monitor Enabled');
         } else {
             console.log('Performance Monitor Disabled');
         }

@@ -21,12 +21,12 @@
                 detectSessionInUrl: true
             }
         });
-        console.log('✅ Supabase 연결 설정됨 (옵션 적용)');
+        console.log('Supabase 연결 설정됨 (옵션 적용)');
     } else if (typeof createClient !== 'undefined') {
         // 구형 방식 호환
         // _supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
     } else {
-        console.error('❌ Supabase 라이브러리가 로드되지 않았습니다.');
+        console.error('Supabase 라이브러리가 로드되지 않았습니다.');
     }
 
     // 전역 노출 (필요한 것만)
@@ -138,7 +138,7 @@
     const script = document.createElement('script');
     script.src = 'js/modules/CloudManager.js?v=10';
     script.onload = () => {
-        console.log('✅ CloudManager module loaded');
+        console.log('CloudManager module loaded');
         const checkSim = setInterval(() => {
             // window.sim이 존재하고, 실제 시뮬레이터 인스턴스인지(components 배열 존재) 확인
             if (window.sim && window.sim.components && window.CloudManager) {

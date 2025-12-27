@@ -142,19 +142,19 @@ window.onerror = function (msg, url, line, col, error) {
 
     const errorMessages = {
         ko: {
-            title: '⚠️ 시뮬레이터 오류',
+            title: '시뮬레이터 오류',
             line: '위치',
             message: '오류 내용',
             suggestion: '페이지를 새로고침하거나 개발자 도구 콘솔(F12)을 확인하세요.'
         },
         en: {
-            title: '⚠️ Simulator Error',
+            title: 'Simulator Error',
             line: 'Line',
             message: 'Error',
             suggestion: 'Please refresh the page or check the developer console (F12).'
         },
         es: {
-            title: '⚠️ Error del Simulador',
+            title: 'Error del Simulador',
             line: 'Línea',
             message: 'Error',
             suggestion: 'Por favor, actualice la página o revise la consola del desarrollador (F12).'

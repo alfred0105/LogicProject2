@@ -51,12 +51,12 @@
                 <span class="tutorial-badge-new">인터랙티브</span>
             </div>
             <div class="tutorial-card" onclick="startTutorial('packages')">
-                <div class="tutorial-icon">📦</div>
+                <div class="tutorial-icon">M</div>
                 <div class="tutorial-title">패키지 사용법</div>
                 <div class="tutorial-desc">반가산기, 전가산기 등 패키지 활용</div>
             </div>
             <div class="tutorial-card" onclick="startTutorial('advanced')">
-                <div class="tutorial-icon">🔧</div>
+                <div class="tutorial-icon">T</div>
                 <div class="tutorial-title">전문가 모드</div>
                 <div class="tutorial-desc">트랜지스터 레벨 회로 설계</div>
             </div>
@@ -324,7 +324,7 @@
                 card.onclick = () => location.href = `simulator.html?id=${project.id}`;
 
                 card.innerHTML = `
-                    <button class="btn-delete-card" onclick="deleteProject('${project.id}', event)">🗑️</button>
+                    <button class="btn-delete-card" onclick="deleteProject('${project.id}', event)">x</button>
                     <div class="card-preview">⚡</div>
                     <div class="card-info">
                         <div class="card-title">${project.title || '제목 없음'}</div>
@@ -476,7 +476,7 @@
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    list.innerHTML = '<div class="empty-state">📭 아직 피드백이 없습니다.</div>';
+                    list.innerHTML = '<div class="empty-state">아직 피드백이 없습니다.</div>';
                     return;
                 }
 
@@ -485,7 +485,7 @@
                     const date = new Date(fb.created_at).toLocaleString('ko-KR');
                     const categoryLabels = {
                         bug: '🐛 버그',
-                        feature: '💡 기능 제안',
+                        feature: '기능 제안',
                         ux: '🎨 UI/UX',
                         other: '📝 기타'
                     };
@@ -511,7 +511,7 @@
                     list.innerHTML = `<div class="empty-state">피드백 로드 오류: ${err.message || err}</div>`;
                 } else {
                     // 테이블이 없는 경우 조용히 숨김
-                    list.innerHTML = '<div class="empty-state">📭 피드백 기능 준비 중...</div>';
+                    list.innerHTML = '<div class="empty-state">피드백 기능 준비 중...</div>';
                 }
             }
         }

@@ -362,10 +362,10 @@
                 <div class="edit-options">
                     <button class="icon-btn small" id="btn-grid-snap" onclick="sim.toggleGridSnap()"
                         title="그리드 스냅 ON/OFF">
-                        <span>📐</span>
+                        <span>#</span>
                     </button>
                     <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="와이어 연결 모드">
-                        🔌 핀
+                        Pin
                     </button>
                 </div>
             </div>
@@ -749,12 +749,16 @@
             <!-- Tab Bar -->
             <div class="workspace-tabs" id="workspace-tabs">
                 <div class="tab active" data-tab="main" onclick="sim.switchTab('main')">
-                    <span class="tab-icon">🔧</span>
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-wire" />
+                        </svg></span>
                     <span class="tab-title">메인 회로</span>
                 </div>
                 <div class="tab" data-tab="module" id="module-tab" style="display: none;"
                     onclick="sim.switchTab('module')">
-                    <span class="tab-icon">📦</span>
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-package" />
+                        </svg></span>
                     <span class="tab-title" id="module-tab-title">모듈 편집</span>
                     <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTab()">×</button>
                 </div>
@@ -775,14 +779,14 @@
                     </div>
                     <div class="module-actions">
                         <button class="btn-module-action save" id="btn-save-as-new" onclick="sim.saveAsNewModule()">
-                            📦 모듈로 저장
+                            모듈로 저장
                         </button>
                         <button class="btn-module-action" id="btn-save-changes" onclick="sim.saveModuleChanges()"
                             style="display: none;">
-                            💾 변경사항 저장
+                            변경사항 저장
                         </button>
                         <button class="btn-module-action secondary" onclick="sim.closeModuleTab()">
-                            ↩️ 닫기
+                            닫기
                         </button>
                     </div>
                 </div>
@@ -791,7 +795,7 @@
                     <!-- Component Palette for Module -->
                     <div class="module-palette">
                         <div class="palette-section">
-                            <h5>📥 입출력</h5>
+                            <h5>입출력</h5>
                             <div class="palette-grid">
                                 <button class="palette-btn input" onclick="sim.addModuleComponent('PORT_IN')"
                                     title="입력 포트">
@@ -842,7 +846,7 @@
                             </div>
                         </div>
                         <div class="palette-section">
-                            <h5>📐 패키지 크기</h5>
+                            <h5>패키지 크기</h5>
                             <div class="size-inputs">
                                 <div class="size-row">
                                     <label>너비:</label>
@@ -873,7 +877,7 @@
                         <div id="module-outputs" class="io-list"></div>
                     </div>
                     <div class="io-section wide">
-                        <h4>ℹ️ 도움말</h4>
+                        <h4>도움말</h4>
                         <p class="io-help">입력/출력 포트를 배치하고 게이트로 연결하세요. 핀을 클릭하여 와이어를 연결합니다.</p>
                     </div>
                 </div>
@@ -890,7 +894,9 @@
         <!-- Component Info Panel (좌측 상단 - 독립적 위치) -->
         <div id="component-info-panel" class="component-info-panel hidden">
             <div class="info-header">
-                <span class="info-type-icon">🔌</span>
+                <span class="info-type-icon"><svg width="16" height="16">
+                        <use href="#icon-wire" />
+                    </svg></span>
                 <span class="info-type-name">Component</span>
             </div>
             <!-- 애니메이션 영역 -->
@@ -901,7 +907,7 @@
                 <p class="info-description">소자를 선택하면 여기에 설명이 표시됩니다.</p>
                 <!-- 사용법 영역 -->
                 <div class="info-usage" id="info-usage-section">
-                    <div class="info-usage-title">💡 사용법</div>
+                    <div class="info-usage-title">Tip</div>
                     <p class="info-usage-content" id="info-usage"></p>
                 </div>
                 <div class="info-details">
@@ -1038,7 +1044,7 @@
         <div class="tooltip-content">
             <div id="tooltip-desc" class="tooltip-desc"></div>
             <div class="tooltip-usage">
-                <div class="tooltip-usage-title">💡 사용법</div>
+                <div class="tooltip-usage-title">Tip</div>
                 <div id="tooltip-usage" class="tooltip-usage-content"></div>
             </div>
             <div class="tooltip-shortcuts" id="tooltip-shortcuts"></div>
@@ -1182,7 +1188,7 @@
                     <label class="form-label">카테고리</label>
                     <select id="feedback-category" class="form-input" style="width: 100%;">
                         <option value="bug">🐛 버그 리포트</option>
-                        <option value="feature">💡 기능 제안</option>
+                        <option value="feature">기능 제안</option>
                         <option value="ux">🎨 UI/UX 개선</option>
                         <option value="other">📝 기타 의견</option>
                     </select>
@@ -1319,7 +1325,7 @@
                     const { error } = await window.sb.from('feedback').insert([feedbackData]);
                     if (error) throw error;
 
-                    sim.showToast('✅ 피드백이 전송되었습니다. 감사합니다!', 'success');
+                    sim.showToast('피드백이 전송되었습니다. 감사합니다!', 'success');
                     document.getElementById('feedback-content').value = '';
                     closeFeedbackModal();
                 } catch (err) {
@@ -1329,7 +1335,7 @@
             } else {
                 // Supabase 미연결 시 로컬 저장 또는 콘솔 출력
                 console.log('Feedback (local):', feedbackData);
-                sim.showToast('✅ 피드백이 기록되었습니다 (오프라인 모드)', 'info');
+                sim.showToast('피드백이 기록되었습니다 (오프라인 모드)', 'info');
                 closeFeedbackModal();
             }
         }
@@ -1339,7 +1345,7 @@
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown Script';
-            var message = "⚠️ 오류 발생 [" + fileName + ":" + lineNo + "] " + msg;
+            var message = "오류 발생 [" + fileName + ":" + lineNo + "] " + msg;
 
             console.error(message, error);
 
@@ -1361,7 +1367,7 @@
 
         window.onunhandledrejection = function (event) {
             var msg = event.reason ? event.reason.message : 'Unknown Async Error';
-            var message = "⚠️ 비동기 오류: " + msg;
+            var message = "비동기 오류: " + msg;
             if (window.sim && window.sim.showToast) {
                 window.sim.showToast(message, 'error');
             } else {

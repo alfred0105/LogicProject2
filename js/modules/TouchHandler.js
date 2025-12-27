@@ -1,5 +1,5 @@
 /**
- * 📱 Touch Handler Module for LoCAD
+ * Touch Handler Module for LoCAD
  * 터치스크린 완전 지원 모듈
  * - 컴포넌트 드래그 (터치)
  * - 핀 연결 (터치)
@@ -63,7 +63,7 @@ Object.assign(CircuitSimulator.prototype, {
             moduleCanvas.addEventListener('touchcancel', (e) => this.onTouchEnd(e), { passive: false });
         }
 
-        console.log('📱 Touch events initialized, isTouchDevice:', this.isTouchDevice);
+        console.log('Touch events initialized, isTouchDevice:', this.isTouchDevice);
     },
 
     /**

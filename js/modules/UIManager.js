@@ -150,7 +150,7 @@ Object.assign(CircuitSimulator.prototype, {
         const btn = document.getElementById('btn-mode');
         if (!btn) return;
         if (this.userMode === 'expert') {
-            btn.innerHTML = '🔧 Expert';
+            btn.innerHTML = 'Expert';
             btn.classList.add('active');
         } else {
             btn.innerHTML = '🎓 Easy';
@@ -169,7 +169,7 @@ Object.assign(CircuitSimulator.prototype, {
             modal.className = 'modal-overlay';
             modal.innerHTML = `
                 <div class="modal-window">
-                    <div class="modal-header">🔧 부품 속성 (Properties)</div>
+                    <div class="modal-header">Properties</div>
                     <div class="key-row">
                         <span>Type</span> <span id="prop-type">AND</span>
                     </div>
@@ -590,7 +590,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.wireMode = this.wireMode === 'pin' ? 'grid' : 'pin';
         const btn = document.getElementById('btn-wire-mode');
         if (btn) {
-            btn.textContent = this.wireMode === 'pin' ? '🔌 핀' : '📐 격자';
+            btn.textContent = this.wireMode === 'pin' ? 'Pin' : 'Grid';
         }
         this.showToast(this.wireMode === 'pin' ? '핀 직접 연결 모드' : '격자 기준 연결 모드', 'info');
     },
@@ -633,7 +633,7 @@ Object.assign(CircuitSimulator.prototype, {
                             <tr><td style="padding: 4px; border: 1px solid var(--border-subtle);"><strong>Ctrl+A</strong></td><td style="padding: 4px; border: 1px solid var(--border-subtle);">전체 선택</td></tr>
                         </table>
                         
-                        <h3>💡 팁</h3>
+                        <h3>Tip</h3>
                         <ul>
                             <li>스위치를 클릭하면 ON/OFF가 전환됩니다</li>
                             <li>컴포넌트 우클릭으로 옵션 메뉴를 열 수 있습니다</li>

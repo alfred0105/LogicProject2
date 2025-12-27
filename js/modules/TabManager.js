@@ -169,7 +169,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (existingTabId) {
             // 이미 열려있으면 해당 탭으로 전환
             this.switchToModuleTab(existingTabId);
-            this.showToast(`📦 ${moduleName} 탭으로 전환합니다`, 'info');
+            this.showToast(`${moduleName} 탭으로 전환합니다`, 'info');
             return;
         }
 
@@ -194,7 +194,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (isBuiltIn) tabElement.classList.add('readonly');
         tabElement.setAttribute('data-tab', tabId);
         tabElement.innerHTML = `
-            <span class="tab-icon">${isBuiltIn ? '🔒' : '📦'}</span>
+            <span class="tab-icon">[M]</span>
             <span class="tab-title">${moduleName}${isBuiltIn ? ' (읽기 전용)' : ''}</span>
             <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTabById('${tabId}')">×</button>
         `;
@@ -261,9 +261,9 @@ Object.assign(CircuitSimulator.prototype, {
         }
 
         if (isBuiltIn) {
-            this.showToast(`🔒 ${moduleName} - 기본 모듈은 읽기 전용입니다. 구조를 참고하여 직접 모듈을 만들어보세요!`, 'info');
+            this.showToast(`[Locked] ${moduleName} - 기본 모듈은 읽기 전용입니다. 구조를 참고하여 직접 모듈을 만들어보세요!`, 'info');
         } else {
-            this.showToast(`📦 ${moduleName} 모듈을 편집합니다`, 'info');
+            this.showToast(`${moduleName} 모듈을 편집합니다`, 'info');
         }
     },
 
@@ -1101,7 +1101,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
         this._pendingRefreshPackages.add(pkgId);
 
-        this.showToast('✅ 모듈 변경사항이 저장되었습니다 (메인 탭에서 적용됩니다)', 'success');
+        this.showToast('모듈 변경사항이 저장되었습니다 (메인 탭에서 적용됩니다)', 'success');
     },
 
     /**
@@ -1336,7 +1336,7 @@ Object.assign(CircuitSimulator.prototype, {
         // 모듈 탭으로 전환
         this.switchToModuleTab(tabId);
 
-        this.showToast('📦 새 모듈 편집을 시작합니다', 'info');
+        this.showToast('새 모듈 편집을 시작합니다', 'info');
     },
 
     /**
@@ -1454,11 +1454,11 @@ Object.assign(CircuitSimulator.prototype, {
         const outputs = this.moduleComponents.filter(c => c.getAttribute('data-type') === 'PORT_OUT');
 
         if (inputs.length === 0) {
-            this.showToast('⚠️ 최소 1개의 입력 포트가 필요합니다', 'error');
+            this.showToast('최소 1개의 입력 포트가 필요합니다', 'error');
             return;
         }
         if (outputs.length === 0) {
-            this.showToast('⚠️ 최소 1개의 출력 포트가 필요합니다', 'error');
+            this.showToast('최소 1개의 출력 포트가 필요합니다', 'error');
             return;
         }
 
@@ -1501,7 +1501,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.saveUserPackages();
         this.updatePackageList();
 
-        this.showToast(`✅ "${moduleName}" 모듈이 생성되었습니다!`, 'success');
+        this.showToast(`"${moduleName}" 모듈이 생성되었습니다!`, 'success');
 
         // 모듈 탭 닫기
         this.closeModuleTab();

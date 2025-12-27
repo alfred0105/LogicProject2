@@ -346,7 +346,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (switches.length === 0 || leds.length === 0) {
             document.getElementById('truth-table-content').innerHTML = `
                 <p style="color: var(--accent-yellow); text-align: center; padding: 40px;">
-                    ⚠️ 스위치와 LED가 필요합니다.<br>
+                    스위치와 LED가 필요합니다.<br>
                     회로를 먼저 구성해주세요.
                 </p>
             `;

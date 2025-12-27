@@ -175,7 +175,7 @@ Object.assign(CircuitSimulator.prototype, {
                 animation: `<svg viewBox="0 0 80 50"><rect x="0" y="0" width="80" height="50" fill="#0a0c10"/><circle cx="30" cy="25" r="18" fill="#1a1e25" stroke="#ff4e42" stroke-width="2"/><line x1="30" y1="10" x2="30" y2="25" stroke="#ff4e42" stroke-width="3" stroke-linecap="round"/><line x1="48" y1="25" x2="72" y2="25" stroke="#ff4e42" stroke-width="3" stroke-linecap="round"/><circle cx="72" cy="25" r="4" fill="#ff4e42"/><text x="30" y="40" text-anchor="middle" fill="#10b981" font-size="9" font-family="Inter" font-weight="600">ON</text></svg>`
             },
             'LED': {
-                icon: '💡',
+                icon: '',
                 name: 'LED',
                 description: 'HIGH 입력 시 불이 켜집니다.',
                 inputs: 1,
@@ -292,7 +292,7 @@ Object.assign(CircuitSimulator.prototype, {
                 </svg>`
             },
             'SR_LATCH': {
-                icon: '🔒',
+                icon: '',
                 name: 'SR Latch (SR 래치)',
                 description: 'SR 래치는 Set(S)과 Reset(R) 두 입력을 갖는 가장 기본적인 기억 소자입니다. 두 개의 크로스-커플 NOR(또는 NAND) 게이트로 구성됩니다. S=1이면 Q=1로 설정(Set), R=1이면 Q=0으로 리셋(Reset)됩니다. S=R=1은 금지 상태입니다.',
                 inputs: 2,
@@ -319,7 +319,7 @@ Object.assign(CircuitSimulator.prototype, {
                 </svg>`
             },
             'D_FLIPFLOP': {
-                icon: '📦',
+                icon: '',
                 name: 'D Flip-Flop (D 플립플롭)',
                 description: 'D 플립플롭은 클럭 신호의 상승 에지(↑)에서 D 입력값을 Q 출력으로 전달하는 에지 트리거 기억 소자입니다. "데이터 래치"라고도 불리며, 레지스터, 카운터 등 순차 회로의 기본 구성 요소입니다.',
                 inputs: 2,
@@ -346,7 +346,7 @@ Object.assign(CircuitSimulator.prototype, {
         };
 
         return componentData[type] || {
-            icon: '🔌',
+            icon: '',
             name: type,
             description: '사용자 정의 컴포넌트입니다.',
             inputs: '?',
