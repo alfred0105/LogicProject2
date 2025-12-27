@@ -74,9 +74,9 @@ Object.assign(CircuitSimulator.prototype, {
         let wsRect;
         if (isModuleEditMode && this.moduleCanvas) {
             wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace) {
-            // workspace 자체를 기준으로 사용
-            wsRect = this.workspace.getBoundingClientRect();
+        } else if (this.workspace && this.workspace.parentElement) {
+            // transform 없는 고정 컨테이너 기준 (parentElement)
+            wsRect = this.workspace.parentElement.getBoundingClientRect();
         } else {
             return; // 워크스페이스 참조 없음
         }
@@ -137,9 +137,9 @@ Object.assign(CircuitSimulator.prototype, {
         let wsRect;
         if (isModuleEditMode && this.moduleCanvas) {
             wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace) {
-            // workspace 자체를 기준으로 사용
-            wsRect = this.workspace.getBoundingClientRect();
+        } else if (this.workspace && this.workspace.parentElement) {
+            // transform 없는 고정 컨테이너 기준 (parentElement)
+            wsRect = this.workspace.parentElement.getBoundingClientRect();
         } else {
             this.cancelWiring();
             return;
@@ -247,6 +247,9 @@ Object.assign(CircuitSimulator.prototype, {
 
         // 이벤트: 전선 좌클릭하여 Joint 추가, 우클릭하여 삭제
         path.onmousedown = (e) => {
+            // Pan 모드, 휠 클릭(1), 또는 스페이스바 누른 상태라면 이벤트 패스 (화면 이동 우선)
+            if (this.mode === 'pan' || e.button === 1) return;
+
             if (this.mode !== 'select' && this.mode !== 'edit') return;
             e.stopPropagation();
             this.insertJointOnWire(pinA, pinB, path, e);
@@ -365,9 +368,9 @@ Object.assign(CircuitSimulator.prototype, {
         let wsRect;
         if (isModuleEditMode && this.moduleCanvas) {
             wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace) {
-            // workspace 자체를 기준으로 사용 (parentElement 아님)
-            wsRect = this.workspace.getBoundingClientRect();
+        } else if (this.workspace && this.workspace.parentElement) {
+            // transform 없는 고정 컨테이너 기준 (parentElement)
+            wsRect = this.workspace.parentElement.getBoundingClientRect();
         } else {
             return { x: 0, y: 0 };
         }
@@ -417,8 +420,8 @@ Object.assign(CircuitSimulator.prototype, {
      * 전선 중간에 Joint 추가 (기존 로직 유지하되 안정화)
      */
     insertJointOnWire(fromPin, toPin, wirePath, event) {
-        // workspace 자체를 기준으로 사용
-        const wsRect = this.workspace.getBoundingClientRect();
+        // transform 없는 고정 컨테이너 기준 (parentElement)
+        const wsRect = this.workspace.parentElement.getBoundingClientRect();
         const clickX = (event.clientX - wsRect.left - this.panX) / this.scale;
         const clickY = (event.clientY - wsRect.top - this.panY) / this.scale;
 
