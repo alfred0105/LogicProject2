@@ -230,7 +230,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--gradient-brand);
+    background: #1e293b;
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
 }

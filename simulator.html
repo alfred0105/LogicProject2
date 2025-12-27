@@ -34,11 +34,12 @@
     <!-- SVG Icon Definitions -->
     <svg style="display: none;">
         <defs>
-            <!-- Logo -->
+            <!-- Logo (Chat Bubble + Glasses) -->
             <symbol id="icon-logo" viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="6" fill="#1e293b" />
-                <path d="M7 6v12h9v-4h-5V6h-4z" fill="#3b82f6" />
-                <circle cx="17" cy="9" r="2" fill="#3b82f6" />
+                <path d="M5 5h14c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H9l-4 4V7c0-1.1.9-2 2-2z" fill="none" stroke="#3b82f6"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="9.5" cy="12" r="2.5" stroke="#3b82f6" stroke-width="2" fill="none" />
+                <circle cx="14.5" cy="12" r="2.5" stroke="#3b82f6" stroke-width="2" fill="none" />
             </symbol>
 
             <symbol id="icon-lightning" viewBox="0 0 24 24">
@@ -306,74 +307,72 @@
                     </svg>
                 </button>
             </div>
-    </div>
-    </div>
 
-    <!-- File -->
-    <div class="toolbar-group">
-        <button class="icon-btn" onclick="sim.newProject()" title="새 프로젝트 (N)">
-            <svg>
-                <use href="#icon-file" />
-            </svg>
-            <span class="btn-text">새 파일</span>
-        </button>
-        <button class="icon-btn" onclick="sim.saveProject()" title="파일 저장 (S)">
-            <svg>
-                <use href="#icon-save" />
-            </svg>
-            <span class="btn-text">수동 저장</span>
-        </button>
+            <!-- File -->
+            <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.newProject()" title="새 프로젝트 (N)">
+                    <svg>
+                        <use href="#icon-file" />
+                    </svg>
+                    <span class="btn-text">새 파일</span>
+                </button>
+                <button class="icon-btn" onclick="sim.saveProject()" title="파일 저장 (S)">
+                    <svg>
+                        <use href="#icon-save" />
+                    </svg>
+                    <span class="btn-text">수동 저장</span>
+                </button>
 
-        <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
-            <svg>
-                <use href="#icon-export" />
-            </svg>
-            <span class="btn-text">내보내기</span>
-        </button>
-    </div>
+                <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
+                    <svg>
+                        <use href="#icon-export" />
+                    </svg>
+                    <span class="btn-text">내보내기</span>
+                </button>
+            </div>
 
-    <div class="toolbar-divider"></div>
+            <div class="toolbar-divider"></div>
 
-    <!-- Edit -->
-    <div class="toolbar-group">
-        <button class="icon-btn" onclick="sim.undo()" title="실행 취소 (Ctrl+Z)">
-            <svg>
-                <use href="#icon-undo" />
-            </svg>
-            <span class="btn-text">취소</span>
-        </button>
-        <button class="icon-btn" onclick="sim.redo()" title="다시 실행 (Ctrl+Y)">
-            <svg>
-                <use href="#icon-redo" />
-            </svg>
-            <span class="btn-text">복구</span>
-        </button>
-        <div class="toolbar-divider"></div>
-        <button class="icon-btn" onclick="sim.copySelection()" title="복사 (Ctrl+C)">
-            <svg>
-                <use href="#icon-copy" />
-            </svg>
-            <span class="btn-text">복사</span>
-        </button>
-        <button class="icon-btn" onclick="sim.pasteFromClipboard()" title="붙여넣기 (Ctrl+V)">
-            <svg>
-                <use href="#icon-paste" />
-            </svg>
-            <span class="btn-text">붙여넣기</span>
-        </button>
-        <button class="icon-btn" onclick="sim.deleteSelected()" title="삭제 (Del)">
-            <svg>
-                <use href="#icon-trash" />
-            </svg>
-            <span class="btn-text">삭제</span>
-        </button>
-    </div>
+            <!-- Edit -->
+            <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.undo()" title="실행 취소 (Ctrl+Z)">
+                    <svg>
+                        <use href="#icon-undo" />
+                    </svg>
+                    <span class="btn-text">취소</span>
+                </button>
+                <button class="icon-btn" onclick="sim.redo()" title="다시 실행 (Ctrl+Y)">
+                    <svg>
+                        <use href="#icon-redo" />
+                    </svg>
+                    <span class="btn-text">복구</span>
+                </button>
+                <div class="toolbar-divider"></div>
+                <button class="icon-btn" onclick="sim.copySelection()" title="복사 (Ctrl+C)">
+                    <svg>
+                        <use href="#icon-copy" />
+                    </svg>
+                    <span class="btn-text">복사</span>
+                </button>
+                <button class="icon-btn" onclick="sim.pasteFromClipboard()" title="붙여넣기 (Ctrl+V)">
+                    <svg>
+                        <use href="#icon-paste" />
+                    </svg>
+                    <span class="btn-text">붙여넣기</span>
+                </button>
+                <button class="icon-btn" onclick="sim.deleteSelected()" title="삭제 (Del)">
+                    <svg>
+                        <use href="#icon-trash" />
+                    </svg>
+                    <span class="btn-text">삭제</span>
+                </button>
+            </div>
 
-    <div class="toolbar-divider"></div>
+            <div class="toolbar-divider"></div>
 
-    <!-- Tools -->
-    <div class="toolbar-group">
-        <!-- Tool Buttons Removed (Integrated functionality)
+            <!-- Tools -->
+            <div class="toolbar-group">
+                <!-- Tool Buttons Removed (Integrated functionality)
                 <div class="tool-toggle">
                     <button class="icon-btn active" id="btn-select" onclick="sim.setMode('edit')" title="선택 도구 (V)">
                         <svg>
@@ -399,595 +398,59 @@
                 </div>
                 -->
 
-        <!-- Grid & Wire Mode -->
-        <div class="edit-options">
-            <button class="icon-btn small" id="btn-grid-snap" onclick="sim.toggleGridSnap()" title="그리드 스냅 ON/OFF">
-                <svg>
-                    <use href="#icon-grid" />
-                </svg>
-            </button>
-            <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="와이어 연결 모드">
-                <svg>
-                    <use href="#icon-wire" />
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Simulation -->
-    <div class="toolbar-group">
-        <button class="icon-btn" id="btn-run" onclick="sim.toggleSimulation()" title="시뮬레이션 시작/정지">
-            <svg>
-                <use href="#icon-play" />
-            </svg>
-            <span class="btn-text">실행</span>
-        </button>
-        <button class="icon-btn" onclick="sim.stepSimulation()" title="한 단계 실행">
-            <svg>
-                <use href="#icon-step" />
-            </svg>
-            <span class="btn-text">스텝</span>
-        </button>
-        <button class="icon-btn" onclick="sim.resetSimulation()" title="시뮬레이션 초기화">
-            <svg>
-                <use href="#icon-reset" />
-            </svg>
-            <span class="btn-text">리셋</span>
-        </button>
-    </div>
-
-    <!-- Speed Control -->
-    <div class="speed-control">
-        <label class="speed-label">⚡ 속도</label>
-        <input type="range" class="speed-slider" id="speed-slider" min="0.1" max="5" step="0.1" value="1"
-            oninput="sim.updateSpeedLabel(parseFloat(this.value))"
-            onchange="sim.setSimulationSpeed(parseFloat(this.value), true)">
-        <span class="speed-value" id="speed-value">1.0x</span>
-    </div>
-
-    <div class="toolbar-spacer"></div>
-
-    <!-- Zoom -->
-    <div class="zoom-control">
-        <button class="icon-btn" onclick="sim.zoom(-0.1)">
-            <svg>
-                <use href="#icon-zoom-out" />
-            </svg>
-        </button>
-        <span class="zoom-value" id="zoom-level">100%</span>
-        <button class="icon-btn" onclick="sim.zoom(0.1)">
-            <svg>
-                <use href="#icon-zoom-in" />
-            </svg>
-        </button>
-        <button class="icon-btn" onclick="sim.resetZoom()" title="화면 맞춤">
-            <svg>
-                <use href="#icon-zoom-fit" />
-            </svg>
-        </button>
-    </div>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Selection Indicator -->
-    <span class="selection-indicator" id="selection-count" style="display: none;">선택: 0개</span>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Utils -->
-    <div class="toolbar-group">
-        <button class="icon-btn" onclick="sim.showTruthTable()" title="진리표 생성">
-            <svg>
-                <use href="#icon-chart" />
-            </svg>
-            <span class="btn-text">진리표</span>
-        </button>
-        <button class="icon-btn" onclick="sim.showHelp()" title="도움말">
-            <svg>
-                <use href="#icon-help" />
-            </svg>
-            <span class="btn-text">도움말</span>
-        </button>
-    </div>
-    </header>
-
-    <!-- ======== Sidebar ======== -->
-    <aside class="sidebar" id="sidebar">
-        <button class="sidebar-toggle-btn" onclick="sim.toggleSidebar()" title="사이드바 열기/닫기">
-            <svg width="12" height="12" viewBox="0 0 12 12">
-                <path d="M8 2 L4 6 L8 10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
-            </svg>
-        </button>
-
-        <div class="sidebar-content">
-            <!-- Account Status -->
-            <div class="account-section">
-                <div class="account-avatar">👤</div>
-                <div class="account-info">
-                    <span class="account-name" id="account-name">Guest</span>
-                    <span class="account-plan">Free Plan</span>
-                </div>
-            </div>
-
-            <!-- IO -->
-            <section class="section" id="sec-io">
-                <div class="section-header" onclick="sim.toggleSection('sec-io')">
-                    <span class="section-title">
-                        <svg class="section-arrow">
-                            <use href="#icon-chevron-down" />
+                <!-- Grid & Wire Mode -->
+                <div class="edit-options">
+                    <button class="icon-btn small" id="btn-grid-snap" onclick="sim.toggleGridSnap()"
+                        title="그리드 스냅 ON/OFF">
+                        <svg>
+                            <use href="#icon-grid" />
                         </svg>
-                        입출력
-                    </span>
-                </div>
-                <div class="section-content">
-                    <div class="comp-grid">
-                        <button class="comp-btn io" onclick="sim.addModule('SWITCH')"
-                            onmouseenter="sim.showTooltip('SWITCH'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 44 44">
-                                    <circle cx="22" cy="22" r="16" fill="none" stroke="#22c55e" stroke-width="2.5" />
-                                    <line x1="22" y1="10" x2="22" y2="22" stroke="#22c55e" stroke-width="2.5"
-                                        stroke-linecap="round" />
-                                </svg>
-                            </div>
-                            <span class="name">스위치</span>
-                        </button>
-                        <button class="comp-btn io" onclick="sim.addModule('LED')"
-                            onmouseenter="sim.showTooltip('LED'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 32 32">
-                                    <circle cx="16" cy="16" r="11" fill="#ef4444" stroke="#fca5a5" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">LED</span>
-                        </button>
-                        <button class="comp-btn io" onclick="sim.addModule('CLOCK')"
-                            onmouseenter="sim.showTooltip('CLOCK'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 56 40">
-                                    <rect x="6" y="8" width="44" height="24" rx="2" fill="none" stroke="#8b5cf6"
-                                        stroke-width="2" />
-                                    <polyline points="12,24 12,16 20,16 20,24 28,24 28,16 36,16 36,24 44,24 44,16"
-                                        fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="miter" />
-                                </svg>
-                            </div>
-                            <span class="name">클럭</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Gates -->
-            <section class="section" id="sec-gates">
-                <div class="section-header" onclick="sim.toggleSection('sec-gates')">
-                    <span class="section-title">
-                        <svg class="section-arrow">
-                            <use href="#icon-chevron-down" />
-                        </svg>
-                        논리 게이트
-                    </span>
-                    <span class="section-count">7</span>
-                </div>
-                <div class="section-content">
-                    <div class="comp-grid">
-                        <button class="comp-btn gate-and" onclick="sim.addModule('AND')"
-                            onmouseenter="sim.showTooltip('AND'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M8 4 L24 4 A 12 14 0 0 1 24 28 L8 28 Z" fill="none" stroke="#3b82f6"
-                                        stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">AND</span>
-                        </button>
-                        <button class="comp-btn gate-or" onclick="sim.addModule('OR')"
-                            onmouseenter="sim.showTooltip('OR'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M6 4 Q 14 16 6 28 Q 24 28 38 16 Q 24 4 6 4 Z" fill="none" stroke="#10b981"
-                                        stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">OR</span>
-                        </button>
-                        <button class="comp-btn gate-not" onclick="sim.addModule('NOT')"
-                            onmouseenter="sim.showTooltip('NOT'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 44 32">
-                                    <path d="M6 4 L30 16 L6 28 Z" fill="none" stroke="#ef4444" stroke-width="2" />
-                                    <circle cx="35" cy="16" r="4" fill="none" stroke="#ef4444" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">NOT</span>
-                        </button>
-                        <button class="comp-btn gate-nand" onclick="sim.addModule('NAND')"
-                            onmouseenter="sim.showTooltip('NAND'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M6 4 L20 4 A 12 14 0 0 1 20 28 L6 28 Z" fill="none" stroke="#8b5cf6"
-                                        stroke-width="2" />
-                                    <circle cx="36" cy="16" r="4" fill="none" stroke="#8b5cf6" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">NAND</span>
-                        </button>
-                        <button class="comp-btn gate-nor" onclick="sim.addModule('NOR')"
-                            onmouseenter="sim.showTooltip('NOR'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M4 4 Q 12 16 4 28 Q 20 28 32 16 Q 20 4 4 4 Z" fill="none" stroke="#f59e0b"
-                                        stroke-width="2" />
-                                    <circle cx="38" cy="16" r="4" fill="none" stroke="#f59e0b" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">NOR</span>
-                        </button>
-                        <button class="comp-btn gate-xor" onclick="sim.addModule('XOR')"
-                            onmouseenter="sim.showTooltip('XOR'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M10 4 Q 18 16 10 28 Q 26 28 40 16 Q 26 4 10 4 Z" fill="none"
-                                        stroke="#06b6d4" stroke-width="2" />
-                                    <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#06b6d4" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">XOR</span>
-                        </button>
-                        <button class="comp-btn gate-xnor" onclick="sim.addModule('XNOR')"
-                            onmouseenter="sim.showTooltip('XNOR'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 32">
-                                    <path d="M10 4 Q 18 16 10 28 Q 24 28 34 16 Q 24 4 10 4 Z" fill="none"
-                                        stroke="#ec4899" stroke-width="2" />
-                                    <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#ec4899" stroke-width="2" />
-                                    <circle cx="40" cy="16" r="4" fill="none" stroke="#ec4899" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">XNOR</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Modules -->
-            <section class="section" id="section-modules">
-                <div class="section-header" onclick="sim.toggleSection('section-modules')">
-                    <span class="section-title">
-                        <svg class="section-arrow">
-                            <use href="#icon-chevron-down" />
-                        </svg>
-                        Modules
-                    </span>
-                </div>
-                <div class="section-content">
-                    <div class="comp-grid">
-                        <button class="comp-btn package wide" onclick="sim.addPackage('HALF_ADDER')">
-                            <div class="icon"><svg>
-                                    <use href="#icon-plus" />
-                                </svg></div>
-                            <span class="name">Half Adder</span>
-                        </button>
-                        <button class="comp-btn package wide" onclick="sim.addPackage('FULL_ADDER')">
-                            <div class="icon"><svg>
-                                    <use href="#icon-plus" />
-                                </svg></div>
-                            <span class="name">Full Adder</span>
-                        </button>
-                        <button class="comp-btn package wide" onclick="sim.addPackage('SR_LATCH')">
-                            <div class="icon"><svg>
-                                    <use href="#icon-package" />
-                                </svg></div>
-                            <span class="name">SR Latch</span>
-                        </button>
-                        <button class="comp-btn package wide" onclick="sim.addPackage('D_FLIPFLOP')">
-                            <div class="icon"><svg>
-                                    <use href="#icon-package" />
-                                </svg></div>
-                            <span class="name">D Flip-Flop</span>
-                        </button>
-                    </div>
-                    <div id="user-packages" style="margin-top: 8px;"></div>
-                    <button class="comp-btn wide dashed" onclick="sim.startNewModule()" style="margin-top: 8px;">
-                        <div class="icon"><svg>
-                                <use href="#icon-plus" />
-                            </svg></div>
-                        <span class="name">새 모듈 만들기</span>
                     </button>
-                </div>
-            </section>
-
-            <!-- Transistors -->
-            <section class="section" id="section-transistors">
-                <div class="section-header" onclick="sim.toggleSection('section-transistors')">
-                    <span class="section-title">
-                        <svg class="section-arrow">
-                            <use href="#icon-chevron-down" />
+                    <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="와이어 연결 모드">
+                        <svg>
+                            <use href="#icon-wire" />
                         </svg>
-                        Transistors
-                    </span>
-                    <span class="section-count">4</span>
-                </div>
-                <div class="section-content">
-                    <div class="comp-grid">
-                        <button class="comp-btn trans-npn" onclick="sim.addModule('TRANSISTOR')"
-                            onmouseenter="sim.showTooltip('TRANSISTOR'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 48">
-                                    <!-- NPN Transistor Symbol -->
-                                    <line x1="16" y1="12" x2="16" y2="36" stroke="#06b6d4" stroke-width="2.5" />
-                                    <line x1="16" y1="18" x2="32" y2="10" stroke="#06b6d4" stroke-width="2.5" />
-                                    <line x1="16" y1="30" x2="32" y2="38" stroke="#06b6d4" stroke-width="2.5" />
-                                    <polygon points="28,34 32,38 26,38" fill="#06b6d4" />
-                                    <line x1="4" y1="24" x2="16" y2="24" stroke="#06b6d4" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">NPN</span>
-                        </button>
-                        <button class="comp-btn trans-pmos" onclick="sim.addModule('PMOS')"
-                            onmouseenter="sim.showTooltip('PMOS'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 48 48">
-                                    <!-- PMOS Transistor Symbol -->
-                                    <line x1="16" y1="12" x2="16" y2="36" stroke="#8b5cf6" stroke-width="2.5" />
-                                    <line x1="16" y1="18" x2="32" y2="10" stroke="#8b5cf6" stroke-width="2.5" />
-                                    <line x1="16" y1="30" x2="32" y2="38" stroke="#8b5cf6" stroke-width="2.5" />
-                                    <polygon points="20,22 16,24 20,26" fill="#8b5cf6" />
-                                    <line x1="4" y1="24" x2="16" y2="24" stroke="#8b5cf6" stroke-width="2" />
-                                    <circle cx="12" cy="24" r="2" fill="none" stroke="#8b5cf6" stroke-width="1.5" />
-                                </svg>
-                            </div>
-                            <span class="name">PMOS</span>
-                        </button>
-                        <button class="comp-btn power-vcc" onclick="sim.addModule('VCC')"
-                            onmouseenter="sim.showTooltip('VCC'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 44 40">
-                                    <!-- VCC: 화살표 오른쪽, 선 왼쪽 -->
-                                    <line x1="0" y1="20" x2="24" y2="20" stroke="#ef4444" stroke-width="3" />
-                                    <polygon points="40,20 24,10 24,30" fill="#ef4444" stroke="#ef4444" stroke-width="2"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <span class="name">VCC</span>
-                        </button>
-                        <button class="comp-btn power-gnd" onclick="sim.addModule('GND')"
-                            onmouseenter="sim.showTooltip('GND'); sim.positionTooltip(event)"
-                            onmouseleave="sim.hideTooltip()">
-                            <div class="icon">
-                                <svg viewBox="0 0 44 40">
-                                    <!-- GND: 선 왼쪽, 접지 심볼 오른쪽 -->
-                                    <line x1="0" y1="20" x2="24" y2="20" stroke="#94a3b8" stroke-width="3" />
-                                    <line x1="24" y1="6" x2="24" y2="34" stroke="#94a3b8" stroke-width="3" />
-                                    <line x1="32" y1="10" x2="32" y2="30" stroke="#94a3b8" stroke-width="2.5" />
-                                    <line x1="40" y1="14" x2="40" y2="26" stroke="#94a3b8" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <span class="name">GND</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </aside>
-
-    <!-- ======== Workspace with Tabs ======== -->
-    <main class="workspace-wrapper">
-        <!-- Tab Bar -->
-        <div class="workspace-tabs" id="workspace-tabs">
-            <div class="tab active" data-tab="main" onclick="sim.switchTab('main')">
-                <span class="tab-icon"><svg>
-                        <use href="#icon-wire" />
-                    </svg></span>
-                <span class="tab-title">메인 회로</span>
-            </div>
-            <div class="tab" data-tab="module" id="module-tab" style="display: none;" onclick="sim.switchTab('module')">
-                <span class="tab-icon"><svg>
-                        <use href="#icon-package" />
-                    </svg></span>
-                <span class="tab-title" id="module-tab-title">모듈 편집</span>
-                <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTab()">×</button>
-            </div>
-        </div>
-
-        <!-- Main Circuit Workspace -->
-        <div id="workspace" class="workspace-content active">
-            <svg id="wire-layer"></svg>
-        </div>
-
-        <!-- Module Editor Workspace (Hidden by default) -->
-        <div id="module-workspace" class="workspace-content module-editor" style="display: none;">
-            <div class="module-editor-header">
-                <div class="module-info">
-                    <input type="text" class="module-name-input" id="editing-module-name" value="새 모듈"
-                        placeholder="모듈 이름 입력">
-                    <span class="module-desc">소자를 배치하고 입출력 포트를 연결하세요</span>
-                </div>
-                <div class="module-actions">
-                    <button class="btn-module-action save" id="btn-save-as-new" onclick="sim.saveAsNewModule()">
-                        모듈로 저장
-                    </button>
-                    <button class="btn-module-action" id="btn-save-changes" onclick="sim.saveModuleChanges()"
-                        style="display: none;">
-                        변경사항 저장
-                    </button>
-                    <button class="btn-module-action secondary" onclick="sim.closeModuleTab()">
-                        닫기
                     </button>
                 </div>
             </div>
 
-            <div class="module-editor-body">
-                <!-- Component Palette for Module -->
-                <div class="module-palette">
-                    <div class="palette-section">
-                        <h5>입출력</h5>
-                        <div class="palette-grid">
-                            <button class="palette-btn input" onclick="sim.addModuleComponent('PORT_IN')" title="입력 포트">
-                                <span class="icon">→</span>
-                                <span class="label">입력</span>
-                            </button>
-                            <button class="palette-btn output" onclick="sim.addModuleComponent('PORT_OUT')"
-                                title="출력 포트">
-                                <span class="icon">→</span>
-                                <span class="label">출력</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="palette-section">
-                        <h5>⚡ 게이트</h5>
-                        <div class="palette-grid">
-                            <button class="palette-btn" onclick="sim.addModuleComponent('AND')"
-                                title="AND 게이트">AND</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('OR')"
-                                title="OR 게이트">OR</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('NOT')"
-                                title="NOT 게이트">NOT</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('NAND')"
-                                title="NAND 게이트">NAND</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('NOR')"
-                                title="NOR 게이트">NOR</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('XOR')"
-                                title="XOR 게이트">XOR</button>
-                            <button class="palette-btn" onclick="sim.addModuleComponent('XNOR')"
-                                title="XNOR 게이트">XNOR</button>
-                        </div>
-                    </div>
-                    <div class="palette-section">
-                        <h5>📊 현재 모듈 정보</h5>
-                        <div class="module-stats">
-                            <div class="stat-row">
-                                <span>입력:</span>
-                                <span id="module-input-count">0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>출력:</span>
-                                <span id="module-output-count">0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>게이트:</span>
-                                <span id="module-gate-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="palette-section">
-                        <h5>패키지 크기</h5>
-                        <div class="size-inputs">
-                            <div class="size-row">
-                                <label>너비:</label>
-                                <input type="number" id="module-width" value="90" min="60" max="200" step="10">
-                            </div>
-                            <div class="size-row">
-                                <label>높이:</label>
-                                <input type="number" id="module-height" value="60" min="40" max="200" step="10">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="toolbar-divider"></div>
 
-                <!-- Module Canvas -->
-                <div class="module-canvas" id="module-canvas">
-                    <svg id="module-wire-layer"></svg>
-                </div>
+            <!-- Simulation -->
+            <div class="toolbar-group">
+                <button class="icon-btn" id="btn-run" onclick="sim.toggleSimulation()" title="시뮬레이션 시작/정지">
+                    <svg>
+                        <use href="#icon-play" />
+                    </svg>
+                    <span class="btn-text">실행</span>
+                </button>
+                <button class="icon-btn" onclick="sim.stepSimulation()" title="한 단계 실행">
+                    <svg>
+                        <use href="#icon-step" />
+                    </svg>
+                    <span class="btn-text">스텝</span>
+                </button>
+                <button class="icon-btn" onclick="sim.resetSimulation()" title="시뮬레이션 초기화">
+                    <svg>
+                        <use href="#icon-reset" />
+                    </svg>
+                    <span class="btn-text">리셋</span>
+                </button>
             </div>
 
-            <!-- Module I/O Summary Panel -->
-            <div class="module-io-panel">
-                <div class="io-section">
-                    <h4>📥 입력 포트</h4>
-                    <div id="module-inputs" class="io-list"></div>
-                </div>
-                <div class="io-section">
-                    <h4>📤 출력 포트</h4>
-                    <div id="module-outputs" class="io-list"></div>
-                </div>
-                <div class="io-section wide">
-                    <h4>도움말</h4>
-                    <p class="io-help">입력/출력 포트를 배치하고 게이트로 연결하세요. 핀을 클릭하여 와이어를 연결합니다.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="minimap" id="minimap">
-            <div class="minimap-viewport" id="minimap-viewport"></div>
-        </div>
-    </main>
-
-    <!-- Selection Box (body 직접 자식으로 이동 - transform containing block 문제 해결) -->
-    <div id="selection-box"></div>
-
-    <!-- Component Info Panel (좌측 상단 - 독립적 위치) -->
-    <div id="component-info-panel" class="component-info-panel hidden">
-        <div class="info-header">
-            <span class="info-type-icon"><svg width="16" height="16">
-                    <use href="#icon-wire" />
-                </svg></span>
-            <span class="info-type-name">Component</span>
-        </div>
-        <!-- 애니메이션 영역 -->
-        <div class="info-animation" id="info-animation">
-            <!-- SVG 애니메이션이 여기에 삽입됨 -->
-        </div>
-        <div class="info-body">
-            <p class="info-description">소자를 선택하면 여기에 설명이 표시됩니다.</p>
-            <!-- 사용법 영역 -->
-            <div class="info-usage" id="info-usage-section">
-                <div class="info-usage-title">Tip</div>
-                <p class="info-usage-content" id="info-usage"></p>
-            </div>
-            <div class="info-details">
-                <div class="info-row">
-                    <span class="info-label">입력:</span>
-                    <span class="info-value" id="info-inputs">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">출력:</span>
-                    <span class="info-value" id="info-outputs">-</span>
-                </div>
-            </div>
-            <div class="info-truth-table" id="info-truth-table" style="display: none;">
-                <span class="info-label">진리표:</span>
-                <table class="truth-table"></table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======== Status Bar ======== -->
-    <footer class="statusbar">
-        <div class="status-left">
-            <span id="status-components" class="status-item">부품: 0</span>
-            <span id="status-wires" class="status-item">전선: 0</span>
-        </div>
-
-        <!-- Enhanced Speed Control Pill -->
-        <div class="status-center">
-            <div class="speed-control-pill">
-                <div class="speed-icon"><svg>
-                        <use href="#icon-lightning" />
-                    </svg></div>
-                <span class="speed-label">속도</span>
-                <input type="range" id="sim-speed" class="speed-slider" min="0.1" max="10" step="0.1" value="1.0"
-                    oninput="sim.setSimulationSpeed(parseFloat(this.value))">
+            <!-- Speed Control -->
+            <div class="speed-control">
+                <label class="speed-label">⚡ 속도</label>
+                <input type="range" class="speed-slider" id="speed-slider" min="0.1" max="5" step="0.1" value="1"
+                    oninput="sim.updateSpeedLabel(parseFloat(this.value))"
+                    onchange="sim.setSimulationSpeed(parseFloat(this.value), true)">
                 <span class="speed-value" id="speed-value">1.0x</span>
             </div>
-        </div>
 
-        <div class="status-right">
-            <div class="zoom-controls">
+            <div class="toolbar-spacer"></div>
+
+            <!-- Zoom -->
+            <div class="zoom-control">
                 <button class="icon-btn" onclick="sim.zoom(-0.1)">
                     <svg>
                         <use href="#icon-zoom-out" />
@@ -1005,8 +468,550 @@
                     </svg>
                 </button>
             </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Selection Indicator -->
+            <span class="selection-indicator" id="selection-count" style="display: none;">선택: 0개</span>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Utils -->
+            <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.showTruthTable()" title="진리표 생성">
+                    <svg>
+                        <use href="#icon-chart" />
+                    </svg>
+                    <span class="btn-text">진리표</span>
+                </button>
+                <button class="icon-btn" onclick="sim.showHelp()" title="도움말">
+                    <svg>
+                        <use href="#icon-help" />
+                    </svg>
+                    <span class="btn-text">도움말</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ======== Sidebar ======== -->
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle-btn" onclick="sim.toggleSidebar()" title="사이드바 열기/닫기">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M8 2 L4 6 L8 10" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </svg>
+            </button>
+
+            <div class="sidebar-content">
+                <!-- Account Status -->
+                <div class="account-section">
+                    <div class="account-avatar">👤</div>
+                    <div class="account-info">
+                        <span class="account-name" id="account-name">Guest</span>
+                        <span class="account-plan">Free Plan</span>
+                    </div>
+                </div>
+
+                <!-- IO -->
+                <section class="section" id="sec-io">
+                    <div class="section-header" onclick="sim.toggleSection('sec-io')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            입출력
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn io" onclick="sim.addModule('SWITCH')"
+                                onmouseenter="sim.showTooltip('SWITCH'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 44">
+                                        <circle cx="22" cy="22" r="16" fill="none" stroke="#22c55e"
+                                            stroke-width="2.5" />
+                                        <line x1="22" y1="10" x2="22" y2="22" stroke="#22c55e" stroke-width="2.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </div>
+                                <span class="name">스위치</span>
+                            </button>
+                            <button class="comp-btn io" onclick="sim.addModule('LED')"
+                                onmouseenter="sim.showTooltip('LED'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 32 32">
+                                        <circle cx="16" cy="16" r="11" fill="#ef4444" stroke="#fca5a5"
+                                            stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">LED</span>
+                            </button>
+                            <button class="comp-btn io" onclick="sim.addModule('CLOCK')"
+                                onmouseenter="sim.showTooltip('CLOCK'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 56 40">
+                                        <rect x="6" y="8" width="44" height="24" rx="2" fill="none" stroke="#8b5cf6"
+                                            stroke-width="2" />
+                                        <polyline points="12,24 12,16 20,16 20,24 28,24 28,16 36,16 36,24 44,24 44,16"
+                                            fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="miter" />
+                                    </svg>
+                                </div>
+                                <span class="name">클럭</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Gates -->
+                <section class="section" id="sec-gates">
+                    <div class="section-header" onclick="sim.toggleSection('sec-gates')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            논리 게이트
+                        </span>
+                        <span class="section-count">7</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn gate-and" onclick="sim.addModule('AND')"
+                                onmouseenter="sim.showTooltip('AND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M8 4 L24 4 A 12 14 0 0 1 24 28 L8 28 Z" fill="none" stroke="#3b82f6"
+                                            stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">AND</span>
+                            </button>
+                            <button class="comp-btn gate-or" onclick="sim.addModule('OR')"
+                                onmouseenter="sim.showTooltip('OR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M6 4 Q 14 16 6 28 Q 24 28 38 16 Q 24 4 6 4 Z" fill="none"
+                                            stroke="#10b981" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">OR</span>
+                            </button>
+                            <button class="comp-btn gate-not" onclick="sim.addModule('NOT')"
+                                onmouseenter="sim.showTooltip('NOT'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 32">
+                                        <path d="M6 4 L30 16 L6 28 Z" fill="none" stroke="#ef4444" stroke-width="2" />
+                                        <circle cx="35" cy="16" r="4" fill="none" stroke="#ef4444" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NOT</span>
+                            </button>
+                            <button class="comp-btn gate-nand" onclick="sim.addModule('NAND')"
+                                onmouseenter="sim.showTooltip('NAND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M6 4 L20 4 A 12 14 0 0 1 20 28 L6 28 Z" fill="none" stroke="#8b5cf6"
+                                            stroke-width="2" />
+                                        <circle cx="36" cy="16" r="4" fill="none" stroke="#8b5cf6" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NAND</span>
+                            </button>
+                            <button class="comp-btn gate-nor" onclick="sim.addModule('NOR')"
+                                onmouseenter="sim.showTooltip('NOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M4 4 Q 12 16 4 28 Q 20 28 32 16 Q 20 4 4 4 Z" fill="none"
+                                            stroke="#f59e0b" stroke-width="2" />
+                                        <circle cx="38" cy="16" r="4" fill="none" stroke="#f59e0b" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NOR</span>
+                            </button>
+                            <button class="comp-btn gate-xor" onclick="sim.addModule('XOR')"
+                                onmouseenter="sim.showTooltip('XOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M10 4 Q 18 16 10 28 Q 26 28 40 16 Q 26 4 10 4 Z" fill="none"
+                                            stroke="#06b6d4" stroke-width="2" />
+                                        <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#06b6d4" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">XOR</span>
+                            </button>
+                            <button class="comp-btn gate-xnor" onclick="sim.addModule('XNOR')"
+                                onmouseenter="sim.showTooltip('XNOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M10 4 Q 18 16 10 28 Q 24 28 34 16 Q 24 4 10 4 Z" fill="none"
+                                            stroke="#ec4899" stroke-width="2" />
+                                        <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#ec4899" stroke-width="2" />
+                                        <circle cx="40" cy="16" r="4" fill="none" stroke="#ec4899" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">XNOR</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Modules -->
+                <section class="section" id="section-modules">
+                    <div class="section-header" onclick="sim.toggleSection('section-modules')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            Modules
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn package wide" onclick="sim.addPackage('HALF_ADDER')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">Half Adder</span>
+                            </button>
+                            <button class="comp-btn package wide" onclick="sim.addPackage('FULL_ADDER')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">Full Adder</span>
+                            </button>
+                            <button class="comp-btn package wide" onclick="sim.addPackage('SR_LATCH')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-package" />
+                                    </svg></div>
+                                <span class="name">SR Latch</span>
+                            </button>
+                            <button class="comp-btn package wide" onclick="sim.addPackage('D_FLIPFLOP')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-package" />
+                                    </svg></div>
+                                <span class="name">D Flip-Flop</span>
+                            </button>
+                        </div>
+                        <div id="user-packages" style="margin-top: 8px;"></div>
+                        <button class="comp-btn wide dashed" onclick="sim.startNewModule()" style="margin-top: 8px;">
+                            <div class="icon"><svg>
+                                    <use href="#icon-plus" />
+                                </svg></div>
+                            <span class="name">새 모듈 만들기</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Transistors -->
+                <section class="section" id="section-transistors">
+                    <div class="section-header" onclick="sim.toggleSection('section-transistors')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            Transistors
+                        </span>
+                        <span class="section-count">4</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn trans-npn" onclick="sim.addModule('TRANSISTOR')"
+                                onmouseenter="sim.showTooltip('TRANSISTOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 48">
+                                        <!-- NPN Transistor Symbol -->
+                                        <line x1="16" y1="12" x2="16" y2="36" stroke="#06b6d4" stroke-width="2.5" />
+                                        <line x1="16" y1="18" x2="32" y2="10" stroke="#06b6d4" stroke-width="2.5" />
+                                        <line x1="16" y1="30" x2="32" y2="38" stroke="#06b6d4" stroke-width="2.5" />
+                                        <polygon points="28,34 32,38 26,38" fill="#06b6d4" />
+                                        <line x1="4" y1="24" x2="16" y2="24" stroke="#06b6d4" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NPN</span>
+                            </button>
+                            <button class="comp-btn trans-pmos" onclick="sim.addModule('PMOS')"
+                                onmouseenter="sim.showTooltip('PMOS'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 48">
+                                        <!-- PMOS Transistor Symbol -->
+                                        <line x1="16" y1="12" x2="16" y2="36" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <line x1="16" y1="18" x2="32" y2="10" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <line x1="16" y1="30" x2="32" y2="38" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <polygon points="20,22 16,24 20,26" fill="#8b5cf6" />
+                                        <line x1="4" y1="24" x2="16" y2="24" stroke="#8b5cf6" stroke-width="2" />
+                                        <circle cx="12" cy="24" r="2" fill="none" stroke="#8b5cf6" stroke-width="1.5" />
+                                    </svg>
+                                </div>
+                                <span class="name">PMOS</span>
+                            </button>
+                            <button class="comp-btn power-vcc" onclick="sim.addModule('VCC')"
+                                onmouseenter="sim.showTooltip('VCC'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 40">
+                                        <!-- VCC: 화살표 오른쪽, 선 왼쪽 -->
+                                        <line x1="0" y1="20" x2="24" y2="20" stroke="#ef4444" stroke-width="3" />
+                                        <polygon points="40,20 24,10 24,30" fill="#ef4444" stroke="#ef4444"
+                                            stroke-width="2" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                                <span class="name">VCC</span>
+                            </button>
+                            <button class="comp-btn power-gnd" onclick="sim.addModule('GND')"
+                                onmouseenter="sim.showTooltip('GND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 40">
+                                        <!-- GND: 선 왼쪽, 접지 심볼 오른쪽 -->
+                                        <line x1="0" y1="20" x2="24" y2="20" stroke="#94a3b8" stroke-width="3" />
+                                        <line x1="24" y1="6" x2="24" y2="34" stroke="#94a3b8" stroke-width="3" />
+                                        <line x1="32" y1="10" x2="32" y2="30" stroke="#94a3b8" stroke-width="2.5" />
+                                        <line x1="40" y1="14" x2="40" y2="26" stroke="#94a3b8" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">GND</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <!-- ======== Workspace with Tabs ======== -->
+        <main class="workspace-wrapper">
+            <!-- Tab Bar -->
+            <div class="workspace-tabs" id="workspace-tabs">
+                <div class="tab active" data-tab="main" onclick="sim.switchTab('main')">
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-wire" />
+                        </svg></span>
+                    <span class="tab-title">메인 회로</span>
+                </div>
+                <div class="tab" data-tab="module" id="module-tab" style="display: none;"
+                    onclick="sim.switchTab('module')">
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-package" />
+                        </svg></span>
+                    <span class="tab-title" id="module-tab-title">모듈 편집</span>
+                    <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTab()">×</button>
+                </div>
+            </div>
+
+            <!-- Main Circuit Workspace -->
+            <div id="workspace" class="workspace-content active">
+                <svg id="wire-layer"></svg>
+            </div>
+
+            <!-- Module Editor Workspace (Hidden by default) -->
+            <div id="module-workspace" class="workspace-content module-editor" style="display: none;">
+                <div class="module-editor-header">
+                    <div class="module-info">
+                        <input type="text" class="module-name-input" id="editing-module-name" value="새 모듈"
+                            placeholder="모듈 이름 입력">
+                        <span class="module-desc">소자를 배치하고 입출력 포트를 연결하세요</span>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn-module-action save" id="btn-save-as-new" onclick="sim.saveAsNewModule()">
+                            모듈로 저장
+                        </button>
+                        <button class="btn-module-action" id="btn-save-changes" onclick="sim.saveModuleChanges()"
+                            style="display: none;">
+                            변경사항 저장
+                        </button>
+                        <button class="btn-module-action secondary" onclick="sim.closeModuleTab()">
+                            닫기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="module-editor-body">
+                    <!-- Component Palette for Module -->
+                    <div class="module-palette">
+                        <div class="palette-section">
+                            <h5>입출력</h5>
+                            <div class="palette-grid">
+                                <button class="palette-btn input" onclick="sim.addModuleComponent('PORT_IN')"
+                                    title="입력 포트">
+                                    <span class="icon">→</span>
+                                    <span class="label">입력</span>
+                                </button>
+                                <button class="palette-btn output" onclick="sim.addModuleComponent('PORT_OUT')"
+                                    title="출력 포트">
+                                    <span class="icon">→</span>
+                                    <span class="label">출력</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>⚡ 게이트</h5>
+                            <div class="palette-grid">
+                                <button class="palette-btn" onclick="sim.addModuleComponent('AND')"
+                                    title="AND 게이트">AND</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('OR')"
+                                    title="OR 게이트">OR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NOT')"
+                                    title="NOT 게이트">NOT</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NAND')"
+                                    title="NAND 게이트">NAND</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NOR')"
+                                    title="NOR 게이트">NOR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('XOR')"
+                                    title="XOR 게이트">XOR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('XNOR')"
+                                    title="XNOR 게이트">XNOR</button>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>📊 현재 모듈 정보</h5>
+                            <div class="module-stats">
+                                <div class="stat-row">
+                                    <span>입력:</span>
+                                    <span id="module-input-count">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>출력:</span>
+                                    <span id="module-output-count">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>게이트:</span>
+                                    <span id="module-gate-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>패키지 크기</h5>
+                            <div class="size-inputs">
+                                <div class="size-row">
+                                    <label>너비:</label>
+                                    <input type="number" id="module-width" value="90" min="60" max="200" step="10">
+                                </div>
+                                <div class="size-row">
+                                    <label>높이:</label>
+                                    <input type="number" id="module-height" value="60" min="40" max="200" step="10">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module Canvas -->
+                    <div class="module-canvas" id="module-canvas">
+                        <svg id="module-wire-layer"></svg>
+                    </div>
+                </div>
+
+                <!-- Module I/O Summary Panel -->
+                <div class="module-io-panel">
+                    <div class="io-section">
+                        <h4>📥 입력 포트</h4>
+                        <div id="module-inputs" class="io-list"></div>
+                    </div>
+                    <div class="io-section">
+                        <h4>📤 출력 포트</h4>
+                        <div id="module-outputs" class="io-list"></div>
+                    </div>
+                    <div class="io-section wide">
+                        <h4>도움말</h4>
+                        <p class="io-help">입력/출력 포트를 배치하고 게이트로 연결하세요. 핀을 클릭하여 와이어를 연결합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="minimap" id="minimap">
+                <div class="minimap-viewport" id="minimap-viewport"></div>
+            </div>
+        </main>
+
+        <!-- Selection Box (body 직접 자식으로 이동 - transform containing block 문제 해결) -->
+        <div id="selection-box"></div>
+
+        <!-- Component Info Panel (좌측 상단 - 독립적 위치) -->
+        <div id="component-info-panel" class="component-info-panel hidden">
+            <div class="info-header">
+                <span class="info-type-icon"><svg width="16" height="16">
+                        <use href="#icon-wire" />
+                    </svg></span>
+                <span class="info-type-name">Component</span>
+            </div>
+            <!-- 애니메이션 영역 -->
+            <div class="info-animation" id="info-animation">
+                <!-- SVG 애니메이션이 여기에 삽입됨 -->
+            </div>
+            <div class="info-body">
+                <p class="info-description">소자를 선택하면 여기에 설명이 표시됩니다.</p>
+                <!-- 사용법 영역 -->
+                <div class="info-usage" id="info-usage-section">
+                    <div class="info-usage-title">Tip</div>
+                    <p class="info-usage-content" id="info-usage"></p>
+                </div>
+                <div class="info-details">
+                    <div class="info-row">
+                        <span class="info-label">입력:</span>
+                        <span class="info-value" id="info-inputs">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">출력:</span>
+                        <span class="info-value" id="info-outputs">-</span>
+                    </div>
+                </div>
+                <div class="info-truth-table" id="info-truth-table" style="display: none;">
+                    <span class="info-label">진리표:</span>
+                    <table class="truth-table"></table>
+                </div>
+            </div>
         </div>
-    </footer>
+
+        <!-- ======== Status Bar ======== -->
+        <footer class="statusbar">
+            <div class="status-left">
+                <span id="status-components" class="status-item">부품: 0</span>
+                <span id="status-wires" class="status-item">전선: 0</span>
+            </div>
+
+            <!-- Enhanced Speed Control Pill -->
+            <div class="status-center">
+                <div class="speed-control-pill">
+                    <div class="speed-icon"><svg>
+                            <use href="#icon-lightning" />
+                        </svg></div>
+                    <span class="speed-label">속도</span>
+                    <input type="range" id="sim-speed" class="speed-slider" min="0.1" max="10" step="0.1" value="1.0"
+                        oninput="sim.setSimulationSpeed(parseFloat(this.value))">
+                    <span class="speed-value" id="speed-value">1.0x</span>
+                </div>
+            </div>
+
+            <div class="status-right">
+                <div class="zoom-controls">
+                    <button class="icon-btn" onclick="sim.zoom(-0.1)">
+                        <svg>
+                            <use href="#icon-zoom-out" />
+                        </svg>
+                    </button>
+                    <span class="zoom-value" id="zoom-level">100%</span>
+                    <button class="icon-btn" onclick="sim.zoom(0.1)">
+                        <svg>
+                            <use href="#icon-zoom-in" />
+                        </svg>
+                    </button>
+                    <button class="icon-btn" onclick="sim.resetZoom()" title="화면 맞춤">
+                        <svg>
+                            <use href="#icon-zoom-fit" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <!-- ======== Context Menu ======== -->
