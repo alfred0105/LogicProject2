@@ -308,43 +308,59 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 20px;
-            color: var(--primary);
-        }
 
-        .card h3 {
-            margin: 0 0 16px 0;
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        .card p {
-            margin: 0;
-            font-size: 1rem;
-            color: var(--text-sub);
-            line-height: 1.6;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
+            .card-icon {
+                font-size: 3rem;
+                margin-bottom: 24px;
+                background: rgba(59, 130, 246, 0.1);
+                width: 80px;
+                height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 20px;
+                color: var(--primary);
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .card-icon svg {
+                width: 40px;
+                height: 40px;
+                stroke-width: 2;
             }
-        }
 
-        footer {
-            padding: 40px;
-            text-align: center;
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            background: #0f172a;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
+            .card h3 {
+                margin: 0 0 16px 0;
+                color: white;
+                font-size: 1.5rem;
+            }
+
+            .card p {
+                margin: 0;
+                font-size: 1rem;
+                color: var(--text-sub);
+                line-height: 1.6;
+            }
+
+            @keyframes fadeUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(40px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            footer {
+                padding: 40px;
+                text-align: center;
+                color: var(--text-sub);
+                font-size: 0.9rem;
+                background: #0f172a;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+            }
     </style>
 </head>
 
@@ -408,35 +424,76 @@
         <h2 class="section-title">주요 기능</h2>
         <div class="features">
             <div class="card">
-                <div class="card-icon">⚡</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                </div>
                 <h3>실시간 시뮬레이션</h3>
                 <p>회로를 수정하는 즉시 시뮬레이션 결과가 반영됩니다. 끊김 없는 빠른 속도를 경험하세요.</p>
             </div>
             <div class="card">
-                <div class="card-icon">Save</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                </div>
                 <h3>클라우드 동기화</h3>
                 <p>Supabase 기반의 안전한 클라우드 저장소를 통해 언제 어디서나 프로젝트를 불러오세요.</p>
             </div>
             <div class="card">
-                <div class="card-icon">Tool</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+                        </path>
+                    </svg>
+                </div>
                 <h3>전문적인 도구</h3>
                 <p>기본 게이트부터 플립플롭, 트랜지스터, IC 패키징까지 전문적인 설계를 지원합니다.</p>
             </div>
             <div class="card">
-                <div class="card-icon">Pack</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                        <rect x="9" y="9" width="6" height="6"></rect>
+                        <line x1="9" y1="1" x2="9" y2="4"></line>
+                        <line x1="15" y1="1" x2="15" y2="4"></line>
+                        <line x1="9" y1="20" x2="9" y2="23"></line>
+                        <line x1="15" y1="20" x2="15" y2="23"></line>
+                        <line x1="20" y1="9" x2="23" y2="9"></line>
+                        <line x1="20" y1="14" x2="23" y2="14"></line>
+                        <line x1="1" y1="9" x2="4" y2="9"></line>
+                        <line x1="1" y1="14" x2="4" y2="14"></line>
+                    </svg>
+                </div>
                 <h3>커스텀 모듈</h3>
                 <p>나만의 회로를 하나의 칩(IC)으로 만들어 복잡한 설계를 단순화할 수 있습니다.</p>
             </div>
             <div class="card">
-                <div class="card-icon">Touch</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                </div>
                 <h3>반응형 디자인</h3>
                 <p>PC, 태블릿 등 다양한 환경에서 최적화된 인터페이스를 제공합니다.</p>
             </div>
+            <!--
             <div class="card">
-                <div class="card-icon">Fast</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
                 <h3>오실로스코프</h3>
                 <p>내장된 4채널 오실로스코프로 신호 파형을 정밀하게 분석할 수 있습니다.</p>
             </div>
+            -->
         </div>
     </div>
 
