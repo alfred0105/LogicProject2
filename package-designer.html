@@ -132,6 +132,21 @@
             gap: 12px;
         }
 
+        .pin-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn.small {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
         .pin-color {
             width: 12px;
             height: 12px;
@@ -344,6 +359,10 @@
                     <div class="pin-name">${label}</div>
                     <div class="pin-desc">입력 핀</div>
                 </div>
+                <div class="pin-actions">
+                    <button class="icon-btn small" title="편집" onclick="editPin(this.parentNode.parentNode)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/></svg></button>
+                    <button class="icon-btn small" title="삭제" onclick="deletePin(this.parentNode.parentNode)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12"/></svg></button>
+                </div>
             `;
             document.getElementById('input-pins').appendChild(pin);
             updatePreview();
@@ -358,9 +377,31 @@
                     <div class="pin-name">${label}</div>
                     <div class="pin-desc">출력 핀</div>
                 </div>
+                <div class="pin-actions">
+                    <button class="icon-btn small" title="편집" onclick="editPin(this.parentNode.parentNode)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/></svg></button>
+                    <button class="icon-btn small" title="삭제" onclick="deletePin(this.parentNode.parentNode)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12"/></svg></button>
+                </div>
             `;
             document.getElementById('output-pins').appendChild(pin);
             updatePreview();
+        }
+
+        // Edit pin label
+        function editPin(pinElement) {
+            const nameEl = pinElement.querySelector('.pin-name');
+            const newLabel = prompt('핀 라벨을 수정하세요:', nameEl.textContent);
+            if (newLabel !== null && newLabel.trim() !== '') {
+                nameEl.textContent = newLabel.trim();
+                updatePreview();
+            }
+        }
+
+        // Delete pin
+        function deletePin(pinElement) {
+            if (confirm('이 핀을 삭제하시겠습니까?')) {
+                pinElement.remove();
+                updatePreview();
+            }
         }
 
         function updatePreview() {

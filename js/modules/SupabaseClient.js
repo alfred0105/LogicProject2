@@ -120,19 +120,46 @@
         if (dashAvatar && avatar) dashAvatar.src = avatar;
     };
 
-    // 초기화 시 세션 리스너 등록
+    // 초기화: 현재 세션 확인 후 어드민 상태 설정 (임시 저장)
+    (async () => {
+        if (!_supabaseClient) return;
+        const { data: { session } } = await _supabaseClient.auth.getSession();
+        if (session && session.user) {
+            // setAdminStatus may not be defined yet, store email temporarily
+            window.__adminEmail = session.user.email;
+            if (typeof window.setAdminStatus === 'function') {
+                window.setAdminStatus(session.user.email);
+            }
+        } else {
+            window.__adminEmail = null;
+            if (typeof window.setAdminStatus === 'function') {
+                window.setAdminStatus(null);
+            }
+        }
+    })();
+
+    // Auth state change listener에 어드민 상태 업데이트 추가
     if (_supabaseClient) {
         _supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
+            if (event === 'SIGNED_IN' && session && session.user) {
                 window.currentUser = session.user;
                 console.log('👤 로그인 감지:', session.user.email);
                 window.updateProfileUI(session.user);
+                window.__adminEmail = session.user.email;
+                if (typeof window.setAdminStatus === 'function') {
+                    window.setAdminStatus(session.user.email);
+                }
             } else if (event === 'SIGNED_OUT') {
                 window.currentUser = null;
                 console.log('👋 로그아웃');
+                window.__adminEmail = null;
+                if (typeof window.setAdminStatus === 'function') {
+                    window.setAdminStatus(null);
+                }
             }
         });
     }
+
 
     // CloudManager 자동 로드
     const script = document.createElement('script');
