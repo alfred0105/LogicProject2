@@ -1567,8 +1567,7 @@ body.mode-wire #workspace {
    ============================================ */
 .minimap {
     position: absolute;
-    bottom: 150px;
-    /* Moved up from 40px */
+    bottom: 40px;
     right: 16px;
     width: 180px;
     height: 120px;
@@ -4321,4 +4320,16 @@ div.component[data-type="NOT"] {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+/* Feedback Button Position Override - Move above Minimap */
+#channel-io-app-wrapper,
+#channel-io-launcher,
+.channel-io-launcher,
+#intercom-container,
+.intercom-lightweight-app,
+#feedback-btn,
+.feedback-btn {
+    bottom: 180px !important;
+    right: 16px !important;
+    z-index: 2000 !important;
 }
