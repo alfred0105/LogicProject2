@@ -127,7 +127,11 @@ Object.assign(CircuitSimulator.prototype, {
                 type: comp.getAttribute('data-type'),
                 x: parseFloat(comp.style.left),
                 y: parseFloat(comp.style.top),
-                value: comp.getAttribute('data-value')
+                value: comp.getAttribute('data-value'),
+                // [FIX] 패키지인 경우 package-id도 저장
+                packageId: comp.getAttribute('data-package-id'),
+                width: parseFloat(comp.style.width) || null,
+                height: parseFloat(comp.style.height) || null
             };
 
             if (comp.internals) {
@@ -225,13 +229,54 @@ Object.assign(CircuitSimulator.prototype, {
         this.wireLayer.innerHTML = '';
 
         const compMap = {};
+        // 내장 패키지 타입 목록
+        const builtInPackages = ['HALF_ADDER', 'FULL_ADDER', 'SR_LATCH', 'D_FLIPFLOP'];
+
         if (projectData.components) {
             projectData.components.forEach(cData => {
-                this.addModule(cData.type, cData.x, cData.y);
-                const newComp = this.components[this.components.length - 1];
+                let newComp;
+
+                // [FIX] PACKAGE 타입 또는 내장 패키지 처리
+                if (cData.type === 'PACKAGE' && cData.packageId !== null && cData.packageId !== undefined) {
+                    // 사용자 정의 패키지 - userPackages에서 복원
+                    const pkgIndex = parseInt(cData.packageId);
+                    if (this.userPackages && this.userPackages[pkgIndex]) {
+                        newComp = this.addUserPackage(pkgIndex);
+                        if (newComp) {
+                            newComp.style.left = cData.x + 'px';
+                            newComp.style.top = cData.y + 'px';
+                        }
+                    } else {
+                        // 패키지를 찾을 수 없으면 기본 모듈로 추가
+                        this.addModule(cData.type, cData.x, cData.y);
+                        newComp = this.components[this.components.length - 1];
+                    }
+                } else if (builtInPackages.includes(cData.type)) {
+                    // 내장 패키지 (D_FLIPFLOP 등)
+                    if (this.addBuiltInPackage) {
+                        newComp = this.addBuiltInPackage(cData.type);
+                        if (newComp) {
+                            newComp.style.left = cData.x + 'px';
+                            newComp.style.top = cData.y + 'px';
+                        }
+                    } else {
+                        // addBuiltInPackage가 없으면 기본 모듈로 추가
+                        this.addModule(cData.type, cData.x, cData.y);
+                        newComp = this.components[this.components.length - 1];
+                    }
+                } else {
+                    // 일반 컴포넌트
+                    this.addModule(cData.type, cData.x, cData.y);
+                    newComp = this.components[this.components.length - 1];
+                }
+
+                if (!newComp) return;
 
                 newComp.id = cData.id;
                 if (cData.value) newComp.setAttribute('data-value', cData.value);
+                if (cData.packageId) newComp.setAttribute('data-package-id', cData.packageId);
+                if (cData.width) newComp.style.width = cData.width + 'px';
+                if (cData.height) newComp.style.height = cData.height + 'px';
 
                 if (cData.type === 'SWITCH') {
                     const label = newComp.querySelector('.comp-label');
