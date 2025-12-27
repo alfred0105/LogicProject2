@@ -268,21 +268,33 @@ Object.assign(CircuitSimulator.prototype, {
                 .tutorial-backdrop {
                     position: absolute;
                     inset: 0;
-                    background: rgba(0, 0, 0, 0.7);
+                    background: transparent; /* Spotlight box-shadow가 대신 처리함 */
                     pointer-events: auto;
                 }
                 .tutorial-spotlight {
                     position: absolute;
                     border-radius: 12px;
-                    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
-                    border: 3px solid #3b82f6;
+                    /* 외부 어둡게 (Dimming) + 내부 밝게 (Inner Glow) */
+                    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), inset 0 0 30px rgba(0, 255, 255, 0.15);
+                    border: 4px solid #00FFFF; /* Neon Cyan */
                     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                     pointer-events: none;
-                    animation: spotlightPulse 2s infinite;
+                    animation: spotlightPulse 1.5s infinite;
+                    z-index: 10001;
                 }
                 @keyframes spotlightPulse {
-                    0%, 100% { border-color: #3b82f6; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.5); }
-                    50% { border-color: #60a5fa; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.8); }
+                    0%, 100% {
+                        border-color: #00FFFF;
+                        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85),
+                                    0 0 30px rgba(0, 255, 255, 0.5),
+                                    inset 0 0 20px rgba(0, 255, 255, 0.1);
+                    }
+                    50% {
+                        border-color: #FFFFFF;
+                        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85),
+                                    0 0 60px rgba(0, 255, 255, 0.9),
+                                    inset 0 0 40px rgba(0, 255, 255, 0.3);
+                    }
                 }
                 .tutorial-panel {
                     position: fixed;
