@@ -730,7 +730,7 @@ body {
     cursor: pointer;
     transition: all var(--duration-fast) var(--ease-out);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .comp-btn::before {
@@ -1567,7 +1567,8 @@ body.mode-wire #workspace {
    ============================================ */
 .minimap {
     position: absolute;
-    bottom: 40px;
+    bottom: 150px;
+    /* Moved up from 40px */
     right: 16px;
     width: 180px;
     height: 120px;

@@ -279,7 +279,7 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (!skipRedraw) this.redrawWires();
         if (!skipSave) this.saveState();
-        if (this.updateStatus) this.updateStatus();
+        if (this.updateStatusBar) this.updateStatusBar();
 
         return newWire;
     },
@@ -294,7 +294,7 @@ Object.assign(CircuitSimulator.prototype, {
         const idx = this.wires.indexOf(wire);
         if (idx !== -1) {
             this.wires.splice(idx, 1);
-            if (this.updateStatus) this.updateStatus();
+            if (this.updateStatusBar) this.updateStatusBar();
         }
     },
 
