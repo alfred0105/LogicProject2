@@ -516,56 +516,64 @@ Object.assign(CircuitSimulator.prototype, {
         panel.classList.remove('position-top-left', 'position-top-right', 'position-bottom-left', 'position-bottom-right');
 
         // 마우스가 워크스페이스 기준으로 어느 쪽에 있는지 확인
-        const isInSidebar = mouseX < sidebarWidth;
-        const isRight = mouseX > workspaceCenterX;
-        const isBottom = mouseY > workspaceCenterY;
+        const isInSidebar = mouseX < sidebarWidth + 20;
 
-        // 사이드바 내부에서 호버하는 경우 → 패널은 우측에 표시
+        // 패널 크기를 측정 (가상)
+        const panelW = 340; // 대략적 너비
+        const panelH = 480; // 대략적 높이 (넉넉하게 잡음)
+
+        let targetLeft, targetTop;
+
         if (isInSidebar) {
-            if (isBottom) {
-                // 사이드바 하단 → 패널은 우상단
-                panel.style.left = 'auto';
-                panel.style.right = margin + 'px';
-                panel.style.top = (margin + 60) + 'px';
-                panel.style.bottom = 'auto';
-                panel.classList.add('position-top-right');
-            } else {
-                // 사이드바 상단 → 패널은 우하단
-                panel.style.left = 'auto';
-                panel.style.right = margin + 'px';
-                panel.style.top = 'auto';
-                panel.style.bottom = margin + 'px';
-                panel.classList.add('position-bottom-right');
+            // Case 1: 사이드바 아이템 호버 시 -> 사이드바 바로 오른쪽에 표시
+            targetLeft = sidebarWidth + 15;
+
+            // 높이는 마우스 위치 기준이되, 화면 아래를 넘지 않도록 조정
+            // 마우스 Y 위치에서 조금 아래(-40)부터 시작
+            targetTop = mouseY - 40;
+
+            // 하단 클리핑 방지
+            if (targetTop + panelH > viewportHeight - 20) {
+                targetTop = viewportHeight - panelH - 20;
             }
-        } else if (isRight && isBottom) {
-            // 마우스가 우하단 → 패널은 좌상단
-            panel.style.left = (sidebarWidth + margin) + 'px';
-            panel.style.right = 'auto';
-            panel.style.top = (margin + 60) + 'px';
-            panel.style.bottom = 'auto';
-            panel.classList.add('position-top-left');
-        } else if (!isRight && isBottom) {
-            // 마우스가 좌하단 (워크스페이스 내) → 패널은 우상단
-            panel.style.left = 'auto';
-            panel.style.right = margin + 'px';
-            panel.style.top = (margin + 60) + 'px';
-            panel.style.bottom = 'auto';
-            panel.classList.add('position-top-right');
-        } else if (isRight && !isBottom) {
-            // 마우스가 우상단 → 패널은 좌하단
-            panel.style.left = (sidebarWidth + margin) + 'px';
-            panel.style.right = 'auto';
-            panel.style.top = 'auto';
-            panel.style.bottom = margin + 'px';
-            panel.classList.add('position-bottom-left');
+            // 상단 클리핑 방지 (헤더 높이 고려)
+            if (targetTop < 70) {
+                targetTop = 70;
+            }
         } else {
-            // 마우스가 좌상단 (워크스페이스 내) → 패널은 우하단
-            panel.style.left = 'auto';
-            panel.style.right = margin + 'px';
-            panel.style.top = 'auto';
-            panel.style.bottom = margin + 'px';
-            panel.classList.add('position-bottom-right');
+            // Case 2: 캔버스 내 호버 시 -> 스마트 포지셔닝
+            // 기본: 마우스 우측 하단
+            targetLeft = mouseX + 20;
+            targetTop = mouseY + 20;
+
+            // 오른쪽 삐져나감 -> 왼쪽으로
+            if (targetLeft + panelW > viewportWidth - 10) {
+                targetLeft = mouseX - panelW - 10;
+            }
+
+            // 아래쪽 삐져나감 -> 위쪽으로
+            if (targetTop + panelH > viewportHeight - 10) {
+                targetTop = mouseY - panelH - 10;
+            }
+
+            // 왼쪽 삐져나감 (왼쪽으로 보냈는데 사이드바랑 겹치면) -> 다시 오른쪽으로? 
+            if (targetLeft < sidebarWidth + 10) {
+                targetLeft = sidebarWidth + 10;
+            }
+            // 위쪽 삐져나감 -> 다시 아래로?
+            if (targetTop < 70) {
+                targetTop = 70;
+            }
         }
+
+        // 최종 적용
+        panel.style.left = targetLeft + 'px';
+        panel.style.top = targetTop + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+
+        // 클래스 제거 (직접 좌표 사용하므로)
+        panel.classList.remove('position-top-left', 'position-top-right', 'position-bottom-left', 'position-bottom-right');
     },
 
     hideTooltip() {
