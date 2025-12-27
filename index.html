@@ -15,10 +15,10 @@
         :root {
             --primary: #3b82f6;
             --primary-glow: rgba(59, 130, 246, 0.5);
-            --bg-dark: #0f172a;
-            --surface: #1e293b;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
+            --bg-dark: #050505;
+            --surface: #0a0a0a;
+            --text-main: #e2e2e2;
+            --text-sub: #888888;
             --accent: #8b5cf6;
         }
 
@@ -91,7 +91,7 @@
             position: relative;
             padding-top: 80px;
             /* Nav height */
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            background: radial-gradient(circle at center, #111111 0%, #050505 100%);
             overflow: hidden;
         }
 
@@ -343,7 +343,11 @@
     <nav>
         <div class="logo">
             <svg viewBox="0 0 24 24">
-                <path d="M13 3L4 14h7v7l9-11h-7V3z" />
+                <path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h2l4 4 4-4h6c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"
+                    fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" />
+                <circle cx="9" cy="11" r="2.5" stroke="#3b82f6" fill="none" stroke-width="1.5" />
+                <circle cx="15" cy="11" r="2.5" stroke="#3b82f6" fill="none" stroke-width="1.5" />
+                <path d="M11.5 11h1" stroke="#3b82f6" stroke-width="1.5" />
             </svg>
             LoCAD
         </div>

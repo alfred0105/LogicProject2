@@ -590,9 +590,10 @@ Object.assign(CircuitSimulator.prototype, {
         this.wireMode = this.wireMode === 'pin' ? 'grid' : 'pin';
         const btn = document.getElementById('btn-wire-mode');
         if (btn) {
-            btn.innerHTML = this.wireMode === 'pin' ? '<svg><use href="#icon-wire" /></svg>' : '<svg><use href="#icon-grid" /></svg>';
+            // Pin Mode가 활성 상태(켜짐)로 표시
+            btn.classList.toggle('active', this.wireMode === 'pin');
         }
-        this.showToast(this.wireMode === 'pin' ? '핀 직접 연결 모드' : '격자 기준 연결 모드', 'info');
+        this.showToast(this.wireMode === 'pin' ? '핀 직접 연결 모드 (자동)' : '격자 기준 연결 모드 (수동)', 'info');
     },
 
     // 도움말 표시

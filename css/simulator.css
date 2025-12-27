@@ -6,51 +6,63 @@
    ============================================ */
 
 :root {
-    /* === Core Color Palette === */
-    --bg-void: #050608;
-    --bg-base: #0a0c10;
-    --bg-surface: #12151a;
-    --bg-elevated: #1a1e25;
-    --bg-hover: #242a33;
-    --bg-active: #2d3640;
+    /* === Theme System: Deep Dark (Dashboard Compatible) === */
+    --bg-base: #050505;
+    /* Main Canvas Background */
+    --bg-surface: #0a0a0a;
+    /* Sidebar / Panels */
+    --bg-elevated: #111111;
+    /* Popups / Hover States */
+    --bg-active: #1a1a1a;
+    /* Active Items */
+
+    --header-height: 50px;
+    --sidebar-width: 260px;
+    /* 사이드바 너비 살짝 조정 */
+    --statusbar-height: 25px;
+
+    /* Text Colors */
+    --text-primary: #e2e2e2;
+    --text-secondary: #a1a1aa;
+    --text-muted: #52525b;
+    --text-invert: #000000;
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-default: rgba(255, 255, 255, 0.12);
+    --border-focus: rgba(59, 130, 246, 0.5);
+
+    /* Accents (Neon Tech) */
+    --accent-blue: #3b82f6;
+    --accent-blue-glow: rgba(59, 130, 246, 0.4);
+
+    --accent-green: #10b981;
+    --accent-green-glow: rgba(16, 185, 129, 0.4);
+
+    --accent-red: #ef4444;
+    --accent-orange: #f59e0b;
+    --accent-orange-glow: rgba(245, 158, 11, 0.4);
+
+    --accent-purple: #8b5cf6;
+
+    /* Signal States */
+    --signal-high: #ef4444;
+    /* Red for ON */
+    --signal-high-glow: rgba(239, 68, 68, 0.6);
+    --signal-low: #3f3f46;
+    /* Dark Grey for OFF */
+    --signal-z: #00bfff;
+    /* Blue for High-Z */
+
+    /* Animation */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.25s;
+    --ease-out: cubic-bezier(0.2, 0.0, 0.2, 1);
 
     /* Glass Effect Colors */
     --glass-bg: rgba(18, 21, 26, 0.85);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-glow: rgba(88, 166, 255, 0.1);
-
-    /* Borders */
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-default: rgba(255, 255, 255, 0.1);
-    --border-strong: rgba(255, 255, 255, 0.15);
-
-    /* Text Hierarchy */
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --text-disabled: #475569;
-
-    /* Accent Colors - Neon Glow */
-    --accent-blue: #3b82f6;
-    --accent-blue-glow: rgba(59, 130, 246, 0.5);
-    --accent-cyan: #06b6d4;
-    --accent-cyan-glow: rgba(6, 182, 212, 0.5);
-    --accent-green: #10b981;
-    --accent-green-glow: rgba(16, 185, 129, 0.5);
-    --accent-purple: #8b5cf6;
-    --accent-purple-glow: rgba(139, 92, 246, 0.5);
-    --accent-pink: #ec4899;
-    --accent-pink-glow: rgba(236, 72, 153, 0.5);
-    --accent-orange: #f59e0b;
-    --accent-orange-glow: rgba(245, 158, 11, 0.5);
-    --accent-red: #ef4444;
-    --accent-red-glow: rgba(239, 68, 68, 0.5);
-
-    /* Signal Colors */
-    --signal-high: #ff4e42;
-    --signal-high-glow: 0 0 20px rgba(255, 78, 66, 0.6);
-    --signal-low: #6b7280;
-    --signal-low-glow: none;
 
     /* Gradients */
     --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
@@ -58,9 +70,6 @@
     --gradient-glow: radial-gradient(ellipse at center, var(--accent-blue-glow) 0%, transparent 70%);
 
     /* Dimensions */
-    --header-height: 52px;
-    --sidebar-width: 260px;
-    --statusbar-height: 28px;
     --radius-xs: 4px;
     --radius-sm: 6px;
     --radius-md: 8px;
