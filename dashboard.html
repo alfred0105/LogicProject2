@@ -696,6 +696,18 @@
         <script>
             let _allFeedback = [];
 
+            // 1. Override setAdminStatus FIRST
+            const originalSetAdmin = window.setAdminStatus || function () { };
+            window.setAdminStatus = function (email) {
+                if (typeof originalSetAdmin === 'function') originalSetAdmin(email);
+                const isAdmin = email === 'ace060408@gmail.com';
+                const section = document.getElementById('admin-feedback-section');
+                if (section) {
+                    section.style.display = isAdmin ? 'block' : 'none';
+                    if (isAdmin) loadFeedback();
+                }
+            };
+
             // Robust Admin Check
             function tryInitAdmin() {
                 console.log('🕵️ Checking admin status...');
@@ -724,17 +736,7 @@
             setTimeout(tryInitAdmin, 500);
             setTimeout(tryInitAdmin, 2000);
 
-            // Ensure setAdminStatus updates visibility and loads feedback
-            const originalSetAdmin = window.setAdminStatus || function () { };
-            window.setAdminStatus = function (email) {
-                originalSetAdmin(email);
-                const isAdmin = email === 'ace060408@gmail.com';
-                const section = document.getElementById('admin-feedback-section');
-                if (section) {
-                    section.style.display = isAdmin ? 'block' : 'none';
-                    if (isAdmin) loadFeedback();
-                }
-            };
+
 
             async function loadFeedback() {
                 console.log('🔄 Loading feedback...');
