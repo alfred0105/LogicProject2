@@ -66,7 +66,29 @@ Object.assign(CircuitSimulator.prototype, {
         }
     },
 
-    hideContextMenu() { \r\n        if (!this.contextMenu) return; \r\n        this.contextMenu.style.display = 'none'; \r\n }, \r\n\r\n    // 모든 동적 생성 컨텍스트 메뉴 닫기 (TabManager 포함)\r\n    hideAllContextMenus() {\r\n        // TabManager에서 생성한 컨텍스트 메뉴\r\n        const dynamicMenu = document.getElementById('component-context-menu');\r\n        if (dynamicMenu) {\r\n            dynamicMenu.classList.remove('visible');\r\n            setTimeout(() => dynamicMenu.remove(), 150);\r\n        }\r\n        \r\n        // 기타 동적 context-menu 클래스 메뉴들\r\n        document.querySelectorAll('.context-menu.visible').forEach(menu => {\r\n            menu.classList.remove('visible');\r\n            setTimeout(() => menu.remove(), 150);\r\n        });\r\n    },
+    hideContextMenu() {
+        if (!this.contextMenu) return;
+        this.contextMenu.style.display = 'none';
+    },
+
+    // 모든 동적 생성 컨텍스트 메뉴 닫기 (TabManager 포함)
+    hideAllContextMenus() {
+        // 메인 컨텍스트 메뉴 닫기
+        this.hideContextMenu();
+
+        // TabManager에서 생성한 컨텍스트 메뉴
+        const dynamicMenu = document.getElementById('component-context-menu');
+        if (dynamicMenu) {
+            dynamicMenu.classList.remove('visible');
+            setTimeout(() => dynamicMenu.remove(), 150);
+        }
+
+        // 기타 동적 context-menu 클래스 메뉴들
+        document.querySelectorAll('.context-menu.visible').forEach(menu => {
+            menu.classList.remove('visible');
+            setTimeout(() => menu.remove(), 150);
+        });
+    },
 
     getComponentInfo(type) {
         // 직관적인 신호 흐름 애니메이션 (입력 → 게이트 → 출력)
