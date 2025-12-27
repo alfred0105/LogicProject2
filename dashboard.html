@@ -870,7 +870,9 @@
             });
 
             async function checkLogin() {
+                window.log('CheckLogin starting...');
                 if (typeof window.sb === 'undefined' || typeof window.getCurrentUser !== 'function') {
+                    window.log('Waiting for Supabase...');
                     setTimeout(checkLogin, 100);
                     return;
                 }
@@ -896,12 +898,17 @@
             }
 
             async function loadProjects(userId) {
+                window.log(`Loading projects for user ${userId}...`);
                 const grid = document.getElementById('project-grid');
-                if (!grid) return;
+                if (!grid) {
+                    window.log('Error: grid not found');
+                    return;
+                }
 
                 grid.innerHTML = '<div class="loading-spinner"></div>';
 
                 try {
+                    window.log('Querying Supabase projects...');
                     // thumbnail 컬럼도 선택
                     const { data, error } = await window.sb
                         .from('projects')
@@ -909,8 +916,12 @@
                         .eq('user_id', userId)
                         .order('updated_at', { ascending: false });
 
-                    if (error) throw error;
+                    if (error) {
+                        window.log('DB Error: ' + error.message);
+                        throw error;
+                    }
 
+                    window.log(`Projects loaded: ${data ? data.length : 0}`);
                     grid.innerHTML = '';
                     if (!data || data.length === 0) {
                         grid.innerHTML = `<div class="empty-state">${t('empty_projects')}</div>`;
@@ -1014,9 +1025,9 @@
 
             // === Admin Feedback Logic ===
             async function loadFeedback() {
-                console.log('🔄 Loading feedback...');
+                window.log('Loading feedback...');
                 if (!window.sb) {
-                    console.error('❌ Supabase client not ready');
+                    window.log('Error: updateStatus Supabase client not ready');
                     return;
                 }
 
@@ -1147,7 +1158,23 @@
                 const s = localStorage.getItem('locad_ui_scale');
                 if (s) document.body.style.zoom = s;
             })();
+
+            // DEBUG CONSOLE
+            window.log = function (msg) {
+                const con = document.getElementById('debug-console');
+                if (con) {
+                    const line = document.createElement('div');
+                    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                    con.appendChild(line);
+                    con.scrollTop = con.scrollHeight;
+                }
+                console.log(msg);
+            };
         </script>
+        <div id="debug-console"
+            style="position:fixed; bottom:10px; right:10px; width:300px; height:150px; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; font-family:monospace; font-size:11px; z-index:10000; overflow-y:auto; pointer-events:none; border:1px solid #0f0;">
+            System Ready.
+        </div>
 </body>
 
 </html>
