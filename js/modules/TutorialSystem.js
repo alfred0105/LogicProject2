@@ -303,14 +303,15 @@ Object.assign(CircuitSimulator.prototype, {
                     transform: translateX(-50%);
                     width: 90%;
                     max-width: 500px;
-                    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-                    border: 1px solid rgba(59, 130, 246, 0.3);
+                    background: #0f172a; /* Solid Dark Background for readability */
+                    border: 2px solid #3b82f6; /* Thicker Border */
                     border-radius: 16px;
                     padding: 24px;
-                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
                     pointer-events: auto;
                     animation: tutorialSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                     touch-action: auto;
+                    z-index: 10002; /* 위에 뜨게 */
                 }
                 @keyframes tutorialSlideUp {
                     from { opacity: 0; transform: translateX(-50%) translateY(30px); }
@@ -359,9 +360,10 @@ Object.assign(CircuitSimulator.prototype, {
                 }
                 .tutorial-instruction {
                     margin: 0;
-                    font-size: 15px;
+                    font-size: 16px; /* 15->16px */
                     line-height: 1.6;
-                    color: #cbd5e1;
+                    color: #f1f5f9; /* Much brighter text */
+                    font-weight: 500;
                 }
                 .tutorial-instruction strong {
                     color: #60a5fa;

@@ -101,6 +101,8 @@
 #wire-layer {
     will-change: transform;
     transform: translateZ(0);
+    transform-origin: 0 0;
+    /* 미니맵 연동 좌표 계산 단순화 */
 }
 
 /* 컴포넌트는 드래그 시에만 will-change 적용 (JS에서 동적 처리) */

@@ -295,11 +295,12 @@ Object.assign(CircuitSimulator.prototype, {
         const viewport = document.getElementById('minimap-viewport');
         if (!minimap || !viewport) return;
 
-        const wrapper = this.workspace.parentElement;
+        const wrapper = this.workspace ? this.workspace.parentElement : null;
         if (!wrapper) return;
 
-        const wVal = this.wireLayer ? (this.wireLayer.getAttribute('width') || window.getComputedStyle(this.wireLayer).width) : '6000';
-        const hVal = this.wireLayer ? (this.wireLayer.getAttribute('height') || window.getComputedStyle(this.wireLayer).height) : '4000';
+        // 캔버스 기본 크기
+        const wVal = this.wireLayer ? (this.wireLayer.getAttribute('width') || '6000') : '6000';
+        const hVal = this.wireLayer ? (this.wireLayer.getAttribute('height') || '4000') : '4000';
         const canvasWidth = parseInt(wVal) || 6000;
         const canvasHeight = parseInt(hVal) || 4000;
 
@@ -334,28 +335,56 @@ Object.assign(CircuitSimulator.prototype, {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // 1. 소자 그리기
         if (this.components) {
             this.components.forEach(comp => {
-                const x = parseFloat(comp.style.left) * scaleX;
-                const y = parseFloat(comp.style.top) * scaleY;
-                const size = 30 * scaleX;
+                const cx = parseFloat(comp.style.left);
+                const cy = parseFloat(comp.style.top);
 
-                ctx.fillStyle = '#666';
+                const x = cx * scaleX;
+                const y = cy * scaleY;
+
+                // 소자 크기는 너무 작아지지 않게 보정
+                const size = Math.max(3, 60 * scaleX);
+
                 const type = comp.getAttribute('data-type');
-                if (type === 'LED') ctx.fillStyle = comp.classList.contains('led-on') ? '#eab308' : '#444';
-                if (type === 'SWITCH') ctx.fillStyle = '#2ecc71';
 
-                ctx.fillRect(x, y, size, size);
+                // 타입별 색상
+                if (type === 'SWITCH') ctx.fillStyle = '#22c55e'; // Green
+                else if (type === 'LED') ctx.fillStyle = comp.classList.contains('led-on') ? '#ef4444' : '#64748b'; // Red/Grey
+                else if (type === 'AND' || type === 'OR' || type === 'NOT') ctx.fillStyle = '#3b82f6'; // Blue
+                else ctx.fillStyle = '#94a3b8'; // Default Grey
+
+                // 전선 제외하고 그리기 (wire components는 보통 path로 관리되지만 data-type='JOINT' 등이 있을 수 있음)
+                // JOINT는 작게
+                if (type === 'JOINT') {
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fillRect(x, y, Math.max(1, 15 * scaleX), Math.max(1, 15 * scaleY));
+                } else {
+                    ctx.fillRect(x, y, size, size * 0.7); // 약간 직사각형
+                }
             });
         }
 
+        // 2. 뷰포트 그리기 (빨간 박스)
         const visibleW = wrapper.clientWidth;
         const visibleH = wrapper.clientHeight;
 
-        const viewX = (-this.panX) * scaleX;
-        const viewY = (-this.panY) * scaleY;
-        const viewW = (visibleW / this.scale) * scaleX;
-        const viewH = (visibleH / this.scale) * scaleY;
+        // 화면 좌표 변환:
+        // panX, panY는 transform translate 값.
+        // scale은 transform scale 값.
+        // 역변환: (0, 0) 화면 좌표 -> (-panX / scale, -panY / scale) 캔버스 좌표
+        const currentScale = this.scale || 1;
+
+        const canvasViewX = -this.panX / currentScale;
+        const canvasViewY = -this.panY / currentScale;
+        const canvasViewW = visibleW / currentScale;
+        const canvasViewH = visibleH / currentScale;
+
+        const viewX = canvasViewX * scaleX;
+        const viewY = canvasViewY * scaleY;
+        const viewW = canvasViewW * scaleX;
+        const viewH = canvasViewH * scaleY;
 
         viewport.style.left = viewX + 'px';
         viewport.style.top = viewY + 'px';
