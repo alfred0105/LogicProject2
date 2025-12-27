@@ -645,7 +645,8 @@ body {
     border-radius: var(--radius-lg);
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
-    overflow: hidden;
+    overflow: visible;
+    /* Changed from hidden to prevent clipping */
     transition: all var(--duration-normal) var(--ease-out);
 }
 
@@ -722,8 +723,10 @@ body {
     gap: 4px;
     padding: 8px 4px;
     min-height: 72px;
-    /* Ensure minimum height for consistency */
     height: auto;
+    width: 100%;
+    /* Ensure full grid cell width */
+    box-sizing: border-box;
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
@@ -4321,6 +4324,7 @@ div.component[data-type="NOT"] {
     flex-direction: column;
     gap: 8px;
 }
+
 /* Feedback Button Position Override - Move above Minimap */
 #channel-io-app-wrapper,
 #channel-io-launcher,
@@ -4339,13 +4343,16 @@ div.component[data-type="NOT"] {
     width: 6px;
     display: block;
 }
+
 .sidebar-content::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .sidebar-content::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
 }
+
 .sidebar-content::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
