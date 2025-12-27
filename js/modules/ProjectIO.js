@@ -177,14 +177,57 @@ Object.assign(CircuitSimulator.prototype, {
             packages: this.userPackages || []
         };
 
+        if (this.currentThumbnail) {
+            projectData.thumbnail = this.currentThumbnail;
+            this.currentThumbnail = null;
+        }
+
         return projectData;
     },
 
     /**
      * 로컬 스토리지에 저장
      */
-    saveProject(silent = false) {
+    async captureThumbnail() {
+        if (typeof html2canvas === 'undefined') return null;
+        const workspace = document.getElementById('workspace');
+        if (!workspace) return null;
+
+        try {
+            // 현재 화면에 보이는 부분만 캡처하기 위해 windowWidth 등을 제한하거나
+            // 전체 캔버스를 축소 캡처
+            // 워크스페이스가 6000px로 잡혀있어 메모리 부하가 클 수 있음 -> scale 대폭 축소
+            // 또는 현재 뷰포트 중심의 스크린샷만 찍는 것이 나음 (simulator-container 기준)
+
+            // 더 안전한 방법: simulator-container 캡처 (보이는 부분만)
+            const container = document.querySelector('.workspace-wrapper');
+
+            const canvas = await html2canvas(container || workspace, {
+                scale: 0.5, // 해상도 50%
+                logging: false,
+                useCORS: true,
+                ignoreElements: (el) => el.classList.contains('grid-layer') || el.classList.contains('component-ui')
+            });
+
+            return canvas.toDataURL('image/jpeg', 0.5); // JPEG 50% 품질
+        } catch (e) {
+            console.error('Thumbnail capture error:', e);
+            return null;
+        }
+    },
+
+    /**
+     * 로컬 스토리지 및 클라우드 저장
+     */
+    async saveProject(silent = false) {
         if (!this.currentProjectId) return;
+
+        // 명시적 저장(버튼 클릭)일 때만 썸네일 캡처 시도
+        if (!silent) {
+            try {
+                this.currentThumbnail = await this.captureThumbnail();
+            } catch (e) { console.warn('Thumbnail skipped'); }
+        }
 
         const projectData = this.exportProjectData();
         localStorage.setItem(this.currentProjectId, JSON.stringify(projectData));
@@ -195,17 +238,11 @@ Object.assign(CircuitSimulator.prototype, {
             localStorage.setItem('logic_sim_projects_index', JSON.stringify(projectIndex));
         }
 
-        if (!silent) this.showToast(`✓ 프로젝트 저장됨 (로컬)`, 'success');
-
-        // 클라우드 즉시 저장 (수동 저장 시)
-        // silent가 false(버튼 클릭)면 즉시 저장하고 결과 알림
-        // silent가 true(내부 호출)면 자동 저장 트리거? -> 아니오, saveProject는 이제 '명시적 저장'으로 간주.
-        // 하지만 내부적으로 saveProject(true)를 쓰면 꼬일 수 있음.
-        // 다행히 HistoryManager는 triggerAutoSave를 직접 부름.
+        if (!silent) this.showToast(`✓ 프로젝트 저장됨`, 'success');
 
         if (this.cloud) {
-            // 수동 저장(버튼)인 경우 silent=false 전달 -> 알림 뜸
-            this.cloud.saveProjectToCloud(this.currentProjectName, silent);
+            // UI 블로킹 방지를 위해 비동기 호출
+            this.cloud.saveProjectToCloud(this.currentProjectName, silent).catch(err => console.error(err));
         }
     },
 
