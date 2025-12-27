@@ -4305,7 +4305,8 @@ div.component[data-type="NOT"] {
 
 /* Feedback Button in Status Bar */
 .statusbar .feedback-btn {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
     align-items: center;
     justify-content: center;
     gap: 8px;
