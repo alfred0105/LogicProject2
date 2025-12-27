@@ -753,5 +753,42 @@ Object.assign(CircuitSimulator.prototype, {
         if (existing) existing.remove();
 
         document.body.insertAdjacentHTML('beforeend', modalContent);
+    },
+
+    // === Settings ===
+    openSettings() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Sync scale
+            const savedScale = localStorage.getItem('locad_ui_scale') || 1.0;
+            const input = document.getElementById('sim-setting-ui-scale');
+            if (input) input.value = savedScale;
+            this.setUIScale(savedScale);
+
+            // Sync language
+            const langSelect = document.getElementById('sim-setting-language');
+            if (langSelect && this.currentLang) langSelect.value = this.currentLang;
+        }
+    },
+
+    closeSettings() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    setUIScale(scale) {
+        scale = parseFloat(scale);
+        this.uiScale = scale;
+
+        // Apply Zoom (Chrome/Edge/Window)
+        // Firefox does not support zoom well, but transform: scale is hard for layout.
+        // Assuming user environment (likely Chromium based on 'zoom' request context)
+        document.body.style.zoom = scale;
+
+        const label = document.getElementById('ui-scale-value');
+        if (label) label.innerText = Math.round(scale * 100) + '%';
+
+        localStorage.setItem('locad_ui_scale', scale);
     }
 });

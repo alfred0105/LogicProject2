@@ -85,9 +85,9 @@
         }
 
         .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-            font-size: 18px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 20px;
             letter-spacing: -0.5px;
             display: flex;
             align-items: center;
@@ -97,7 +97,9 @@
         }
 
         .logo-icon {
-            width: 20px;
+            width: 28px;
+            height: 28px;
+            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
             height: 20px;
             stroke: var(--text-main);
             stroke-width: 2;
@@ -504,12 +506,18 @@
     <!-- SVG Definitions (Icons) -->
     <svg style="display: none;">
         <defs>
+            <!-- Logo Gradient -->
+            <linearGradient id="grad-logo" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+            </linearGradient>
+
             <symbol id="icon-circuit" viewBox="0 0 24 24">
-                <path
-                    d="M21 12V7a2 2 0 0 0-2-2h-3l-2.5-3-2.5 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4l2.5 3 2.5-3h6a2 2 0 0 0 2-2v-2"
-                    stroke-linejoin="round"></path>
-                <circle cx="9" cy="12" r="2"></circle>
-                <circle cx="15" cy="12" r="2"></circle>
+                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#grad-logo)" />
+                <path d="M7 7h3v2H9v6h5v-2h-3v-2h3V7h-3V7" fill="none" />
+                <path d="M15 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" fill="white" opacity="0.9" />
+                <path d="M8 8h2v8H8z" fill="white" />
+                <path d="M10 14h4v2h-4z" fill="white" />
             </symbol>
             <symbol id="icon-plus" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -952,6 +960,11 @@
         function loadFeedback() {
             // ... (기존 로직 유지하거나 i18n 적용 필요)
         }
+        // Apply UI Scale on load
+        (function () {
+            const s = localStorage.getItem('locad_ui_scale');
+            if (s) document.body.style.zoom = s;
+        })();
     </script>
 </body>
 
