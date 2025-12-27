@@ -19,7 +19,35 @@
 
     <style>
         :root {
-            /* === Minimalist & Dark Tech Palette === */
+            --badge-pending: #ff4d4f;
+            --badge-progress: #faad14;
+            --badge-resolved: #52c41a;
+
+            .status-select {
+                background: var(--bg-hover);
+                border: 1px solid var(--border-dim);
+                color: var(--text-main);
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                cursor: pointer;
+            }
+
+            .status-select.pending {
+                border-color: var(--badge-pending);
+                color: var(--badge-pending);
+            }
+
+            .status-select.progress {
+                border-color: var(--badge-progress);
+                color: var(--badge-progress);
+            }
+
+            .status-select.resolved {
+                border-color: var(--badge-resolved);
+                color: var(--badge-resolved);
+            }
+
             --bg-void: #050505;
             --bg-card: #0a0a0a;
             --bg-hover: #111111;
@@ -1099,23 +1127,63 @@
                     return;
                 }
                 items.forEach(item => {
+                    const status = item.status || 'pending';
+                    const statusClass = status === 'pending' ? 'pending' : (status === 'in_progress' ? 'progress' : 'resolved');
+
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.style.height = 'auto';
                     card.style.cursor = 'default';
                     card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
+                                <select class="status-select ${statusClass}" onchange="updateStatus('${item.id}', this.value)" onclick="event.stopPropagation()">
+                                    <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ 미해결</option>
+                                    <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>🚧 해결중</option>
+                                    <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>✅ 해결완료</option>
+                                </select>
+                            </div>
                             <span style="font-size:11px; color:var(--text-sub);">${new Date(item.created_at).toLocaleString()}</span>
                         </div>
-                        <div style="margin-bottom:12px; color:var(--text-main); line-height:1.5;">${item.content}</div>
+                        <div style="margin-bottom:12px; color:var(--text-main); line-height:1.5; white-space: pre-wrap;">${item.content}</div>
                         <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">사용자: ${item.user_email || '익명'}</div>
-                        <textarea class="comment-input" data-id="${item.id}" placeholder="관리자 코멘트" style="width:100%; height:50px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
-                        <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px; width:100%;">저장</button>
+                        
+                        <div style="border-top:1px solid var(--border-dim); padding-top:8px; margin-top:8px;">
+                            <div style="font-size:11px; color:var(--text-sub); margin-bottom:4px;">관리자 답변</div>
+                            <textarea class="comment-input" data-id="${item.id}" placeholder="답변을 입력하세요..." style="width:100%; height:60px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
+                            <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px; width:100%;">답변 저장</button>
+                        </div>
                     `;
                     container.appendChild(card);
                 });
             }
+
+            window.updateStatus = async function (id, newStatus) {
+                // UI 업데이트 (색상 변경)
+                const select = document.querySelector(`select[onchange="updateStatus('${id}', this.value)"]`);
+                if (select) {
+                    select.className = `status-select ${newStatus === 'pending' ? 'pending' : (newStatus === 'in_progress' ? 'progress' : 'resolved')}`;
+                }
+
+                try {
+                    const { error } = await window.sb.from('feedback').update({ status: newStatus }).eq('id', id);
+                    if (error) throw error;
+                    // 로컬 데이터 업데이트
+                    if (window._allFeedback) {
+                        const item = window._allFeedback.find(i => i.id === id);
+                        if (item) item.status = newStatus;
+                    }
+                    console.log('Status updated to', newStatus);
+                } catch (err) {
+                    console.error('Status update error:', err);
+                    if (err.message && err.message.includes('column')) {
+                        alert('⚠️ DB 오류: "status" 컬럼이 없습니다.\nSupabase SQL Editor에서 다음을 실행하세요:\nALTER TABLE feedback ADD COLUMN status text DEFAULT \'pending\';');
+                    } else {
+                        alert('상태 변경 실패: ' + err.message);
+                    }
+                }
+            };
 
             window.saveComment = async function (id) {
                 const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
