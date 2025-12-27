@@ -32,26 +32,34 @@ Object.assign(CircuitSimulator.prototype, {
             const modal = document.getElementById('new-project-modal');
             if (modal) modal.classList.add('show');
         } else if (projectId) {
-            // URL 파라미터에 ID가 있으면 로컬 스토리지 또는 Cloud에서 로드 시도
-            if (window.sim && window.sim.cloud && window.sim.cloud.loadProjectFromCloud) {
-                // Supabase 로딩을 기다려야 할 수도 있음.
-                // 1. 로컬 스토리지에 있으면 먼저 로드 (빠른 반응)
+            // URL 파라미터에 ID가 있으면 클라우드 우선 로드
+            // [FIX] 클라우드 우선 로딩 - 최신 데이터 보장
+            const tryCloudLoad = async () => {
+                if (window.sim && window.sim.cloud) {
+                    try {
+                        await window.sim.cloud.loadProjectFromCloud(projectId);
+                        console.log('Cloud load completed');
+                    } catch (e) {
+                        console.warn('Cloud load failed, falling back to local:', e);
+                        // 클라우드 로드 실패 시에만 로컬에서 로드
+                        if (localStorage.getItem(projectId)) {
+                            this.loadProject(projectId);
+                        }
+                    }
+                } else {
+                    setTimeout(tryCloudLoad, 300);
+                }
+            };
+
+            // Supabase가 없거나 로컬 전용 프로젝트인 경우
+            if (!window.sb) {
+                // 로컬 스토리지에서 로드
                 if (localStorage.getItem(projectId)) {
                     this.loadProject(projectId);
                 }
-
-                // 2. 클라우드 로드 시도 (최신 데이터 동기화)
-                // CloudManager가 로드되면 실행
-                const tryCloudLoad = () => {
-                    if (window.sim.cloud) {
-                        window.sim.cloud.loadProjectFromCloud(projectId);
-                    } else {
-                        setTimeout(tryCloudLoad, 500);
-                    }
-                };
-                tryCloudLoad();
             } else {
-                this.loadProject(projectId);
+                // 클라우드 우선 로드 시도
+                tryCloudLoad();
             }
         }
 

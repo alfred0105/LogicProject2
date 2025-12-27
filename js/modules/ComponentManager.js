@@ -99,8 +99,22 @@ Object.assign(CircuitSimulator.prototype, {
                 el.innerHTML = symbols[type];
                 label.innerText = 'OFF';
                 el.appendChild(label);
-                el.setAttribute('data-value', '0'); // [FIXED]
-                el.onclick = (e) => this.toggleSwitch(e, el);
+                el.setAttribute('data-value', '0');
+
+                // [FIX] 간단한 클릭 핸들러 - 드래그와 분리
+                el.addEventListener('click', (e) => {
+                    // 드래그 중이거나 직전에 드래그한 경우 토글 방지
+                    if (this.dragTarget || this._justDragged) {
+                        return;
+                    }
+                    // 핀 클릭은 제외
+                    if (e.target.closest('.pin')) {
+                        return;
+                    }
+                    e.stopPropagation();
+                    this.toggleSwitch(e, el);
+                });
+
                 this.addPin(el, 'out', 'output center');
             } else if (type === 'LED') {
                 el.innerHTML = symbols[type];

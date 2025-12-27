@@ -37,7 +37,15 @@ Object.assign(CircuitSimulator.prototype, {
         window.addEventListener('mousemove', (e) => this._throttledPositionUpdate(e));
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
-        window.addEventListener('click', () => this.hideContextMenu());
+
+        // 클릭 시 모든 컨텍스트 메뉴 닫기
+        window.addEventListener('click', (e) => {
+            // 컨텍스트 메뉴 자체를 클릭한 경우는 제외
+            if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
+                this.hideContextMenu();
+                this.hideAllContextMenus();
+            }
+        });
     },
 
     // [PERFORMANCE] 분리된 위치 표시 업데이트 함수
@@ -365,6 +373,10 @@ Object.assign(CircuitSimulator.prototype, {
                 this.dragTarget.classList.remove('dragging');
                 this.dragTarget.style.cursor = 'grab';
                 this.saveState();
+
+                // [FIX] 드래그 직후 클릭 방지 플래그
+                this._justDragged = true;
+                setTimeout(() => { this._justDragged = false; }, 100);
             }
 
             if (this.isWiring) {

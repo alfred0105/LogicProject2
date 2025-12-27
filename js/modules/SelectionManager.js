@@ -66,10 +66,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
     },
 
-    hideContextMenu() {
-        if (!this.contextMenu) return;
-        this.contextMenu.style.display = 'none';
-    },
+    hideContextMenu() { \r\n        if (!this.contextMenu) return; \r\n        this.contextMenu.style.display = 'none'; \r\n }, \r\n\r\n    // 모든 동적 생성 컨텍스트 메뉴 닫기 (TabManager 포함)\r\n    hideAllContextMenus() {\r\n        // TabManager에서 생성한 컨텍스트 메뉴\r\n        const dynamicMenu = document.getElementById('component-context-menu');\r\n        if (dynamicMenu) {\r\n            dynamicMenu.classList.remove('visible');\r\n            setTimeout(() => dynamicMenu.remove(), 150);\r\n        }\r\n        \r\n        // 기타 동적 context-menu 클래스 메뉴들\r\n        document.querySelectorAll('.context-menu.visible').forEach(menu => {\r\n            menu.classList.remove('visible');\r\n            setTimeout(() => menu.remove(), 150);\r\n        });\r\n    },
 
     getComponentInfo(type) {
         // 직관적인 신호 흐름 애니메이션 (입력 → 게이트 → 출력)
@@ -362,7 +359,23 @@ Object.assign(CircuitSimulator.prototype, {
         this.showToast('삭제됨', 'info');
     },
 
-    deleteComponent(el) {
+    deleteComponent(elOrId) {
+        // ID 문자열인 경우 DOM 요소로 변환
+        let el = elOrId;
+        if (typeof elOrId === 'string') {
+            el = document.getElementById(elOrId);
+            if (!el) {
+                console.warn('deleteComponent: Element not found for ID:', elOrId);
+                return;
+            }
+        }
+
+        // 유효한 DOM 요소인지 확인
+        if (!el || !el.parentNode) {
+            console.warn('deleteComponent: Invalid element or already removed');
+            return;
+        }
+
         // [Module Mode Support] 포트 컴포넌트 삭제 시 메타데이터 동기화
         if (this.currentTab && this.currentTab.startsWith('module_')) {
             const type = el.getAttribute('data-type');
@@ -395,8 +408,15 @@ Object.assign(CircuitSimulator.prototype, {
         );
         wiresToRemove.forEach(wire => this.removeWire(wire));
 
-        if (el.parentNode) el.parentNode.removeChild(el);
+        // DOM에서 제거
+        el.parentNode.removeChild(el);
+
+        // 배열에서 제거
         this.components = this.components.filter(c => c !== el);
+
+        // 상태 표시줄 업데이트
+        if (this.updateStatusBar) this.updateStatusBar();
+
         this.hideTooltip();
     },
 
