@@ -236,7 +236,12 @@ Object.assign(CircuitSimulator.prototype, {
                 if (cData.type === 'SWITCH') {
                     const label = newComp.querySelector('.comp-label');
                     if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
-                    newComp.style.background = cData.value === '1' ? '#2ecc71' : '#27ae60';
+                    // [FIX] background 스타일 대신 클래스 토글 (SVG 충돌 방지)
+                    if (cData.value === '1') {
+                        newComp.classList.add('switch-on');
+                    } else {
+                        newComp.classList.remove('switch-on');
+                    }
                 }
 
                 compMap[cData.id] = newComp;

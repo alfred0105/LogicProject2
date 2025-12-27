@@ -4073,3 +4073,22 @@ div.component[data-type="NOT"] {
     transform: scale(0.95);
     transition: transform 0.1s;
 }
+
+/* ============================================
+   🔘 SWITCH ON STATE
+   ============================================ */
+.component[data-type="SWITCH"].switch-on {
+    color: #4ade80;
+    border-color: #4ade80;
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+}
+
+.component[data-type="SWITCH"].switch-on svg {
+    color: #4ade80;
+    fill: #4ade80;
+}
+
+.component[data-type="SWITCH"].switch-on .comp-label {
+    color: #4ade80;
+    text-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+}

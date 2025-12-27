@@ -13,10 +13,11 @@ Object.assign(CircuitSimulator.prototype, {
         const label = el.querySelector('.comp-label');
         if (label) label.innerText = next === '1' ? 'ON' : 'OFF';
 
+        // [FIX] 인라인 스타일 대신 클래스 토글 (SVG 충돌 방지)
         if (next === '1') {
-            el.style.color = '#4ade80';
+            el.classList.add('switch-on');
         } else {
-            el.style.color = '';
+            el.classList.remove('switch-on');
         }
         this.updateCircuit();
     },
@@ -63,7 +64,7 @@ Object.assign(CircuitSimulator.prototype, {
                 if (type === 'SWITCH') {
                     const label = c.querySelector('.comp-label');
                     if (label) label.innerText = 'OFF';
-                    c.style.color = '';
+                    c.classList.remove('switch-on');
                 }
             } else if (type === 'VCC') {
                 c.setAttribute('data-value', '1');
