@@ -240,6 +240,13 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (!silent) this.showToast(`✓ 프로젝트 저장됨`, 'success');
 
+        const statusEl = document.getElementById('save-status');
+        if (statusEl) {
+            statusEl.textContent = '저장됨';
+            statusEl.style.opacity = '1';
+            setTimeout(() => { statusEl.style.opacity = '0'; }, 2000);
+        }
+
         if (this.cloud) {
             // UI 블로킹 방지를 위해 비동기 호출
             this.cloud.saveProjectToCloud(this.currentProjectName, silent).catch(err => console.error(err));
