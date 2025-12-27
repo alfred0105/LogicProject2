@@ -905,7 +905,7 @@
                     // thumbnail 컬럼도 선택
                     const { data, error } = await window.sb
                         .from('projects')
-                        .select('id, title, updated_at, thumbnail')
+                        .select('id, title, updated_at')
                         .eq('user_id', userId)
                         .order('updated_at', { ascending: false });
 
