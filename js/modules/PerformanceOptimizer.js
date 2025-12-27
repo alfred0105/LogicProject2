@@ -207,7 +207,11 @@ Object.assign(CircuitSimulator.prototype, {
         }
 
         // RAF로 LED 업데이트 배치
-        requestAnimationFrame(() => this.updateLEDsOptimized());
+        requestAnimationFrame(() => {
+            this.updateLEDsOptimized();
+            // [FIX] 와이어 시각화도 업데이트
+            this.updateWireVisualsOptimized();
+        });
 
         // 성능 통계 업데이트
         if (this.perfMonitorEnabled) {
@@ -285,11 +289,12 @@ Object.assign(CircuitSimulator.prototype, {
             const isHigh = val === '1';
             let signal = false;
 
-            // classList.contains 대신 캐시된 역할 사용
-            const pinRole = fromPin._cachedRole ||
-                (fromPin._cachedRole = fromPin.getAttribute('data-role'));
+            // [FIX] classList.contains 사용하여 output 핀 확인
+            const isOutputPin = fromPin._isOutput !== undefined
+                ? fromPin._isOutput
+                : (fromPin._isOutput = fromPin.classList.contains('output') || fromPin.classList.contains('emit'));
 
-            if (pinRole === 'output' || type === 'JOINT') {
+            if (isOutputPin || type === 'JOINT') {
                 signal = isHigh;
             }
 
