@@ -252,15 +252,15 @@ Object.assign(CircuitSimulator.prototype, {
                         newComp = this.components[this.components.length - 1];
                     }
                 } else if (builtInPackages.includes(cData.type)) {
-                    // 내장 패키지 (D_FLIPFLOP 등)
-                    if (this.addBuiltInPackage) {
-                        newComp = this.addBuiltInPackage(cData.type);
+                    // 내장 패키지 (D_FLIPFLOP 등) - addPackage 함수 사용
+                    if (this.addPackage) {
+                        newComp = this.addPackage(cData.type);
                         if (newComp) {
                             newComp.style.left = cData.x + 'px';
                             newComp.style.top = cData.y + 'px';
                         }
                     } else {
-                        // addBuiltInPackage가 없으면 기본 모듈로 추가
+                        // addPackage가 없으면 기본 모듈로 추가
                         this.addModule(cData.type, cData.x, cData.y);
                         newComp = this.components[this.components.length - 1];
                     }
