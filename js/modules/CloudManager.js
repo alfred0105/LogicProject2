@@ -112,9 +112,16 @@ class CloudManager {
         // 썸네일 생성
         let thumbnail = null;
         try {
-            const canvas = this.sim.canvas || document.getElementById('logic-canvas');
-            if (canvas) {
-                thumbnail = canvas.toDataURL('image/jpeg', 0.5);
+            if (typeof html2canvas === 'function') {
+                const workspace = document.getElementById('workspace');
+                if (workspace) {
+                    const canvas = await html2canvas(workspace, {
+                        scale: 0.25,
+                        backgroundColor: '#1e293b',
+                        logging: false
+                    });
+                    thumbnail = canvas.toDataURL('image/jpeg', 0.6);
+                }
             }
         } catch (err) {
             console.warn('Failed to generate thumbnail:', err);
