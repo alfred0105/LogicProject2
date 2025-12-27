@@ -1163,22 +1163,7 @@
                         alert('저장 실패: ' + err.message);
                     }
                 }
-
-                // Local update
-                if (window._allFeedback) {
-                    const item = window._allFeedback.find(i => i.id === id);
-                    if (item) item.comment = comment;
-                }
-            } catch (err) {
-                console.error('Comment save error:', err);
-                if (window.log) window.log('Save Error: ' + err.message);
-
-                if (err.message && err.message.includes('column')) {
-                    alert('⚠️ DB 설정 오류:\nSupabase의 "feedback" 테이블에 "comment" 컬럼이 없습니다.');
-                } else {
-                    alert('저장 실패: ' + err.message);
-                }
-            }
+            };
             };
 
             // Apply UI Scale on load
