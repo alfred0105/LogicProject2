@@ -895,6 +895,61 @@
                 }
             }
 
+            async function loadProjects(userId) {
+                const grid = document.getElementById('project-grid');
+                if (!grid) return;
+
+                grid.innerHTML = '<div class="loading-spinner"></div>';
+
+                try {
+                    // thumbnail 컬럼도 선택
+                    const { data, error } = await window.sb
+                        .from('projects')
+                        .select('id, title, updated_at, thumbnail')
+                        .eq('user_id', userId)
+                        .order('updated_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    grid.innerHTML = '';
+                    if (!data || data.length === 0) {
+                        grid.innerHTML = `<div class="empty-state">${t('empty_projects')}</div>`;
+                        return;
+                    }
+
+                    data.forEach(p => {
+                        const date = new Date(p.updated_at).toLocaleDateString();
+                        // 썸네일 처리: Base64 이미지이거나 URL일 수 있음
+                        const thumbHtml = p.thumbnail
+                            ? `<img src="${p.thumbnail}" alt="${p.title}" style="width:100%; height:100%; object-fit:cover;">`
+                            : `<svg class="card-icon-svg"><use href="#icon-circuit"/></svg>`;
+
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.onclick = () => location.href = `simulator.html?id=${p.id}`;
+                        card.innerHTML = `
+                            <div class="card-preview">
+                                ${thumbHtml}
+                            </div>
+                            <div class="card-info">
+                                <div>
+                                    <div class="card-title">${p.title}</div>
+                                    <div class="card-meta">${date}</div>
+                                </div>
+                                <button class="icon-btn delete-btn" onclick="deleteProject('${p.id}', event)" title="Delete">
+                                    <svg style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;"><use href="#icon-trash"/></svg>
+                                </button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                } catch (err) {
+                    console.error('Error loading projects:', err);
+                    grid.innerHTML = '<div class="error">Failed to load projects.</div>';
+                }
+            }
+
             async function createNewProject() {
                 const title = prompt(currentLang === 'ko' ? "프로젝트 이름을 입력하세요:" : "Enter project name:");
                 if (!title) return;

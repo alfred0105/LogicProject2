@@ -109,6 +109,17 @@ class CloudManager {
         const title = projectName || this.sim.currentProjectName || 'Untitled Project';
         const now = new Date().toISOString();
 
+        // 썸네일 생성
+        let thumbnail = null;
+        try {
+            const canvas = this.sim.canvas || document.getElementById('logic-canvas');
+            if (canvas) {
+                thumbnail = canvas.toDataURL('image/jpeg', 0.5);
+            }
+        } catch (err) {
+            console.warn('Failed to generate thumbnail:', err);
+        }
+
         try {
             let data, error;
 
@@ -120,7 +131,8 @@ class CloudManager {
                     .update({
                         title: title,
                         data: projectData,
-                        updated_at: now
+                        updated_at: now,
+                        thumbnail: thumbnail
                     })
                     .eq('id', this.sim.currentCloudId)
                     .select();
@@ -138,7 +150,8 @@ class CloudManager {
                             title: title,
                             data: projectData,
                             created_at: now,
-                            updated_at: now
+                            updated_at: now,
+                            thumbnail: thumbnail
                         }
                     ])
                     .select();
