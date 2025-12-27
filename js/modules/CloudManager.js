@@ -118,7 +118,13 @@ class CloudManager {
                     const canvas = await html2canvas(workspace, {
                         scale: 0.25,
                         backgroundColor: '#1e293b',
-                        logging: false
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true,
+                        scrollX: 0,
+                        scrollY: 0,
+                        width: workspace.scrollWidth,
+                        height: workspace.scrollHeight
                     });
                     thumbnail = canvas.toDataURL('image/jpeg', 0.6);
                 }
