@@ -244,7 +244,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (statusEl) {
             statusEl.textContent = '저장됨';
             statusEl.style.opacity = '1';
-            setTimeout(() => { statusEl.style.opacity = '0'; }, 2000);
+            // Removed auto-hide to keep status visible
         }
 
         if (this.cloud) {
