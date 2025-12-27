@@ -75,11 +75,128 @@
 
         // 어드민인 경우에만 상세 오류 표시
         if (_isAdmin || isDev || debugMode) {
+            // 관리자용 비주얼 디버그 패널에 오류 추가
+            showAdminDebugError(errorInfo);
             return false; // 기본 에러 핸들러도 실행
         }
 
         // 일반 사용자: 오류 숨김
         return true; // 기본 에러 핸들러 차단
+    }
+
+    /**
+     * 관리자용 비주얼 디버그 패널 (콘솔 오류를 화면에 표시)
+     */
+    function showAdminDebugError(errorInfo) {
+        // 디버그 패널이 없으면 생성
+        let panel = document.getElementById('admin-debug-panel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'admin-debug-panel';
+            panel.innerHTML = `
+                <div class="admin-debug-header">
+                    <span>🔧 Admin Debug Console</span>
+                    <button onclick="document.getElementById('admin-debug-panel').classList.toggle('minimized')">_</button>
+                    <button onclick="document.getElementById('admin-debug-panel').remove()">✕</button>
+                </div>
+                <div class="admin-debug-content"></div>
+            `;
+            panel.style.cssText = `
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                width: 400px;
+                max-height: 300px;
+                background: rgba(15, 15, 20, 0.95);
+                border: 1px solid #ef4444;
+                border-radius: 8px;
+                font-family: 'Consolas', monospace;
+                font-size: 11px;
+                z-index: 99999;
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+                overflow: hidden;
+            `;
+            document.body.appendChild(panel);
+
+            // 스타일 추가
+            const style = document.createElement('style');
+            style.textContent = `
+                #admin-debug-panel .admin-debug-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 12px;
+                    background: linear-gradient(135deg, #ef4444, #dc2626);
+                    color: white;
+                    font-weight: bold;
+                }
+                #admin-debug-panel .admin-debug-header button {
+                    background: rgba(255,255,255,0.2);
+                    border: none;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-left: 4px;
+                }
+                #admin-debug-panel .admin-debug-header button:hover {
+                    background: rgba(255,255,255,0.4);
+                }
+                #admin-debug-panel .admin-debug-content {
+                    max-height: 240px;
+                    overflow-y: auto;
+                    padding: 8px;
+                }
+                #admin-debug-panel.minimized .admin-debug-content {
+                    display: none;
+                }
+                #admin-debug-panel .error-item {
+                    padding: 6px 8px;
+                    margin-bottom: 4px;
+                    background: rgba(239, 68, 68, 0.1);
+                    border-left: 3px solid #ef4444;
+                    border-radius: 4px;
+                    color: #fca5a5;
+                }
+                #admin-debug-panel .error-item .error-type {
+                    color: #f87171;
+                    font-weight: bold;
+                }
+                #admin-debug-panel .error-item .error-source {
+                    color: #94a3b8;
+                    font-size: 10px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 오류 항목 추가
+        const content = panel.querySelector('.admin-debug-content');
+        const errorItem = document.createElement('div');
+        errorItem.className = 'error-item';
+
+        const time = new Date().toLocaleTimeString();
+        const shortSource = errorInfo.source ? errorInfo.source.split('/').pop() : '';
+
+        errorItem.innerHTML = `
+            <span class="error-type">[${errorInfo.type}]</span> 
+            <span>${escapeHtmlLocal(errorInfo.message)}</span>
+            <div class="error-source">${time} - ${shortSource}:${errorInfo.line}</div>
+        `;
+        content.prepend(errorItem);
+
+        // 최대 20개만 표시
+        while (content.children.length > 20) {
+            content.lastChild.remove();
+        }
+    }
+
+    // HTML 이스케이프 헬퍼 (Security.js 내부용)
+    function escapeHtmlLocal(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // ===== 전역 에러 핸들러 =====
