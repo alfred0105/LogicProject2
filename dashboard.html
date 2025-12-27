@@ -8,6 +8,7 @@
     <title>LoCAD - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/Security.js"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
     <!-- 폰트 로드 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -694,6 +695,11 @@
         </div>
         <script>
             let _allFeedback = [];
+
+            // Check for pending admin email from SupabaseClient
+            if (typeof window.__adminEmail !== 'undefined') {
+                setTimeout(() => window.setAdminStatus(window.__adminEmail), 100);
+            }
 
             // Ensure setAdminStatus updates visibility and loads feedback
             const originalSetAdmin = window.setAdminStatus || function () { };
