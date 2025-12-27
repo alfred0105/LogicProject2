@@ -238,7 +238,8 @@ Object.assign(CircuitSimulator.prototype, {
         path.classList.add('wire-path');
 
         // 스타일
-        path.style.stroke = '#555555';
+        path.style.stroke = '#22d3ee'; // Cyan-400 (Neon-like)
+        path.style.filter = 'drop-shadow(0 0 2px rgba(34, 211, 238, 0.6))'; // Glow Effect
         path.style.strokeWidth = '3px';
         path.style.strokeLinecap = 'round';
         path.style.strokeLinejoin = 'round';

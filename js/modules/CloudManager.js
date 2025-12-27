@@ -162,7 +162,12 @@ class CloudManager {
                 this.lastSavedTime = timeStr;
                 this.updateSaveStatusUI('saved', `저장됨 (${timeStr})`);
 
-                if (!silent) alert(`저장되었습니다!`);
+                if (!silent && this.sim.showToast) {
+                    this.sim.showToast('저장되었습니다!', 'success');
+                } else if (!silent) {
+                    // Fallback if toast not available
+                    console.log('Save success (Toast missing)');
+                }
                 console.log('Project saved:', savedProject);
 
                 // URL 업데이트

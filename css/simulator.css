@@ -1084,6 +1084,8 @@ body.mode-wire #workspace {
     stroke-width: 2.5;
     fill: none;
     transition: stroke 0.2s ease, filter 0.2s ease;
+    filter: drop-shadow(0 0 3px rgba(226, 226, 226, 0.25));
+    /* Subtle default glow */
 }
 
 .component:hover svg {
