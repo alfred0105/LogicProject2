@@ -698,14 +698,25 @@
 
             // Robust Admin Check
             function tryInitAdmin() {
+                console.log('🕵️ Checking admin status...');
                 if (typeof window.__adminEmail !== 'undefined' && window.__adminEmail) {
+                    console.log('Found cached admin email:', window.__adminEmail);
                     window.setAdminStatus(window.__adminEmail);
                 } else if (window.currentUser) {
+                    console.log('Found currentUser:', window.currentUser.email);
                     window.setAdminStatus(window.currentUser.email);
                 } else if (window.sb) {
+                    console.log('Checking Supabase session...');
                     window.sb.auth.getUser().then(({ data }) => {
-                        if (data && data.user) window.setAdminStatus(data.user.email);
+                        if (data && data.user) {
+                            console.log('Supabase user found:', data.user.email);
+                            window.setAdminStatus(data.user.email);
+                        } else {
+                            console.log('No active session found.');
+                        }
                     });
+                } else {
+                    console.log('Supabase client not ready yet.');
                 }
             }
             // Multiple attempts to catch async loading
@@ -726,15 +737,32 @@
             };
 
             async function loadFeedback() {
-                if (!window.sb) return;
-                const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
-                if (error) {
-                    console.error('Feedback load error:', error);
+                console.log('🔄 Loading feedback...');
+                if (!window.sb) {
+                    console.error('❌ Supabase client not ready');
+                    alert('데이터베이스 연결 대기 중... 잠시 후 다시 시도해주세요.');
                     return;
                 }
-                _allFeedback = data;
-                populateCategoryFilter(data);
-                renderFeedbackList(data);
+
+                try {
+                    const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
+
+                    if (error) {
+                        console.error('❌ Feedback load error:', error);
+                        console.log('Error details:', JSON.stringify(error));
+                        // 404 or Table not found?
+                        alert('피드백 데이터를 불러오는데 실패했습니다.\n오류: ' + error.message);
+                        return;
+                    }
+
+                    console.log('✅ Feedback loaded:', data?.length, 'items');
+                    _allFeedback = data || [];
+                    populateCategoryFilter(_allFeedback);
+                    renderFeedbackList(_allFeedback);
+                } catch (e) {
+                    console.error('❌ Unexpected error loading feedback:', e);
+                    alert('예기치 않은 오류가 발생했습니다: ' + e.message);
+                }
             }
 
             function populateCategoryFilter(items) {
