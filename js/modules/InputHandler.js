@@ -104,6 +104,11 @@ Object.assign(CircuitSimulator.prototype, {
         this.dragOffset.x = mouseX - compX;
         this.dragOffset.y = mouseY - compY;
 
+        // [FIX] 드래그 시작 위치 저장 (실제 드래그 여부 판별용)
+        this._dragStartX = compX;
+        this._dragStartY = compY;
+        this._didActuallyDrag = false;
+
         // [PERFORMANCE] 드래그 시작 시 GPU 최적화 활성화
         this.dragTarget.classList.add('dragging');
         this.dragTarget.style.cursor = 'grabbing';
@@ -372,11 +377,18 @@ Object.assign(CircuitSimulator.prototype, {
                 // [PERFORMANCE] 드래그 종료 시 GPU 최적화 해제
                 this.dragTarget.classList.remove('dragging');
                 this.dragTarget.style.cursor = 'grab';
-                this.saveState();
 
-                // [FIX] 드래그 직후 클릭 방지 플래그
-                this._justDragged = true;
-                setTimeout(() => { this._justDragged = false; }, 100);
+                // [FIX] 실제로 이동했는지 확인 (5px 이상 이동 시에만 드래그로 판정)
+                const movedX = Math.abs(snapLeft - (this._dragStartX || 0));
+                const movedY = Math.abs(snapTop - (this._dragStartY || 0));
+                const actuallyDragged = movedX > 5 || movedY > 5;
+
+                if (actuallyDragged) {
+                    this.saveState();
+                    // 실제 드래그 시에만 클릭 방지 플래그 설정
+                    this._justDragged = true;
+                    setTimeout(() => { this._justDragged = false; }, 100);
+                }
             }
 
             if (this.isWiring) {

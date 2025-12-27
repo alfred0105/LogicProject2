@@ -122,14 +122,16 @@ Object.assign(CircuitSimulator.prototype, {
                 el.appendChild(label);
                 el.setAttribute('data-value', '0');
 
-                // [FIX] 간단한 클릭 핸들러 - 드래그와 분리
+                // [FIX] 스위치 클릭 핸들러 - mousedown 없이 직접 처리
                 el.addEventListener('click', (e) => {
-                    // 드래그 중이거나 직전에 드래그한 경우 토글 방지
-                    if (this.dragTarget || this._justDragged) {
-                        return;
-                    }
                     // 핀 클릭은 제외
                     if (e.target.closest('.pin')) {
+                        return;
+                    }
+                    // 드래그 중이면 무시 (dragTarget이 설정되어 있으면 드래그 중)
+                    // click 이벤트는 mouseup 후에 발생하므로 dragTarget은 이미 null
+                    // 따라서 _justDragged 플래그로 판단
+                    if (this._justDragged) {
                         return;
                     }
                     e.stopPropagation();
