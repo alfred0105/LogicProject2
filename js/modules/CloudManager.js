@@ -109,29 +109,8 @@ class CloudManager {
         const title = projectName || this.sim.currentProjectName || 'Untitled Project';
         const now = new Date().toISOString();
 
-        // 썸네일 생성
+        // 썸네일 생성 (제거됨: 정적 로고 사용)
         let thumbnail = null;
-        try {
-            if (typeof html2canvas === 'function') {
-                const workspace = document.getElementById('workspace');
-                if (workspace) {
-                    const canvas = await html2canvas(workspace, {
-                        scale: 0.25,
-                        backgroundColor: '#1e293b',
-                        logging: false,
-                        useCORS: true,
-                        allowTaint: true,
-                        scrollX: 0,
-                        scrollY: 0,
-                        width: workspace.scrollWidth,
-                        height: workspace.scrollHeight
-                    });
-                    thumbnail = canvas.toDataURL('image/jpeg', 0.6);
-                }
-            }
-        } catch (err) {
-            console.warn('Failed to generate thumbnail:', err);
-        }
 
         try {
             let data, error;
@@ -144,8 +123,7 @@ class CloudManager {
                     .update({
                         title: title,
                         data: projectData,
-                        updated_at: now,
-                        thumbnail: thumbnail
+                        updated_at: now
                     })
                     .eq('id', this.sim.currentCloudId)
                     .select();
@@ -163,8 +141,7 @@ class CloudManager {
                             title: title,
                             data: projectData,
                             created_at: now,
-                            updated_at: now,
-                            thumbnail: thumbnail
+                            updated_at: now
                         }
                     ])
                     .select();
