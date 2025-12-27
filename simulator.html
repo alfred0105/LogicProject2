@@ -3,15 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LoCAD - Circuit Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Logic Sim</title>
     <meta name="description" content="교육용 디지털 논리 회로 시뮬레이터">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="css/simulator.css?v=2">
     <link rel="stylesheet" href="css/tabs.css?v=2">
     <script src="js/modules/Security.js"></script>
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2358a6ff' d='M13 3L4 14h7v7l9-11h-7V3z'/%3E%3C/svg%3E">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script>
         // 초기 로딩 에러(ReferenceError: sim is not defined) 방지용 더미 객체
         window.sim = window.sim || {
@@ -35,19 +34,11 @@
     <!-- SVG Icon Definitions -->
     <svg style="display: none;">
         <defs>
-            <!-- Logo Gradient -->
-            <linearGradient id="grad-logo" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
-            </linearGradient>
-
             <!-- Logo -->
             <symbol id="icon-logo" viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#grad-logo)" />
-                <path d="M7 7h3v2H9v6h5v-2h-3v-2h3V7h-3V7" fill="none" /> <!-- Abstract Internal -->
-                <path d="M15 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" fill="white" opacity="0.9" />
-                <path d="M8 8h2v8H8z" fill="white" />
-                <path d="M10 14h4v2h-4z" fill="white" />
+                <rect x="2" y="2" width="20" height="20" rx="6" fill="#1e293b" />
+                <path d="M7 6v12h9v-4h-5V6h-4z" fill="#3b82f6" />
+                <circle cx="17" cy="9" r="2" fill="#3b82f6" />
             </symbol>
 
             <symbol id="icon-lightning" viewBox="0 0 24 24">
@@ -314,21 +305,8 @@
                         <use href="#icon-settings" />
                     </svg>
                 </button>
-
-                <div class="account-profile">
-                    <!-- ... existing account profile ... -->
-                </div>
             </div>
-            <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 8px;">
-                <input type="text" id="project-name-input"
-                    style="background: transparent; border: 1px solid transparent; color: white; font-size: 1rem; font-weight: bold; padding: 2px 5px; border-radius: 4px; width: 200px; outline: none; transition: 0.2s;"
-                    value="Logic Sim"
-                    onchange="if(window.sim && window.sim.updateProjectName) window.sim.updateProjectName(this.value)"
-                    onfocus="this.style.borderColor='#3b82f6'; this.style.background='#1e293b'"
-                    onblur="this.style.borderColor='transparent'; this.style.background='transparent'">
-                <span id="save-status"
-                    style="font-size: 0.75rem; color: #94a3b8; padding-left: 5px; height: 14px; line-height: 14px;"></span>
-            </div>
+    </div>
     </div>
 
     <!-- File -->
