@@ -298,14 +298,12 @@
                 </div>
             </div>
 
-            <div class="header-controls" style="display:flex; align-items:center; gap: 12px; margin-left: 16px;">
-                <div style="display: flex; flex-direction: column; justify-content: center;">
-                    <input type="text" id="project-name-input" onchange="sim.updateProjectName(this.value)"
-                        value="Untitled Project"
-                        style="background: transparent; border: none; color: var(--text-primary); font-size: 14px; font-weight: 500; text-align: left;">
-                </div>
+            <div class="header-controls" style="display:flex; align-items:center; gap: 6px; margin-left: 16px;">
+                <input type="text" id="project-name-input" onchange="sim.updateProjectName(this.value)"
+                    value="Untitled Project"
+                    style="background: transparent; border: none; color: var(--text-primary); font-size: 14px; font-weight: 500; text-align: left; width: auto; min-width: 120px;">
                 <span id="save-status"
-                    style="font-size:12px; color:var(--text-secondary); opacity: 1; transition: opacity 0.5s;">저장됨</span>
+                    style="font-size:11px; color:var(--text-secondary); opacity: 1; transition: opacity 0.5s; white-space: nowrap;">저장됨</span>
             </div>
 
             <!-- File -->
@@ -676,25 +674,25 @@
                     </div>
                     <div class="section-content">
                         <div class="comp-grid">
-                            <button class="comp-btn package wide" onclick="sim.addPackage('HALF_ADDER')">
+                            <button class="comp-btn package" onclick="sim.addPackage('HALF_ADDER')">
                                 <div class="icon"><svg>
                                         <use href="#icon-plus" />
                                     </svg></div>
                                 <span class="name">Half Adder</span>
                             </button>
-                            <button class="comp-btn package wide" onclick="sim.addPackage('FULL_ADDER')">
+                            <button class="comp-btn package" onclick="sim.addPackage('FULL_ADDER')">
                                 <div class="icon"><svg>
                                         <use href="#icon-plus" />
                                     </svg></div>
                                 <span class="name">Full Adder</span>
                             </button>
-                            <button class="comp-btn package wide" onclick="sim.addPackage('SR_LATCH')">
+                            <button class="comp-btn package" onclick="sim.addPackage('SR_LATCH')">
                                 <div class="icon"><svg>
                                         <use href="#icon-package" />
                                     </svg></div>
                                 <span class="name">SR Latch</span>
                             </button>
-                            <button class="comp-btn package wide" onclick="sim.addPackage('D_FLIPFLOP')">
+                            <button class="comp-btn package" onclick="sim.addPackage('D_FLIPFLOP')">
                                 <div class="icon"><svg>
                                         <use href="#icon-package" />
                                     </svg></div>
@@ -702,11 +700,11 @@
                             </button>
                         </div>
                         <div id="user-packages" style="margin-top: 8px;"></div>
-                        <button class="comp-btn wide dashed" onclick="sim.startNewModule()" style="margin-top: 8px;">
+                        <button class="comp-btn dashed" onclick="sim.startNewModule()" style="margin-top: 8px;">
                             <div class="icon"><svg>
                                     <use href="#icon-plus" />
                                 </svg></div>
-                            <span class="name">새 모듈 만들기</span>
+                            <span class="name">새 모듈</span>
                         </button>
                     </div>
                 </section>
