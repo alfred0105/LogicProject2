@@ -447,8 +447,9 @@ Object.assign(CircuitSimulator.prototype, {
 
         // [읽기 전용 모드 처리] - 편집 단축키 차단, 탐색 키 허용
         if (window.isReadOnlyMode) {
-            // 허용할 키: Space(패닝), Escape(선택해제/취소), H(핸드툴), 방향키
-            if (key === ' ' || key === 'H' || key === 'ESCAPE' || key.startsWith('ARROW')) {
+            // 허용할 키: Space(패닝), Escape(선택해제/취소), H(핸드툴), 방향키, 줌(+, -)
+            if (key === ' ' || key === 'H' || key === 'ESCAPE' || key.startsWith('ARROW') ||
+                key === '+' || key === '-' || key === '=' || key === '_') {
                 // 통과 (아래 로직 실행)
             } else {
                 // 그 외(Delete, W, V, Ctrl+C/V 등)는 무시하고 함수 종료

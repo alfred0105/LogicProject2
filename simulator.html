@@ -1694,6 +1694,11 @@
                         const key = e.key.toUpperCase();
                         const isCtrl = e.ctrlKey || e.metaKey;
 
+                        // [PASS] 시스템 키(F1~F12) 및 새로고침(Ctrl+R) 통과
+                        if (key.startsWith('F') || (isCtrl && key === 'R')) {
+                            return;
+                        }
+
                         if (key === 'DELETE' || key === 'BACKSPACE') {
                             e.preventDefault();
                             e.stopPropagation();
