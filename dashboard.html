@@ -641,11 +641,19 @@
                         <use href="#icon-chevron-down" />
                     </svg>
                 </div>
-                <button class="btn-new" onclick="createNewProject()">
-                    <svg>
-                        <use href="#icon-plus" />
-                    </svg> <span data-i18n="new_project">New Project</span>
-                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-new" onclick="showCreatePostModal()"
+                        style="background: var(--accent-purple, #8b5cf6);">
+                        <svg>
+                            <use href="#icon-plus" />
+                        </svg> <span>게시글 작성</span>
+                    </button>
+                    <button class="btn-new" onclick="createNewProject()">
+                        <svg>
+                            <use href="#icon-plus" />
+                        </svg> <span data-i18n="new_project">New Project</span>
+                    </button>
+                </div>
             </div>
             <div class="section-content">
                 <div id="project-list" class="grid">
@@ -730,6 +738,52 @@
 
 
 
+
+        <!-- Create Post Modal -->
+        <div id="create-post-modal" class="modal-overlay">
+            <div class="modal-window">
+                <div class="modal-title">게시글 작성</div>
+
+                <div class="settings-group">
+                    <label class="settings-label">카테고리</label>
+                    <select id="post-category" class="settings-select">
+                        <option value="showcase">🎨 쇼케이스</option>
+                        <option value="tutorial">📚 튜토리얼</option>
+                        <option value="question">❓ 질문</option>
+                        <option value="general">💬 일반</option>
+                    </select>
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">제목</label>
+                    <input type="text" id="post-title" class="settings-select" placeholder="게시글 제목을 입력하세요"
+                        maxlength="100">
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">내용</label>
+                    <textarea id="post-content"
+                        style="width: 100%; min-height: 200px; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-dim); color: var(--text-main); border-radius: 6px; font-family: inherit; resize: vertical;"
+                        placeholder="게시글 내용을 작성하세요..."></textarea>
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">태그 (쉼표로 구분)</label>
+                    <input type="text" id="post-tags" class="settings-select"
+                        placeholder="예: logic, tutorial, beginner">
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button onclick="closeCreatePostModal()"
+                        style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-secondary); cursor: pointer;">
+                        취소
+                    </button>
+                    <button onclick="submitPost()" class="btn-primary">
+                        게시하기
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal-overlay">
@@ -1184,6 +1238,62 @@
                 console.log(msg);
             };
         </script>
+
+        <!-- PostManager 로드 및 게시글 작성 기능 -->
+        <script src="js/modules/PostManager.js"></script>
+        <script>
+            let postManager;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.PostManager) {
+                    postManager = new PostManager();
+                }
+            });
+
+            // 게시글 작성 모달 열기
+            function showCreatePostModal() {
+                document.getElementById('create-post-modal').style.display = 'flex';
+            }
+
+            // 게시글 작성 모달 닫기
+            function closeCreatePostModal() {
+                document.getElementById('create-post-modal').style.display = 'none';
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-content').value = '';
+                document.getElementById('post-tags').value = '';
+            }
+
+            // 게시글 제출
+            async function submitPost() {
+                const category = document.getElementById('post-category').value;
+                const title = document.getElementById('post-title').value.trim();
+                const content = document.getElementById('post-content').value.trim();
+                const tagsStr = document.getElementById('post-tags').value.trim();
+                const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+
+                if (!title) {
+                    alert('제목을 입력하세요.');
+                    return;
+                }
+
+                if (!content) {
+                    alert('내용을 입력하세요.');
+                    return;
+                }
+
+                try {
+                    const post = await postManager.createPost(title, content, category, tags);
+                    alert('✓ 게시글이 작성되었습니다!');
+                    closeCreatePostModal();
+                    // 메인 페이지로 이동하여 게시글 확인
+                    location.href = 'index.html';
+                } catch (error) {
+                    console.error('Post creation error:', error);
+                    alert('오류: ' + error.message);
+                }
+            }
+        </script>
+
         <div id="debug-console"
             style="display:none; position:fixed; bottom:10px; right:10px; width:450px; height:200px; background:rgba(0,0,0,0.9); color:#0f0; padding:10px; font-family:monospace; font-size:12px; z-index:10000; overflow-y:auto; border:1px solid #0f0; border-radius:4px; box-shadow: 0 0 10px rgba(0,255,0,0.2);">
             System Ready. Waiting for Admin...
