@@ -624,6 +624,8 @@
             <span class="user-name" id="user-display"><span data-i18n="welcome">Welcome</span>,
                 <strong>User</strong></span>
             <button class="btn-text" onclick="location.href='index.html'">커뮤니티</button>
+            <button class="btn-text" id="admin-btn" onclick="location.href='admin.html'"
+                style="display: none; color: var(--accent-orange, #f59e0b);">⚙️ 관리자</button>
             <button class="btn-text" onclick="openSettings()" data-i18n="settings">Settings</button>
             <button class="btn-text" onclick="handleLogout()" data-i18n="logout">Logout</button>
         </div>
@@ -716,26 +718,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Admin Feedback Section -->
-        <div class="section-container" id="admin-feedback-section" style="display:none;">
-            <div class="section-header">
-                <div class="section-title-group">
-                    <h2><span data-i18n="feedback">피드백</span></h2>
-                </div>
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <select id="feedback-category-filter" onchange="filterFeedback()"
-                        style="padding:8px 12px; background:var(--bg-card); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main);">
-                        <option value="all">전체</option>
-                    </select>
-                    <button class="btn-text" onclick="loadFeedback()" data-i18n="refresh">새로고침</button>
-                </div>
-            </div>
-            <div class="section-content">
-                <div id="feedback-list" class="grid"></div>
-            </div>
-        </div>
-
 
 
 
@@ -956,6 +938,13 @@
             async function loadProjects(userId) {
                 const list = document.getElementById('project-list');
                 if (!list) return;
+
+                // 관리자 체크
+                const { data: { user } } = await window.sb.auth.getUser();
+                if (user && user.email === 'ace060408@gmail.com') {
+                    const adminBtn = document.getElementById('admin-btn');
+                    if (adminBtn) adminBtn.style.display = 'block';
+                }
 
                 list.innerHTML = '<div class="loading-spinner"></div>';
 

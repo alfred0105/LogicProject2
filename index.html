@@ -440,8 +440,11 @@
                 <a href="#latest" class="nav-link">최신</a>
                 <a href="#categories" class="nav-link">카테고리</a>
                 <a href="library.html" class="nav-link">전체보기</a>
+                <a href="javascript:void(0)" onclick="showFeedbackModal()" class="nav-link">💬 피드백</a>
                 <a href="login.html" class="nav-link" id="nav-login">로그인</a>
                 <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">📊 대시보드</a>
+                <a href="admin.html" class="nav-link" id="nav-admin"
+                    style="display: none; color: var(--accent-orange);">⚙️ 관리자</a>
                 <a href="create-post.html" class="nav-link" id="nav-create-post"
                     style="display: none; color: var(--accent-purple);">✍️ 글쓰기</a>
                 <a href="simulator.html" class="btn-cta">회로 만들기</a>
@@ -540,21 +543,8 @@
     </section>
 
     <!-- Footer -->
-    <!-- Footer -->
     <footer>
         <p>&copy; 2025 LoCAD. 논리 회로 시뮬레이터 & 커뮤니티 플랫폼</p>
-        <div style="margin-top: 12px; display: flex; gap: 20px; justify-content: center; font-size: 13px;">
-            <a href="javascript:void(0)" onclick="showFeedbackModal()"
-                style="color: var(--text-sub); text-decoration: none; transition: color 0.2s;"
-                onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-sub)'">
-                💬 피드백 보내기
-            </a>
-            <a href="admin.html" id="admin-link"
-                style="display: none; color: var(--accent-orange); text-decoration: none; font-weight: 600; transition: opacity 0.2s;"
-                onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                ⚙️ 관리자 페이지
-            </a>
-        </div>
     </footer>
 
     <!-- Feedback Modal -->
@@ -736,7 +726,7 @@
 
                     // 관리자 체크
                     if (user.email === 'ace060408@gmail.com') {
-                        document.getElementById('admin-link').style.display = 'block';
+                        document.getElementById('nav-admin').style.display = 'block';
                     }
                 }
             }
