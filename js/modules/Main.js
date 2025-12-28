@@ -15,6 +15,25 @@ document.addEventListener('DOMContentLoaded', () => {
         window.sim.validator = new CircuitValidator(window.sim);
     }
 
+    // 라이브러리 관리자 초기화
+    if (window.LibraryManager) {
+        window.library = new LibraryManager();
+    }
+
+    // 협업 관리자 초기화
+    if (window.CollaborationManager) {
+        window.sim.collaboration = new CollaborationManager(window.sim);
+
+        // URL에 협업 파라미터가 있으면 자동 시작
+        const urlParams = new URLSearchParams(window.location.search);
+        const collaborateId = urlParams.get('collaborate');
+        if (collaborateId && window.sim.currentProjectId) {
+            setTimeout(() => {
+                window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
+            }, 2000); // 2초 대기 후 시작
+        }
+    }
+
     // 메인 루프 실행
     function animate() {
         if (window.sim) {
