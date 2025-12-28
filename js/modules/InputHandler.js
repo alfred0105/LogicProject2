@@ -440,8 +440,22 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     onKeyDown(e) {
+        // [Input 방지]
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
         const key = e.key.toUpperCase();
+
+        // [읽기 전용 모드 처리] - 편집 단축키 차단, 탐색 키 허용
+        if (window.isReadOnlyMode) {
+            // 허용할 키: Space(패닝), Escape(선택해제/취소), H(핸드툴), 방향키
+            if (key === ' ' || key === 'H' || key === 'ESCAPE' || key.startsWith('ARROW')) {
+                // 통과 (아래 로직 실행)
+            } else {
+                // 그 외(Delete, W, V, Ctrl+C/V 등)는 무시하고 함수 종료
+                // 주의: 여기서preventDefault()를 부르면 F12도 막히므로 그냥 return만 함
+                return;
+            }
+        }
 
         if (key === 'DELETE' || key === 'BACKSPACE') { this.deleteSelected(); e.preventDefault(); }
         if (key === 'ESCAPE') { this.clearSelection(); this.cancelWiring(); }
