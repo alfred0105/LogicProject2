@@ -1599,44 +1599,62 @@
         window.isReadOnlyMode = isReadOnly;
 
         if (isReadOnly) {
-            document.addEventListener('DOMContentLoaded', () => {
-                // 1. UI 요소 숨기기 (툴바, 사이드바 등)
-                const hideSelectors = [
-                    '.toolbar-group',
-                    '.icon-btn',
-                    '.toolbar-divider',
-                    '.btn-collaborate',
-                    '.left-sidebar',
-                    '.component-panel',
-                    '#sidebar'
-                ];
+            console.log('🔒 Read-only mode active');
 
-                hideSelectors.forEach(selector => {
-                    document.querySelectorAll(selector).forEach(el => {
-                        el.style.setProperty('display', 'none', 'important');
-                    });
-                });
+            // [핵심] body에 클래스를 추가하여 CSS로 강제 제어 (로그인 로직이 덮어쓰지 못하도록)
+            document.body.classList.add('readonly-mode');
 
-                // 2. 홈 버튼은 예외적으로 표시
-                const homeBtn = document.querySelector('[onclick="goHome()"]');
-                if (homeBtn) {
-                    homeBtn.style.display = 'flex';
-                    homeBtn.style.zIndex = '2000'; // 최상위 보장
+            // 1. CSS로 UI 강제 숨김 (가장 강력한 방어)
+            const style = document.createElement('style');
+            style.textContent = `
+                /* 읽기 모드일 때 무조건 숨겨야 할 요소들 */
+                body.readonly-mode .toolbar-group,
+                body.readonly-mode .icon-btn:not(.home-btn),
+                body.readonly-mode .toolbar-divider,
+                body.readonly-mode .btn-collaborate,
+                body.readonly-mode .left-sidebar,
+                body.readonly-mode .component-panel,
+                body.readonly-mode #sidebar,
+                body.readonly-mode .sidebar-toggle-btn,
+                body.readonly-mode #section-modules,
+                body.readonly-mode #section-transistors,
+                body.readonly-mode .feedback-btn {
+                    display: none !important;
                 }
 
-                // 3. 레이아웃 조정 (왼쪽 공백 제거 및 전체 너비)
-                const layoutStyle = document.createElement('style');
-                layoutStyle.textContent = `
-                    .workspace-wrapper, .canvas-container, #app-container {
-                        margin-left: 0 !important;
-                        left: 0 !important;
-                        width: 100vw !important;
-                        max-width: 100vw !important;
-                    }
-                `;
-                document.head.appendChild(layoutStyle);
+                /* 레이아웃 강제 조정 */
+                body.readonly-mode .workspace-wrapper,
+                body.readonly-mode .canvas-container,
+                body.readonly-mode #app-container {
+                    margin-left: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                }
+                
+                /* 홈 버튼(Log out 등)은 보이게 - .home-btn 클래스가 없으면 onclick 속성으로 찾음 */
+                body.readonly-mode .icon-btn[onclick*="goHome"] {
+                    display: flex !important;
+                    z-index: 2000;
+                }
+            `;
+            document.head.appendChild(style);
 
-                // 4. 읽기 전용 배너 표시 (workspace-wrapper 내부에 삽입하여 자연스럽게 밀리도록 함)
+            // 2. DOMContentLoaded 대기 후 배너 추가 (안전하게)
+            document.addEventListener('DOMContentLoaded', () => {
+                // 기존 JS 숨김 로직 (혹시 모를 대비)
+                const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
+                toolbars.forEach(el => {
+                    const onClick = el.getAttribute('onclick');
+                    if (!onClick || !onClick.includes('goHome')) {
+                        el.style.display = 'none';
+                    }
+                });
+
+                const sidebars = document.querySelectorAll('.left-sidebar, .component-panel, #sidebar');
+                sidebars.forEach(el => el.style.display = 'none');
+
+                // 읽기 전용 배너 표시
                 const banner = document.createElement('div');
                 banner.style.cssText = `
                     width: 100%;
@@ -1651,40 +1669,35 @@
                     z-index: 900;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                     font-family: 'Inter', sans-serif;
-                    flex-shrink: 0; /* flex 컨테이너 내에서 줄어들지 않도록 */
+                    flex-shrink: 0;
                 `;
                 banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
 
-                // workspace-wrapper의 가장 첫 번째 요소로 추가
                 const wrapper = document.querySelector('.workspace-wrapper');
                 if (wrapper) {
                     wrapper.insertBefore(banner, wrapper.firstChild);
                 } else {
-                    // 혹시 못 찾으면 fallback
                     banner.style.position = 'fixed';
                     banner.style.top = '64px';
                     document.body.appendChild(banner);
                 }
 
-                // 5. 캔버스 편집 차단 (줌/팬은 허용)
-                // pointer-events: none을 사용하지 않고, 이벤트 캡처링 단계에서 편집 관련 동작만 막습니다.
+                // 캔버스 편집 차단
                 const canvas = document.querySelector('canvas');
                 if (canvas) {
                     canvas.style.cursor = 'default';
 
-                    // 편집 관련 키보드 단축키 차단 (F12 등 시스템 키 허용)
+                    // 키보드 차단
                     document.addEventListener('keydown', (e) => {
                         const key = e.key.toUpperCase();
                         const isCtrl = e.ctrlKey || e.metaKey;
 
-                        // 차단할 키 목록: Delete, Backspace
                         if (key === 'DELETE' || key === 'BACKSPACE') {
                             e.preventDefault();
                             e.stopPropagation();
                             return;
                         }
 
-                        // 차단할 조합키: Ctrl + C, V, X, Z, Y, S
                         if (isCtrl && ['C', 'V', 'X', 'Z', 'Y', 'S'].includes(key)) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1692,9 +1705,6 @@
                         }
                     }, true);
                 }
-
-                // WireManager, InteractionManager 등에서 window.isReadOnlyMode를 체크하도록 함
-                console.log('🔒 읽기 전용 모드 활성화: 탐색 가능, 편집 불가');
             });
         }
     </script>
