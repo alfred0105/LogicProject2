@@ -1602,6 +1602,14 @@
                 const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
                 toolbars.forEach(el => el.style.display = 'none');
 
+                // 왼쪽 사이드바(모듈 선택 창) 숨기기
+                const leftSidebar = document.querySelector('.left-sidebar');
+                const componentPanel = document.querySelector('.component-panel');
+                const sidebar = document.querySelector('#sidebar');
+                if (leftSidebar) leftSidebar.style.display = 'none';
+                if (componentPanel) componentPanel.style.display = 'none';
+                if (sidebar) sidebar.style.display = 'none';
+
                 // 특정 버튼만 표시 (홈 버튼)
                 const homeBtn = document.querySelector('[onclick="goHome()"]');
                 if (homeBtn) homeBtn.style.display = 'flex';
@@ -1621,21 +1629,42 @@
                     font-weight: 600;
                     z-index: 1000;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    font-family: 'Inter', sans-serif;
                 `;
-                banner.innerHTML = '👀 읽기 전용 모드 - 수정할 수 없습니다. 포크하여 나만의 회로를 만드세요!';
+                banner.textContent = '👀 읽기 전용 모드 - 수정할 수 없습니다';
                 document.body.insertBefore(banner, document.body.firstChild);
 
-                // 캔버스 이벤트 차단
-                if (window.sim && window.sim.canvas) {
-                    window.sim.canvas.style.pointerEvents = 'none';
-                }
+                // 캔버스 완전 차단
+                setTimeout(() => {
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) {
+                        canvas.style.pointerEvents = 'none';
+                        canvas.style.cursor = 'not-allowed';
+                    }
+
+                    // 모든 마우스/터치 이벤트 차단
+                    const preventEvents = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    };
+
+                    if (canvas) {
+                        canvas.addEventListener('mousedown', preventEvents, true);
+                        canvas.addEventListener('mouseup', preventEvents, true);
+                        canvas.addEventListener('mousemove', preventEvents, true);
+                        canvas.addEventListener('click', preventEvents, true);
+                        canvas.addEventListener('touchstart', preventEvents, true);
+                        canvas.addEventListener('touchmove', preventEvents, true);
+                        canvas.addEventListener('touchend', preventEvents, true);
+                    }
+                }, 1000);
 
                 // 키보드 이벤트 차단
                 document.addEventListener('keydown', (e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
                 }, true);
 
                 console.log('🔒 읽기 전용 모드 활성화');
