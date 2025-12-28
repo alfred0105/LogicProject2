@@ -189,6 +189,135 @@
         </div>
     </div>
 
+    <!-- Profile Setup Modal -->
+    <div id="profile-modal" class="profile-modal" style="display: none;">
+        <div class="profile-modal-content">
+            <h2>🎉 환영합니다!</h2>
+            <p style="color: var(--text-sub); margin-bottom: 24px;">LoCAD 시작을 위해 프로필을 설정해주세요</p>
+
+            <div class="input-group">
+                <label>사용자 ID</label>
+                <input type="text" id="username-input" placeholder="john_doe" maxlength="20">
+                <small>영문, 숫자, -, _ 만 사용 가능 (3-20자)</small>
+                <div id="username-error" class="error-msg"></div>
+            </div>
+
+            <div class="input-group">
+                <label>표시 이름 (선택)</label>
+                <input type="text" id="displayname-input" placeholder="John Doe" maxlength="50">
+                <small>다른 사용자에게 보여질 이름</small>
+            </div>
+
+            <button class="btn-submit" onclick="completeProfile()" id="submit-profile-btn">
+                시작하기
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .profile-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-modal-content {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .profile-modal-content h2 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-group small {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 24px;
+        }
+
+        .btn-submit:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+
     <!-- 로직 스크립트 연결 -->
     <script src="js/modules/SupabaseClient.js"></script>
     <script>
@@ -198,8 +327,8 @@
                 if (typeof window.getCurrentUser === 'function') {
                     const user = await window.getCurrentUser();
                     if (user) {
-                        // 이미 로그인 된 경우 대시보드로 이동
-                        window.location.replace('dashboard.html');
+                        // 이미 로그인 된 경우 프로필 확인
+                        await checkUserProfile(user);
                     }
                 } else {
                     // 아직 로드 안됨, 재시도
@@ -207,6 +336,119 @@
                 }
             };
             checkAuth();
+        });
+
+        // 프로필 확인
+        async function checkUserProfile(user) {
+            if (!window.sb) return;
+
+            try {
+                const { data: profile } = await window.sb
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile) {
+                    // 프로필이 있으면 대시보드로
+                    window.location.replace('dashboard.html');
+                } else {
+                    // 프로필이 없으면 설정 모달 표시
+                    document.getElementById('profile-modal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Profile check error:', error);
+                // 프로필 없음 - 모달 표시
+                document.getElementById('profile-modal').style.display = 'flex';
+            }
+        }
+
+        // 프로필 완성
+        async function completeProfile() {
+            const usernameInput = document.getElementById('username-input');
+            const displayNameInput = document.getElementById('displayname-input');
+            const errorMsg = document.getElementById('username-error');
+            const submitBtn = document.getElementById('submit-profile-btn');
+
+            const username = usernameInput.value.trim();
+            const displayName = displayNameInput.value.trim();
+
+            // 유효성 검사
+            if (username.length < 3 || username.length > 20) {
+                errorMsg.textContent = '사용자 ID는 3-20자여야 합니다';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+                errorMsg.textContent = '영문, 숫자, -, _ 만 사용 가능합니다';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            errorMsg.classList.remove('show');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '처리 중...';
+
+            try {
+                const user = await window.getCurrentUser();
+                if (!user) throw new Error('Not authenticated');
+
+                // 사용자명 중복 체크
+                const { data: existing } = await window.sb
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('username', username)
+                    .single();
+
+                if (existing) {
+                    errorMsg.textContent = '이미 사용 중인 ID입니다';
+                    errorMsg.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '시작하기';
+                    return;
+                }
+
+                // 프로필 생성
+                const { error: insertError } = await window.sb
+                    .from('user_profiles')
+                    .insert({
+                        id: user.id,
+                        username: username,
+                        display_name: displayName || username,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (insertError) throw insertError;
+
+                // 성공 - 대시보드로 이동
+                window.location.replace('dashboard.html');
+            } catch (error) {
+                console.error('Profile creation error:', error);
+                errorMsg.textContent = '오류가 발생했습니다: ' + error.message;
+                errorMsg.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '시작하기';
+            }
+        }
+
+        // 실시간 유효성 검사
+        document.addEventListener('DOMContentLoaded', () => {
+            const usernameInput = document.getElementById('username-input');
+            if (usernameInput) {
+                usernameInput.addEventListener('input', (e) => {
+                    const errorMsg = document.getElementById('username-error');
+                    const value = e.target.value;
+
+                    if (value && !/^[a-zA-Z0-9_-]+$/.test(value)) {
+                        errorMsg.textContent = '영문, 숫자, -, _ 만 사용 가능합니다';
+                        errorMsg.classList.add('show');
+                    } else {
+                        errorMsg.classList.remove('show');
+                    }
+                });
+            }
         });
     </script>
 </body>
