@@ -199,6 +199,57 @@
             padding: 40px;
             color: var(--text-sub);
         }
+
+        .admin-controls {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-select {
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 13px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .admin-comment-box {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .btn-save {
+            background: var(--accent-primary);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: fit-content;
+            align-self: flex-end;
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 
@@ -298,7 +349,7 @@
                     .from('feedback')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(20);
+                    .limit(50); // 개수 늘림
 
                 if (error) throw error;
 
@@ -325,21 +376,92 @@
                 other: '💡 기타'
             };
 
+            const statusLabels = {
+                pending: '⏳ 미해결',
+                in_progress: '🔥 해결중',
+                resolved: '✅ 해결완료',
+                rejected: '❌ 거절됨'
+            };
+
             const date = new Date(feedback.created_at);
             const dateStr = date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR');
 
             return `
-                <div class="feedback-item">
+                <div class="feedback-item" id="feedback-${feedback.id}">
                     <div class="feedback-header">
-                        <span class="feedback-category">${categoryLabels[feedback.category] || feedback.category}</span>
-                        <span class="feedback-date">${dateStr}</span>
+                        <div>
+                            <span class="feedback-category">${categoryLabels[feedback.category] || feedback.category}</span>
+                            <span class="feedback-date">${dateStr}</span>
+                        </div>
+                        <select class="status-select" onchange="updateStatus('${feedback.id}', this.value)" 
+                            style="border-color: ${getStatusColor(feedback.status)}">
+                            <option value="pending" ${feedback.status === 'pending' ? 'selected' : ''}>⏳ 미해결</option>
+                            <option value="in_progress" ${feedback.status === 'in_progress' ? 'selected' : ''}>🔥 해결중</option>
+                            <option value="resolved" ${feedback.status === 'resolved' ? 'selected' : ''}>✅ 해결완료</option>
+                            <option value="rejected" ${feedback.status === 'rejected' ? 'selected' : ''}>❌ 거절됨</option>
+                        </select>
                     </div>
-                    <div class="feedback-content">${feedback.content}</div>
+                    <div class="feedback-content">${feedback.content.replace(/\n/g, '<br>')}</div>
                     <div class="feedback-user">
                         👤 ${feedback.user_email || 'Anonymous'}
                     </div>
+
+                    <div class="admin-controls">
+                        <label style="font-size: 12px; color: var(--text-dim);">관리자 답변</label>
+                        <textarea id="comment-${feedback.id}" class="admin-comment-box" 
+                            placeholder="답변을 입력하세요...">${feedback.admin_comment || ''}</textarea>
+                        <button class="btn-save" onclick="saveComment('${feedback.id}')">저장</button>
+                    </div>
                 </div>
             `;
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'in_progress': return '#f59e0b';
+                case 'resolved': return '#10b981';
+                case 'rejected': return '#ef4444';
+                default: return 'var(--border-light)';
+            }
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                const { error } = await window.sb
+                    .from('feedback')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // 색상 업데이트 시각적 피드백
+                const select = document.querySelector(`#feedback-${id} .status-select`);
+                select.style.borderColor = getStatusColor(newStatus);
+                alert('상태가 변경되었습니다.');
+            } catch (error) {
+                console.error('Update status error:', error);
+                alert('상태 변경 실패: ' + error.message);
+            }
+        }
+
+        async function saveComment(id) {
+            const comment = document.getElementById(`comment-${id}`).value;
+
+            try {
+                const { error } = await window.sb
+                    .from('feedback')
+                    .update({
+                        admin_comment: comment,
+                        admin_reply_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+                alert('답변이 저장되었습니다.');
+            } catch (error) {
+                console.error('Save comment error:', error);
+                alert('답변 저장 실패 (DB 스키마 확인 필요): ' + error.message);
+            }
         }
     </script>
 </body>
