@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - LoCAD</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/Security.js"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
+
+    <style>
+        :root {
+            --bg-void: #050505;
+            --bg-card: #0a0a0a;
+            --bg-hover: #111111;
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --text-main: #e2e2e2;
+            --text-sub: #888888;
+            --text-dim: #555555;
+            --accent-primary: #3b82f6;
+            --accent-danger: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-green: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 20px 40px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-orange);
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-sub);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .feedback-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feedback-item {
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .feedback-category {
+            padding: 4px 12px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent-purple, #8b5cf6);
+            font-weight: 600;
+        }
+
+        .feedback-date {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .feedback-content {
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .feedback-user {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1 class="header-title">⚙️ 관리자 페이지</h1>
+            <a href="index.html" class="back-btn">← 커뮤니티로 돌아가기</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">총 사용자</div>
+                <div class="stat-value" id="total-users">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">총 프로젝트</div>
+                <div class="stat-value" id="total-projects">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">총 게시글</div>
+                <div class="stat-value" id="total-posts">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">피드백</div>
+                <div class="stat-value" id="total-feedback">-</div>
+            </div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="section">
+            <h2 class="section-title">최근 피드백</h2>
+            <div id="feedback-list" class="feedback-list">
+                <div class="loading">피드백을 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 관리자 권한 체크
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!window.sb) {
+                alert('잠시 후 다시 시도해주세요.');
+                location.href = 'index.html';
+                return;
+            }
+
+            const { data: { user } } = await window.sb.auth.getUser();
+
+            if (!user || user.email !== 'ace060408@gmail.com') {
+                alert('관리자 권한이 필요합니다.');
+                location.href = 'index.html';
+                return;
+            }
+
+            // 통계 로드
+            await loadStats();
+            await loadFeedback();
+        });
+
+        async function loadStats() {
+            try {
+                // 총 프로젝트 수
+                const { count: projectCount } = await window.sb
+                    .from('projects')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('total-projects').textContent = projectCount || 0;
+
+                // 총 게시글 수
+                const { count: postCount } = await window.sb
+                    .from('posts')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('total-posts').textContent = postCount || 0;
+
+                // 피드백 수
+                const { count: feedbackCount } = await window.sb
+                    .from('feedback')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('total-feedback').textContent = feedbackCount || 0;
+
+                // 사용자 수 (user_profiles)
+                const { count: userCount } = await window.sb
+                    .from('user_profiles')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('total-users').textContent = userCount || 0;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadFeedback() {
+            try {
+                const { data, error } = await window.sb
+                    .from('feedback')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                const container = document.getElementById('feedback-list');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
+                    return;
+                }
+
+                container.innerHTML = data.map(item => createFeedbackCard(item)).join('');
+            } catch (error) {
+                console.error('Failed to load feedback:', error);
+                document.getElementById('feedback-list').innerHTML =
+                    '<div class="empty-state">피드백을 불러오지 못했습니다.</div>';
+            }
+        }
+
+        function createFeedbackCard(feedback) {
+            const categoryLabels = {
+                bug: '🐛 버그',
+                feature: '✨ 기능',
+                improvement: '📈 개선',
+                other: '💡 기타'
+            };
+
+            const date = new Date(feedback.created_at);
+            const dateStr = date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR');
+
+            return `
+                <div class="feedback-item">
+                    <div class="feedback-header">
+                        <span class="feedback-category">${categoryLabels[feedback.category] || feedback.category}</span>
+                        <span class="feedback-date">${dateStr}</span>
+                    </div>
+                    <div class="feedback-content">${feedback.content}</div>
+                    <div class="feedback-user">
+                        👤 ${feedback.user_email || 'Anonymous'}
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+
+</html>
