@@ -1,0 +1,281 @@
+/* ============================================
+   실시간 협업 스타일
+   ============================================ */
+
+/* 원격 커서 */
+.remote-cursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: left 0.05s linear, top 0.05s linear;
+}
+
+.remote-cursor svg {
+    drop-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.cursor-label {
+    position: absolute;
+    left: 20px;
+    top: 4px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* 협업자 목록 패널 */
+.collaboration-panel {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    width: 280px;
+    background: var(--bg-surface, #1a1a1a);
+    border-left: 1px solid var(--border-default, #333);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+    z-index: 90;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+
+.collaboration-panel.hidden {
+    transform: translateX(100%);
+}
+
+.collab-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-subtle, #444);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collab-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #888);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px;
+}
+
+#collaborators-list {
+    padding: 12px;
+}
+
+.no-collaborators {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-tertiary, #666);
+    font-size: 13px;
+}
+
+.collaborators-header {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary, #888);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+
+.collaborator-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: var(--bg-hover, #222);
+    transition: background 0.2s;
+}
+
+.collaborator-item:hover {
+    background: var(--bg-active, #2a2a2a);
+}
+
+.collab-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+}
+
+.collab-info {
+    flex: 1;
+}
+
+.collab-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+    margin-bottom: 2px;
+}
+
+.collab-status {
+    font-size: 11px;
+    color: var(--accent-green, #22c55e);
+}
+
+/* 원격 변경사항 하이라이트 */
+.component.remote-change {
+    animation: remote-pulse 1s ease-in-out;
+}
+
+@keyframes remote-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+}
+
+/* 협업 버튼 */
+.btn-collaborate {
+    padding: 10px 16px;
+    background: var(--accent-cyan, #22d3ee);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-collaborate:hover {
+    background: #06b6d4;
+    transform: translateY(-1px);
+}
+
+.btn-collaborate.active {
+    background: var(--accent-green, #22c55e);
+}
+
+.btn-collaborate.active::before {
+    content: '●';
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* 협업 상태 표시 */
+.collaboration-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.collaboration-status.connected {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid var(--accent-green, #22c55e);
+}
+
+.collaboration-status.disconnected {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid var(--accent-red, #ef4444);
+}
+
+/* 초대 모달 (간단 버전) */
+.invite-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.invite-modal.show {
+    display: flex;
+}
+
+.invite-content {
+    background: var(--bg-surface, #1a1a1a);
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.invite-content h3 {
+    margin-bottom: 16px;
+    color: var(--text-primary, #fff);
+}
+
+.invite-input {
+    width: 100%;
+    padding: 10px;
+    background: var(--bg-default, #0a0a0a);
+    border: 1px solid var(--border-default, #333);
+    border-radius: 6px;
+    color: var(--text-primary, #fff);
+    margin-bottom: 16px;
+}
+
+.invite-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-invite-cancel {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-default, #333);
+    color: var(--text-secondary, #888);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-invite-send {
+    padding: 8px 16px;
+    background: var(--accent-blue, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}

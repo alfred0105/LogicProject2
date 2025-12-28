@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티 라이브러리 - LoCAD</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/library.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/Security.js"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/LibraryManager.js"></script>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand" onclick="location.href='index.html'">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                    <path
+                        d="M6 6 L10 2 L12 6 H20 A2 2 0 0 1 22 8 V17 A2 2 0 0 1 20 19 H14 L10 23 L9 19 H4 A2 2 0 0 1 2 17 V8 A2 2 0 0 1 4 6 Z">
+                    </path>
+                    <circle cx="9" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                    <circle cx="15" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                </svg>
+                <span>LoCAD</span>
+            </div>
+
+            <div class="nav-links">
+                <a href="index.html">홈</a>
+                <a href="library.html" class="active">라이브러리</a>
+                <a href="simulator.html">시뮬레이터</a>
+            </div>
+
+            <div class="nav-user">
+                <div id="user-info" class="user-info">
+                    <a href="login.html" class="btn-login">로그인</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>커뮤니티 회로 라이브러리</h1>
+            <p>전 세계 사용자들이 공유한 논리 회로를 탐색하고 학습하세요</p>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="회로 검색... (예: half adder, counter)"
+                    onkeypress="if(event.key==='Enter') searchProjects()">
+                <button onclick="searchProjects()" class="btn-search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    검색
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="library-container">
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="trending" onclick="applyFilter('trending')">
+                    🔥 인기순
+                </button>
+                <button class="filter-btn" data-filter="latest" onclick="applyFilter('latest')">
+                    ⏰ 최신순
+                </button>
+                <button class="filter-btn" data-filter="most_liked" onclick="applyFilter('most_liked')">
+                    ❤️ 좋아요순
+                </button>
+                <button class="filter-btn" data-filter="most_viewed" onclick="applyFilter('most_viewed')">
+                    👁️ 조회순
+                </button>
+            </div>
+
+            <!-- Tag Cloud -->
+            <div class="tags-container">
+                <span class="tag" onclick="filterByTag('logic')">logic</span>
+                <span class="tag" onclick="filterByTag('adder')">adder</span>
+                <span class="tag" onclick="filterByTag('counter')">counter</span>
+                <span class="tag" onclick="filterByTag('flipflop')">flipflop</span>
+                <span class="tag" onclick="filterByTag('multiplexer')">multiplexer</span>
+                <span class="tag" onclick="filterByTag('decoder')">decoder</span>
+                <span class="tag" onclick="filterByTag('beginner')">beginner</span>
+                <span class="tag" onclick="filterByTag('advanced')">advanced</span>
+            </div>
+        </div>
+
+        <!-- Projects Grid -->
+        <div id="projects-grid" class="projects-grid">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>회로를 불러오는 중...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display: none;">
+            <button class="btn-page" onclick="prevPage()">이전</button>
+            <span id="page-info">1 / 1</span>
+            <button class="btn-page" onclick="nextPage()">다음</button>
+        </div>
+    </main>
+
+    <!-- Project Detail Modal -->
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content project-modal">
+            <button class="modal-close" onclick="closeProjectModal()">×</button>
+
+            <div class="modal-header">
+                <h2 id="modal-title">프로젝트 제목</h2>
+                <div class="project-stats">
+                    <span>👁️ <span id="modal-views">0</span></span>
+                    <span>❤️ <span id="modal-likes">0</span></span>
+                    <span>🍴 <span id="modal-forks">0</span></span>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <p id="modal-description">프로젝트 설명</p>
+
+                <div id="modal-tags" class="modal-tags"></div>
+
+                <div class="modal-actions">
+                    <button class="btn-action" id="btn-like" onclick="toggleLike()">
+                        ❤️ 좋아요
+                    </button>
+                    <button class="btn-action" onclick="forkProject()">
+                        🍴 포크
+                    </button>
+                    <button class="btn-action btn-primary" onclick="openProject()">
+                        ▶️ 열기
+                    </button>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="comments-section">
+                    <h3>댓글 (<span id="comment-count">0</span>)</h3>
+
+                    <div class="comment-input-container">
+                        <textarea id="comment-input" placeholder="댓글을 입력하세요..." rows="3"></textarea>
+                        <button onclick="addComment()" class="btn-comment">댓글 작성</button>
+                    </div>
+
+                    <div id="comments-list" class="comments-list">
+                        <!-- 댓글들이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let library;
+        let currentPage = 1;
+        let currentFilter = 'trending';
+        let currentProjectId = null;
+        let currentProject = null;
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 라이브러리 관리자 초기화
+            if (window.LibraryManager) {
+                library = new LibraryManager();
+                await loadProjects();
+            }
+
+            // 사용자 정보 업데이트
+            updateUserInfo();
+        });
+
+        // 사용자 정보 업데이트
+        async function updateUserInfo() {
+            if (!window.sb) return;
+
+            const { data: { user } } = await window.sb.auth.getUser();
+            const userInfo = document.getElementById('user-info');
+
+            if (user) {
+                const name = user.user_metadata?.full_name || user.email.split('@')[0];
+                userInfo.innerHTML = `
+                    <div class="user-avatar">${name.charAt(0).toUpperCase()}</div>
+                    <span>${name}</span>
+                    <a href="dashboard.html" class="btn-dashboard">대시보드</a>
+                `;
+            }
+        }
+
+        // 프로젝트 로드
+        async function loadProjects() {
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>회로를 불러오는 중...</p></div>';
+
+            try {
+                const projects = await library.getPublicProjects(currentFilter, currentPage);
+
+                if (projects.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><p>🔍 프로젝트가 없습니다</p></div>';
+                    return;
+                }
+
+                grid.innerHTML = projects.map(project => createProjectCard(project)).join('');
+
+                // 페이지네이션 업데이트
+                updatePagination();
+            } catch (error) {
+                console.error('Failed to load projects:', error);
+                grid.innerHTML = '<div class="error-state"><p>❌ 프로젝트를 불러오지 못했습니다</p></div>';
+            }
+        }
+
+        // 프로젝트 카드 생성
+        function createProjectCard(project) {
+            const title = project.title || 'Untitled Project';
+            const description = project.description || '설명 없음';
+            const tags = project.tags || [];
+            const views = project.views || 0;
+            const likes = project.likes || 0;
+            const forks = project.forks || 0;
+
+            return `
+                <div class="project-card" onclick="showProjectDetail('${project.id}')">
+                    <div class="card-thumbnail">
+                        ${project.thumbnail_url ?
+                    `<img src="${project.thumbnail_url}" alt="${title}">` :
+                    `<div class="thumbnail-placeholder">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                            </div>`
+                }
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${title}</h3>
+                        <p class="card-description">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</p>
+                        <div class="card-tags">
+                            ${tags.slice(0, 3).map(tag => `<span class="tag-small">${tag}</span>`).join('')}
+                        </div>
+                        <div class="card-stats">
+                            <span>👁️ ${views}</span>
+                            <span>❤️ ${likes}</span>
+                            <span>🍴 ${forks}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 프로젝트 상세 보기
+        async function showProjectDetail(projectId) {
+            const modal = document.getElementById('project-modal');
+            currentProjectId = projectId;
+
+            try {
+                // 프로젝트 정보 가져오기
+                const { data, error } = await window.sb
+                    .from('projects')
+                    .select('*')
+                    .eq('id', projectId)
+                    .single();
+
+                if (error) throw error;
+
+                currentProject = data;
+
+                // 모달 내용 채우기
+                document.getElementById('modal-title').textContent = data.title || 'Untitled Project';
+                document.getElementById('modal-description').textContent = data.description || '설명 없음';
+                document.getElementById('modal-views').textContent = data.views || 0;
+                document.getElementById('modal-likes').textContent = data.likes || 0;
+                document.getElementById('modal-forks').textContent = data.forks || 0;
+
+                // 태그
+                const tagsContainer = document.getElementById('modal-tags');
+                if (data.tags && data.tags.length > 0) {
+                    tagsContainer.innerHTML = data.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+                } else {
+                    tagsContainer.innerHTML = '';
+                }
+
+                // 좋아요 상태 확인
+                const isLiked = await library.isProjectLiked(projectId);
+                const btnLike = document.getElementById('btn-like');
+                if (isLiked) {
+                    btnLike.textContent = '💔 좋아요 취소';
+                    btnLike.classList.add('liked');
+                } else {
+                    btnLike.textContent = '❤️ 좋아요';
+                    btnLike.classList.remove('liked');
+                }
+
+                // 댓글 로드
+                await loadComments();
+
+                // 조회수 증가
+                await library.incrementViews(projectId);
+
+                modal.classList.add('show');
+            } catch (error) {
+                console.error('Failed to load project:', error);
+                alert('프로젝트를 불러오지 못했습니다.');
+            }
+        }
+
+        // 모달 닫기
+        function closeProjectModal() {
+            document.getElementById('project-modal').classList.remove('show');
+            currentProjectId = null;
+            currentProject = null;
+        }
+
+        // 좋아요 토글
+        async function toggleLike() {
+            if (!currentProjectId) return;
+
+            try {
+                const result = await library.likeProject(currentProjectId);
+                const btnLike = document.getElementById('btn-like');
+
+                if (result.liked) {
+                    btnLike.textContent = '💔 좋아요 취소';
+                    btnLike.classList.add('liked');
+                    const likesEl = document.getElementById('modal-likes');
+                    likesEl.textContent = parseInt(likesEl.textContent) + 1;
+                } else {
+                    btnLike.textContent = '❤️ 좋아요';
+                    btnLike.classList.remove('liked');
+                    const likesEl = document.getElementById('modal-likes');
+                    likesEl.textContent = parseInt(likesEl.textContent) - 1;
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 프로젝트 포크
+        async function forkProject() {
+            if (!currentProjectId) return;
+
+            if (!confirm('이 프로젝트를 포크하시겠습니까?')) return;
+
+            try {
+                const forked = await library.forkProject(currentProjectId);
+                alert('✓ 프로젝트가 포크되었습니다!');
+                // 대시보드로 이동
+                location.href = `simulator.html?id=${forked.id}`;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 프로젝트 열기
+        function openProject() {
+            if (!currentProjectId) return;
+            location.href = `simulator.html?id=${currentProjectId}`;
+        }
+
+        // 댓글 로드
+        async function loadComments() {
+            if (!currentProjectId) return;
+
+            try {
+                const comments = await library.getComments(currentProjectId);
+                const commentsList = document.getElementById('comments-list');
+                document.getElementById('comment-count').textContent = comments.length;
+
+                if (comments.length === 0) {
+                    commentsList.innerHTML = '<p class="no-comments">아직 댓글이 없습니다.</p>';
+                    return;
+                }
+
+                commentsList.innerHTML = comments.map(comment => `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <strong>${comment.user_name}</strong>
+                            <span class="comment-date">${new Date(comment.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="comment-content">${comment.content}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load comments:', error);
+            }
+        }
+
+        // 댓글 작성
+        async function addComment() {
+            const input = document.getElementById('comment-input');
+            const content = input.value.trim();
+
+            if (!content) {
+                alert('댓글 내용을 입력하세요.');
+                return;
+            }
+
+            try {
+                await library.addComment(currentProjectId, content);
+                input.value = '';
+                await loadComments();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 검색
+        async function searchProjects() {
+            const query = document.getElementById('search-input').value.trim();
+            if (!query) return;
+
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>검색 중...</p></div>';
+
+            try {
+                const results = await library.searchProjects(query);
+
+                if (results.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><p>🔍 검색 결과가 없습니다</p></div>';
+                    return;
+                }
+
+                grid.innerHTML = results.map(project => createProjectCard(project)).join('');
+            } catch (error) {
+                console.error('Search failed:', error);
+                grid.innerHTML = '<div class="error-state"><p>❌ 검색 실패</p></div>';
+            }
+        }
+
+        // 필터 적용
+        function applyFilter(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+            loadProjects();
+        }
+
+        // 태그로 필터링
+        async function filterByTag(tag) {
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>검색 중...</p></div>';
+
+            try {
+                const results = await library.getProjectsByTag(tag);
+
+                if (results.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><p>🔍 결과가 없습니다</p></div>';
+                    return;
+                }
+
+                grid.innerHTML = results.map(project => createProjectCard(project)).join('');
+            } catch (error) {
+                console.error('Filter failed:', error);
+                grid.innerHTML = '<div class="error-state"><p>❌ 필터링 실패</p></div>';
+            }
+        }
+
+        // 페이지네이션
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            const pageInfo = document.getElementById('page-info');
+
+            // 간단한 구현 (실제로는 총 페이지 수를 서버에서 받아와야 함)
+            pageInfo.textContent = `${currentPage} / ?`;
+            pagination.style.display = 'flex';
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadProjects();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadProjects();
+        }
+    </script>
+</body>
+
+</html>
