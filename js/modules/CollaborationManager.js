@@ -33,14 +33,26 @@ class CollaborationManager {
         // 현재 사용자 정보
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) {
-            console.warn('Not authenticated');
-            return;
+            throw new Error('로그인이 필요합니다');
         }
+
+        // 협업 권한 체크
+        const hasPermission = await this.checkCollaborationPermission(projectId, user.id);
+        if (!hasPermission) {
+            throw new Error('이 프로젝트에 대한 협업 권한이 없습니다. 프로젝트 소유자에게 초대를 요청하세요.');
+        }
+
+        // 사용자 프로필 가져오기
+        const { data: profile } = await window.sb
+            .from('user_profiles')
+            .select('username, display_name')
+            .eq('id', user.id)
+            .single();
 
         this.currentUser = {
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.full_name || user.email.split('@')[0]
+            name: profile?.display_name || profile?.username || user.email.split('@')[0]
         };
 
         // 사용자 색상 할당
@@ -509,6 +521,126 @@ class CollaborationManager {
         } else {
             console.log('[Collaboration]', message);
         }
+    }
+
+    /**
+     * 협업 권한 체크
+     */
+    async checkCollaborationPermission(projectId, userId) {
+        if (!window.sb) return false;
+
+        try {
+            // RPC 함수 호출
+            const { data, error } = await window.sb
+                .rpc('can_collaborate_on_project', {
+                    target_project_id: projectId,
+                    target_user_id: userId
+                });
+
+            if (error) {
+                console.error('Permission check error:', error);
+                return false;
+            }
+
+            return data === true;
+        } catch (error) {
+            console.error('Permission check failed:', error);
+            return false;
+        }
+    }
+
+    /**
+     * 사용자 초대
+     */
+    async inviteCollaborator(projectId, email, role = 'editor') {
+        if (!window.sb) throw new Error('Supabase not initialized');
+
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // 프로젝트 소유자인지 확인
+        const { data: project } = await window.sb
+            .from('projects')
+            .select('user_id')
+            .eq('id', projectId)
+            .single();
+
+        if (!project || project.user_id !== user.id) {
+            throw new Error('프로젝트 소유자만 협업자를 초대할 수 있습니다');
+        }
+
+        // 초대 생성
+        const { data, error } = await window.sb
+            .from('collaboration_invites')
+            .insert({
+                project_id: projectId,
+                inviter_id: user.id,
+                invitee_email: email,
+                role: role,
+                status: 'pending'
+            })
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === '23505') { // Unique constraint violation
+                throw new Error('이미 초대된 사용자입니다');
+            }
+            throw error;
+        }
+
+        return data;
+    }
+
+    /**
+     * 내 초대 목록 가져오기
+     */
+    async getMyInvites() {
+        if (!window.sb) throw new Error('Supabase not initialized');
+
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await window.sb
+            .from('collaboration_invites')
+            .select(`
+                *,
+                projects (
+                    id,
+                    title
+                )
+            `)
+            .eq('invitee_email', user.email)
+            .eq('status', 'pending')
+            .order('invited_at', { ascending: false });
+
+        if (error) throw error;
+
+        return data || [];
+    }
+
+    /**
+     * 초대 수락
+     */
+    async acceptInvite(inviteId) {
+        if (!window.sb) throw new Error('Supabase not initialized');
+
+        const { error } = await window.sb
+            .rpc('accept_collaboration_invite', { invite_id: inviteId });
+
+        if (error) throw error;
+    }
+
+    /**
+     * 초대 거절
+     */
+    async rejectInvite(inviteId) {
+        if (!window.sb) throw new Error('Supabase not initialized');
+
+        const { error } = await window.sb
+            .rpc('reject_collaboration_invite', { invite_id: inviteId });
+
+        if (error) throw error;
     }
 }
 
