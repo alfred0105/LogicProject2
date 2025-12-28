@@ -720,13 +720,18 @@
             if (window.sb) {
                 const { data: { user } } = await window.sb.auth.getUser();
                 if (user) {
-                    document.getElementById('nav-login').style.display = 'none';
-                    document.getElementById('nav-dashboard').style.display = 'block';
-                    document.getElementById('nav-create-post').style.display = 'block';
+                    const navLogin = document.getElementById('nav-login');
+                    const navDashboard = document.getElementById('nav-dashboard');
+                    const navCreatePost = document.getElementById('nav-create-post');
+                    const navAdmin = document.getElementById('nav-admin');
+
+                    if (navLogin) navLogin.style.display = 'none';
+                    if (navDashboard) navDashboard.style.display = 'block';
+                    if (navCreatePost) navCreatePost.style.display = 'block';
 
                     // 관리자 체크
                     if (user.email === 'ace060408@gmail.com') {
-                        document.getElementById('nav-admin').style.display = 'block';
+                        if (navAdmin) navAdmin.style.display = 'block';
                     }
                 }
             }
