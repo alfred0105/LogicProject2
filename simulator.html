@@ -1574,8 +1574,14 @@
                 if (canvas) {
                     canvas.style.cursor = 'default';
 
-                    // 키보드 차단
+                    // 키보드 차단 (단, 입력 필드에서는 허용)
                     document.addEventListener('keydown', (e) => {
+                        // 입력 필드에 포커스 있으면 키 입력 허용
+                        const activeTag = document.activeElement?.tagName?.toUpperCase();
+                        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
+                            return; // 댓글 입력 등 허용
+                        }
+
                         const key = e.key.toUpperCase();
                         const isCtrl = e.ctrlKey || e.metaKey;
 
@@ -1656,8 +1662,15 @@
             `;
             panel.innerHTML = `
                 <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #fff;">💬 댓글</h3>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #fff;">💬 댓글 & 반응</h3>
                     <button onclick="toggleCommentPanel()" style="background: none; border: none; color: #888; font-size: 20px; cursor: pointer;">×</button>
+                </div>
+                <div style="padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 16px; align-items: center;">
+                    <button id="sim-like-btn" onclick="toggleSimLike()" 
+                        style="padding: 8px 16px; background: #1a1a24; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <span id="sim-like-icon">🤍</span> <span id="sim-like-count">0</span>
+                    </button>
+                    <span style="color: #666; font-size: 12px;">👁 <span id="sim-view-count">0</span> 조회</span>
                 </div>
                 <div id="sim-comments-list" style="flex: 1; overflow-y: auto; padding: 16px;">
                     <div style="color: #666; text-align: center; padding: 40px 20px;">댓글을 불러오는 중...</div>
@@ -1673,8 +1686,9 @@
             `;
             document.body.appendChild(panel);
 
-            // 패널 열릴 때 댓글 로드
+            // 패널 열릴 때 댓글 로드 + 통계 로드
             loadSimComments();
+            loadSimStats();
         }
 
         let isCommentPanelOpen = false;
@@ -1763,7 +1777,6 @@
                         user_name: userName,
                         content: content
                     });
-
                 if (error) throw error;
 
                 input.value = '';
@@ -1771,6 +1784,109 @@
             } catch (e) {
                 console.error('Failed to submit comment:', e);
                 alert('댓글 작성 실패: ' + e.message);
+            }
+        }
+
+        // 프로젝트 통계 로드 (좋아요, 조회수)
+        let simProjectLiked = false;
+        async function loadSimStats() {
+            const projectId = new URLSearchParams(window.location.search).get('id');
+            if (!projectId || !window.sb) return;
+
+            try {
+                // 프로젝트 정보 가져오기
+                const { data: project } = await window.sb
+                    .from('projects')
+                    .select('likes, views')
+                    .eq('id', projectId)
+                    .single();
+
+                if (project) {
+                    document.getElementById('sim-like-count').textContent = project.likes || 0;
+                    document.getElementById('sim-view-count').textContent = project.views || 0;
+                }
+
+                // 내가 좋아요 했는지 확인
+                const { data: { user } } = await window.sb.auth.getUser();
+                if (user) {
+                    const { data: like } = await window.sb
+                        .from('project_likes')
+                        .select('id')
+                        .eq('project_id', projectId)
+                        .eq('user_id', user.id)
+                        .single();
+
+                    simProjectLiked = !!like;
+                    updateLikeButton();
+                }
+            } catch (e) {
+                console.warn('Failed to load stats:', e);
+            }
+        }
+
+        function updateLikeButton() {
+            const btn = document.getElementById('sim-like-btn');
+            const icon = document.getElementById('sim-like-icon');
+            if (simProjectLiked) {
+                btn.style.background = 'rgba(239, 68, 68, 0.2)';
+                btn.style.borderColor = '#ef4444';
+                icon.textContent = '❤️';
+            } else {
+                btn.style.background = '#1a1a24';
+                btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                icon.textContent = '🤍';
+            }
+        }
+
+        async function toggleSimLike() {
+            const projectId = new URLSearchParams(window.location.search).get('id');
+            if (!projectId || !window.sb) return;
+
+            try {
+                const { data: { user } } = await window.sb.auth.getUser();
+                if (!user) {
+                    alert('좋아요를 누르려면 로그인이 필요합니다.');
+                    return;
+                }
+
+                const countEl = document.getElementById('sim-like-count');
+                let count = parseInt(countEl.textContent) || 0;
+
+                if (simProjectLiked) {
+                    // 좋아요 취소
+                    await window.sb
+                        .from('project_likes')
+                        .delete()
+                        .eq('project_id', projectId)
+                        .eq('user_id', user.id);
+
+                    simProjectLiked = false;
+                    count = Math.max(0, count - 1);
+                } else {
+                    // 좋아요 추가
+                    await window.sb
+                        .from('project_likes')
+                        .insert({
+                            project_id: projectId,
+                            user_id: user.id
+                        });
+
+                    simProjectLiked = true;
+                    count++;
+                }
+
+                countEl.textContent = count;
+                updateLikeButton();
+
+                // DB에도 likes 카운트 동기화 (트리거가 없다면 수동)
+                await window.sb
+                    .from('projects')
+                    .update({ likes: count })
+                    .eq('id', projectId);
+
+            } catch (e) {
+                console.error('Failed to toggle like:', e);
+                alert('좋아요 실패: ' + e.message);
             }
         }
     </script>
