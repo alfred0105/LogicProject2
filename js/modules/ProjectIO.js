@@ -63,7 +63,13 @@ Object.assign(CircuitSimulator.prototype, {
             }
         }
 
-        this.setMode('edit');
+        if (window.isReadOnlyMode) {
+            this.setMode('pan');
+            this.isReadOnly = true;
+            console.log('🔒 Read-only mode initialized in ProjectIO');
+        } else {
+            this.setMode('edit');
+        }
         this.setUserMode('easy');
     },
 
