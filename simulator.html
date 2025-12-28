@@ -1610,28 +1610,46 @@
                 if (componentPanel) componentPanel.style.display = 'none';
                 if (sidebar) sidebar.style.display = 'none';
 
+                // 메인 컨테이너를 전체 너비로 확장
+                const mainContainer = document.querySelector('.main-container');
+                const canvasContainer = document.querySelector('.canvas-container');
+                const appContainer = document.querySelector('#app-container');
+
+                if (mainContainer) {
+                    mainContainer.style.marginLeft = '0';
+                    mainContainer.style.width = '100%';
+                }
+                if (canvasContainer) {
+                    canvasContainer.style.marginLeft = '0';
+                    canvasContainer.style.width = '100%';
+                }
+                if (appContainer) {
+                    appContainer.style.marginLeft = '0';
+                    appContainer.style.width = '100%';
+                }
+
                 // 특정 버튼만 표시 (홈 버튼)
                 const homeBtn = document.querySelector('[onclick="goHome()"]');
                 if (homeBtn) homeBtn.style.display = 'flex';
 
-                // 읽기 전용 배너 표시
+                // 읽기 전용 배너 표시 (탭 아래로 이동)
                 const banner = document.createElement('div');
                 banner.style.cssText = `
                     position: fixed;
-                    top: 64px;
+                    top: 108px;
                     left: 0;
                     right: 0;
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    padding: 12px;
+                    padding: 10px;
                     text-align: center;
-                    font-size: 14px;
+                    font-size: 13px;
                     font-weight: 600;
                     z-index: 1000;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
                     font-family: 'Inter', sans-serif;
                 `;
-                banner.textContent = '👀 읽기 전용 모드 - 수정할 수 없습니다';
+                banner.textContent = '👀 읽기 전용 모드';
                 document.body.insertBefore(banner, document.body.firstChild);
 
                 // 캔버스 완전 차단
