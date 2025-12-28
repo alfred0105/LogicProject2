@@ -1683,9 +1683,42 @@
         </div>
 
         <div style="padding: 12px;">
+            <button class="btn-invite-collab" onclick="showInviteModal()"
+                style="width: 100%; padding: 10px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; margin-bottom: 8px;">
+                👥 협업자 초대
+            </button>
             <div id="collab-status"
                 style="font-size: 11px; color: var(--text-tertiary); text-align: center; margin-bottom: 8px;">
                 오프라인
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="invite-modal" class="invite-modal" style="display: none;">
+        <div class="invite-content">
+            <h3>협업자 초대</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+                이메일로 협업자를 초대하세요
+            </p>
+
+            <input type="email" id="invite-email" class="invite-input" placeholder="user@example.com">
+
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-secondary);">권한</label>
+                <select id="invite-role"
+                    style="width: 100%; padding: 10px; background: var(--bg-default, #0a0a0a); border: 1px solid var(--border-default, #333); border-radius: 6px; color: var(--text-primary, #fff);">
+                    <option value="editor">편집자 - 회로 수정 가능</option>
+                    <option value="viewer">뷰어 - 읽기만 가능</option>
+                </select>
+            </div>
+
+            <div id="invite-error" style="color: #ef4444; font-size: 12px; margin-bottom: 12px; display: none;"></div>
+
+            <div class="invite-actions">
+                <button class="btn-invite-cancel" onclick="closeInviteModal()">취소</button>
+                <button class="btn-invite-send" onclick="sendInvite()">초대 보내기</button>
             </div>
         </div>
     </div>
@@ -1750,6 +1783,71 @@
         function toggleCollaborationPanel() {
             const panel = document.getElementById('collaboration-panel');
             panel.classList.toggle('hidden');
+        }
+
+        // 초대 모달 열기
+        function showInviteModal() {
+            if (!window.sim || !window.sim.currentProjectId) {
+                alert('프로젝트를 먼저 저장해주세요.');
+                return;
+            }
+            document.getElementById('invite-modal').style.display = 'flex';
+            document.getElementById('invite-email').focus();
+        }
+
+        // 초대 모달 닫기
+        function closeInviteModal() {
+            document.getElementById('invite-modal').style.display = 'none';
+            document.getElementById('invite-email').value = '';
+            document.getElementById('invite-role').value = 'editor';
+            document.getElementById('invite-error').style.display = 'none';
+        }
+
+        // 초대 보내기
+        async function sendInvite() {
+            const emailInput = document.getElementById('invite-email');
+            const roleSelect = document.getElementById('invite-role');
+            const errorDiv = document.getElementById('invite-error');
+
+            const email = emailInput.value.trim();
+            const role = roleSelect.value;
+
+            // 유효성 검사
+            if (!email) {
+                errorDiv.textContent = '이메일을 입력하세요.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorDiv.textContent = '올바른 이메일 형식이 아닙니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            try {
+                if (!window.sim.collaboration) {
+                    throw new Error('협업 기능이 초기화되지 않았습니다.');
+                }
+
+                await window.sim.collaboration.inviteCollaborator(
+                    window.sim.currentProjectId,
+                    email,
+                    role
+                );
+
+                if (window.sim.showToast) {
+                    window.sim.showToast('✓ 초대를 보냈습니다!', 'success');
+                }
+
+                closeInviteModal();
+            } catch (error) {
+                console.error('Invite error:', error);
+                errorDiv.textContent = error.message || '초대 실패';
+                errorDiv.style.display = 'block';
+            }
         }
     </script>
 
