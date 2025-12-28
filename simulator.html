@@ -1402,128 +1402,11 @@
     </div>
 
     <style>
-        /* Feedback Floating Action Button */
-        .feedback-fab {
-            position: fixed;
-            bottom: 180px;
-            right: 24px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            border: none;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
 
-        .feedback-fab:hover {
-            transform: scale(1.1) translateY(-2px);
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
-        }
-
-        .feedback-fab:active {
-            transform: scale(0.95);
-        }
-
-        /* Feedback Modal Styles */
-        .feedback-modal {
-            max-width: 480px;
-        }
-
-        .feedback-modal .form-input {
-            background: var(--bg-tertiary, #1e293b);
-            border: 1px solid var(--border-default, #334155);
-            color: var(--text-primary, #f8fafc);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .feedback-modal .form-input:focus {
-            border-color: #3b82f6;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .feedback-modal textarea {
-            font-family: inherit;
-            line-height: 1.5;
-        }
-
-        .feedback-modal .form-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary, #94a3b8);
-            margin-bottom: 8px;
-            display: block;
-        }
     </style>
 
     <script>
-        function openFeedbackModal() {
-            document.getElementById('feedback-modal').classList.add('show');
-        }
-        function closeFeedbackModal() {
-            document.getElementById('feedback-modal').classList.remove('show');
-        }
-        async function submitFeedback() {
-            const category = document.getElementById('feedback-category').value;
-            const content = document.getElementById('feedback-content').value.trim();
-            const includeCircuit = document.getElementById('feedback-include-circuit').checked;
 
-            if (!content) {
-                sim.showToast('피드백 내용을 입력해주세요', 'error');
-                return;
-            }
-
-            // 피드백 데이터 구성
-            const feedbackData = {
-                category: category,
-                content: content,
-                circuit_data: includeCircuit && window.sim ? sim.serializeCircuit?.() : null,
-                user_agent: navigator.userAgent,
-                url: window.location.href,
-                created_at: new Date().toISOString()
-            };
-
-            // 사용자 정보 추가 (로그인된 경우)
-            if (window.getCurrentUser) {
-                const user = await window.getCurrentUser();
-                if (user) {
-                    feedbackData.user_id = user.id;
-                    feedbackData.user_email = user.email;
-                }
-            }
-
-            // Supabase에 저장
-            if (window.sb) {
-                try {
-                    const { error } = await window.sb.from('feedback').insert([feedbackData]);
-                    if (error) throw error;
-
-                    sim.showToast('피드백이 전송되었습니다. 감사합니다!', 'success');
-                    document.getElementById('feedback-content').value = '';
-                    closeFeedbackModal();
-                } catch (err) {
-                    console.error('Feedback submission error:', err);
-                    // 사용자에게는 친화적인 메시지만 표시
-                    sim.showToast('피드백을 보내주셔서 감사합니다! (서버 저장 대기 중)', 'info');
-                    document.getElementById('feedback-content').value = '';
-                    closeFeedbackModal();
-                }
-            } else {
-                // Supabase 미연결 시 로컬 저장
-                console.log('Feedback (local):', feedbackData);
-                sim.showToast('피드백이 기록되었습니다. 감사합니다!', 'success');
-                closeFeedbackModal();
-            }
-        }
     </script>
 
     <!-- Error Handler -->
@@ -1589,7 +1472,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/SupabaseClient.js"></script>
     <script src="js/modules/CircuitValidator.js"></script>
-    <script src="js/modules/LibraryManager.js"></script>
     <script src="js/modules/CollaborationManager.js"></script>
     <script src="js/modules/Main.js?v=2.0"></script>
 
