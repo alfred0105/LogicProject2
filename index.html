@@ -510,6 +510,24 @@
         </div>
     </section>
 
+    <!-- Community Posts Section -->
+    <section id="posts">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">📢 커뮤니티 게시글</h2>
+                <p class="section-subtitle">다양한 주제로 소통해보세요</p>
+            </div>
+            <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
+                style="color: var(--accent-purple);">글쓰기 →</a>
+        </div>
+        <div class="grid" id="posts-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>게시글을 불러오는 중...</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Categories Section -->
     <section id="categories">
         <div class="section-header">
@@ -585,20 +603,31 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/Security.js"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/LibraryManager.js"></script>
+    <script src="js/modules/PostManager.js"></script>
+
     <script>
         let library;
+        let postManager;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.LibraryManager) {
                 library = new LibraryManager();
-                await loadAllSections();
             }
+            if (window.PostManager) {
+                postManager = new PostManager();
+            }
+            await loadAllSections();
         });
 
         async function loadAllSections() {
             await Promise.all([
                 loadTrendingProjects(),
                 loadLatestProjects(),
+                loadCommunityPosts(),
                 loadStats()
             ]);
         }
