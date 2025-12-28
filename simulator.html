@@ -1633,20 +1633,13 @@
                         width: 100vw !important;
                         max-width: 100vw !important;
                     }
-                    /* 배너 공간 확보를 위해 탭 영역을 아래로 */
-                    .workspace-tabs {
-                        margin-top: 40px !important; 
-                    }
                 `;
                 document.head.appendChild(layoutStyle);
 
-                // 4. 읽기 전용 배너 표시 (헤더 바로 아래)
+                // 4. 읽기 전용 배너 표시 (workspace-wrapper 내부에 삽입하여 자연스럽게 밀리도록 함)
                 const banner = document.createElement('div');
                 banner.style.cssText = `
-                    position: fixed;
-                    top: 64px; /* 헤더 높이 */
-                    left: 0;
-                    right: 0;
+                    width: 100%;
                     height: 40px;
                     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
                     color: white;
@@ -1655,12 +1648,23 @@
                     justify-content: center;
                     font-size: 14px;
                     font-weight: 600;
-                    z-index: 900; /* 헤더(100)보다 높고 모달보다 낮게 */
+                    z-index: 900;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                     font-family: 'Inter', sans-serif;
+                    flex-shrink: 0; /* flex 컨테이너 내에서 줄어들지 않도록 */
                 `;
                 banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
-                document.body.appendChild(banner);
+
+                // workspace-wrapper의 가장 첫 번째 요소로 추가
+                const wrapper = document.querySelector('.workspace-wrapper');
+                if (wrapper) {
+                    wrapper.insertBefore(banner, wrapper.firstChild);
+                } else {
+                    // 혹시 못 찾으면 fallback
+                    banner.style.position = 'fixed';
+                    banner.style.top = '64px';
+                    document.body.appendChild(banner);
+                }
 
                 // 5. 캔버스 편집 차단 (줌/팬은 허용)
                 // pointer-events: none을 사용하지 않고, 이벤트 캡처링 단계에서 편집 관련 동작만 막습니다.
