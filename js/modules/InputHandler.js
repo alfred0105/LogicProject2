@@ -72,6 +72,11 @@ Object.assign(CircuitSimulator.prototype, {
         }
         this.selectComponent(target, true);
 
+        // 읽기 전용 모드일 경우 드래그 시작 안 함 -> 이동 불가 (선택만 가능)
+        if (window.isReadOnlyMode) {
+            return;
+        }
+
         this.dragTarget = target;
 
         // 모듈 편집 모드에서는 moduleCanvas를 직접 사용 (pan/scale 미적용)

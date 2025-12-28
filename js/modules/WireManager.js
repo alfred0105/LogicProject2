@@ -13,6 +13,9 @@ Object.assign(CircuitSimulator.prototype, {
      * 핀에서 마우스 다운 발생 시 호출 (진입점)
      */
     handlePinDown(e, pin) {
+        // 읽기 전용 모드 체크
+        if (window.isReadOnlyMode) return;
+
         e.stopPropagation();
         e.preventDefault();
 

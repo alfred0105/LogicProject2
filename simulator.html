@@ -1595,97 +1595,94 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isReadOnly = urlParams.get('readonly') === 'true' || urlParams.get('view') === 'true';
 
+        // 전역 읽기 전용 플래그 설정 (다른 모듈에서 체크 가능하도록)
+        window.isReadOnlyMode = isReadOnly;
+
         if (isReadOnly) {
-            // 페이지 로드 후 즉시 실행
             document.addEventListener('DOMContentLoaded', () => {
-                // 툴바 전체 숨기기
-                const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
-                toolbars.forEach(el => el.style.display = 'none');
+                // 1. UI 요소 숨기기 (툴바, 사이드바 등)
+                const hideSelectors = [
+                    '.toolbar-group',
+                    '.icon-btn',
+                    '.toolbar-divider',
+                    '.btn-collaborate',
+                    '.left-sidebar',
+                    '.component-panel',
+                    '#sidebar'
+                ];
 
-                // 왼쪽 사이드바(모듈 선택 창) 숨기기
-                const leftSidebar = document.querySelector('.left-sidebar');
-                const componentPanel = document.querySelector('.component-panel');
-                const sidebar = document.querySelector('#sidebar');
-                if (leftSidebar) leftSidebar.style.display = 'none';
-                if (componentPanel) componentPanel.style.display = 'none';
-                if (sidebar) sidebar.style.display = 'none';
+                hideSelectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        el.style.setProperty('display', 'none', 'important');
+                    });
+                });
 
-                // 메인 컨테이너를 전체 너비로 확장
-                const mainContainer = document.querySelector('.main-container');
-                const canvasContainer = document.querySelector('.canvas-container');
-                const appContainer = document.querySelector('#app-container');
-
-                if (mainContainer) {
-                    mainContainer.style.marginLeft = '0';
-                    mainContainer.style.width = '100%';
-                }
-                if (canvasContainer) {
-                    canvasContainer.style.marginLeft = '0';
-                    canvasContainer.style.width = '100%';
-                }
-                if (appContainer) {
-                    appContainer.style.marginLeft = '0';
-                    appContainer.style.width = '100%';
-                }
-
-                // 특정 버튼만 표시 (홈 버튼)
+                // 2. 홈 버튼은 예외적으로 표시
                 const homeBtn = document.querySelector('[onclick="goHome()"]');
-                if (homeBtn) homeBtn.style.display = 'flex';
+                if (homeBtn) {
+                    homeBtn.style.display = 'flex';
+                    homeBtn.style.zIndex = '2000'; // 최상위 보장
+                }
 
-                // 읽기 전용 배너 표시 (탭 아래로 이동)
+                // 3. 레이아웃 조정 (왼쪽 공백 제거 및 전체 너비)
+                const layoutStyle = document.createElement('style');
+                layoutStyle.textContent = `
+                    .main-container, .canvas-container, #app-container {
+                        margin-left: 0 !important;
+                        left: 0 !important;
+                        width: 100vw !important;
+                        max-width: 100vw !important;
+                    }
+                    /* 배너 공간 확보를 위해 탭 영역을 아래로 */
+                    .tab-container {
+                        margin-top: 40px !important; 
+                    }
+                `;
+                document.head.appendChild(layoutStyle);
+
+                // 4. 읽기 전용 배너 표시 (헤더 바로 아래)
                 const banner = document.createElement('div');
                 banner.style.cssText = `
                     position: fixed;
-                    top: 108px;
+                    top: 64px; /* 헤더 높이 */
                     left: 0;
                     right: 0;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    height: 40px;
+                    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    padding: 10px;
-                    text-align: center;
-                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
                     font-weight: 600;
-                    z-index: 1000;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    z-index: 900; /* 헤더(100)보다 높고 모달보다 낮게 */
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                     font-family: 'Inter', sans-serif;
                 `;
-                banner.textContent = '👀 읽기 전용 모드';
-                document.body.insertBefore(banner, document.body.firstChild);
+                banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
+                document.body.appendChild(banner);
 
-                // 캔버스 완전 차단
-                setTimeout(() => {
-                    const canvas = document.querySelector('canvas');
-                    if (canvas) {
-                        canvas.style.pointerEvents = 'none';
-                        canvas.style.cursor = 'not-allowed';
-                    }
+                // 5. 캔버스 편집 차단 (줌/팬은 허용)
+                // pointer-events: none을 사용하지 않고, 이벤트 캡처링 단계에서 편집 관련 동작만 막습니다.
+                const canvas = document.querySelector('canvas');
+                if (canvas) {
+                    // 커서는 기본으로 설정
+                    canvas.style.cursor = 'default';
 
-                    // 모든 마우스/터치 이벤트 차단
-                    const preventEvents = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    };
+                    // 편집 관련 키보드 단축키 차단
+                    document.addEventListener('keydown', (e) => {
+                        // Delete, Backspace, Ctrl+C/V/X/Z 등 차단
+                        if (e.key === 'Delete' || e.key === 'Backspace' ||
+                            (e.ctrlKey && ['c', 'v', 'x', 'z', 's'].includes(e.key.toLowerCase()))) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('🚫 읽기 전용 모드: 편집 기능이 제한됩니다.');
+                        }
+                    }, true);
+                }
 
-                    if (canvas) {
-                        canvas.addEventListener('mousedown', preventEvents, true);
-                        canvas.addEventListener('mouseup', preventEvents, true);
-                        canvas.addEventListener('mousemove', preventEvents, true);
-                        canvas.addEventListener('click', preventEvents, true);
-                        canvas.addEventListener('touchstart', preventEvents, true);
-                        canvas.addEventListener('touchmove', preventEvents, true);
-                        canvas.addEventListener('touchend', preventEvents, true);
-                    }
-                }, 1000);
-
-                // 키보드 이벤트 차단
-                document.addEventListener('keydown', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }, true);
-
-                console.log('🔒 읽기 전용 모드 활성화');
+                // WireManager, InteractionManager 등에서 window.isReadOnlyMode를 체크하도록 함
+                console.log('🔒 읽기 전용 모드 활성화: 탐색 가능, 편집 불가');
             });
         }
     </script>
