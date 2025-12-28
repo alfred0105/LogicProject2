@@ -457,6 +457,29 @@
                 </button>
             </div>
 
+            <!-- Comments Section -->
+            <div style="margin-top: 24px; border-top: 1px solid var(--border-dim); padding-top: 20px;">
+                <h3 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">💬 댓글</h3>
+
+                <!-- Comment Input -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <input type="text" id="comment-input" placeholder="댓글을 입력하세요..."
+                        style="flex: 1; padding: 10px 12px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-main); font-size: 13px;">
+                    <button onclick="submitComment()"
+                        style="padding: 10px 16px; background: var(--accent-primary); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                        작성
+                    </button>
+                </div>
+
+                <!-- Comments List -->
+                <div id="comments-list"
+                    style="display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto;">
+                    <div style="color: var(--text-dim); font-size: 12px; text-align: center; padding: 20px;">
+                        댓글을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+
             <button class="btn-primary" onclick="closeProjectModal()" style="margin-top: 20px;">
                 닫기
             </button>
@@ -568,6 +591,7 @@
                 btnLike.textContent = isLiked ? '💔 좋아요 취소' : '❤️ 좋아요';
 
                 await library.incrementViews(projectId);
+                await loadComments(projectId);
                 document.getElementById('project-modal').classList.add('show');
             } catch (error) {
                 console.error('Failed to load project:', error);
@@ -627,6 +651,57 @@
             document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
 
             loadProjects();
+        }
+
+        // === 댓글 기능 ===
+        async function loadComments(projectId) {
+            const list = document.getElementById('comments-list');
+            if (!list) return;
+
+            try {
+                const comments = await library.getComments(projectId);
+
+                if (!comments || comments.length === 0) {
+                    list.innerHTML = '<div style="color: var(--text-dim); font-size: 12px; text-align: center; padding: 20px;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>';
+                    return;
+                }
+
+                list.innerHTML = comments.map(c => {
+                    const date = new Date(c.created_at).toLocaleDateString();
+                    return `
+                        <div style="padding: 12px; background: var(--bg-hover); border-radius: 6px; border: 1px solid var(--border-dim);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 12px; font-weight: 500; color: var(--text-main);">${c.user_name || '익명'}</span>
+                                <span style="font-size: 11px; color: var(--text-dim);">${date}</span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-sub); line-height: 1.5;">${c.content}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Failed to load comments:', error);
+                list.innerHTML = '<div style="color: var(--text-dim); font-size: 12px; text-align: center;">댓글을 불러오지 못했습니다.</div>';
+            }
+        }
+
+        async function submitComment() {
+            if (!currentProjectId) return;
+
+            const input = document.getElementById('comment-input');
+            const content = input.value.trim();
+
+            if (!content) {
+                alert('댓글 내용을 입력하세요.');
+                return;
+            }
+
+            try {
+                await library.addComment(currentProjectId, content);
+                input.value = '';
+                await loadComments(currentProjectId);
+            } catch (error) {
+                alert('댓글 작성 실패: ' + error.message);
+            }
         }
     </script>
 </body>

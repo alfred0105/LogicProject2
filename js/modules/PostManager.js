@@ -277,6 +277,24 @@ class PostManager {
         if (error) throw error;
         return data || [];
     }
+
+    /**
+     * 내가 작성한 게시글 가져오기
+     */
+    async getMyPosts(limit = 10) {
+        const user = await this.getCurrentUser();
+        if (!user) return [];
+
+        const { data, error } = await window.sb
+            .from('posts')
+            .select('*, projects(id, title)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+        return data || [];
+    }
 }
 
 // 전역 등록
