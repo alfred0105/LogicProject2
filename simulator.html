@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="css/simulator.css?v=2">
     <link rel="stylesheet" href="css/tabs.css?v=2">
+    <link rel="stylesheet" href="css/validation.css">
     <script src="js/modules/Security.js"></script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script>
@@ -564,6 +565,12 @@
 
             <!-- Utils -->
             <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.validator?.validateCircuit()" title="회로 검증">
+                    <svg>
+                        <use href="#icon-settings" />
+                    </svg>
+                    <span class="btn-text">검증</span>
+                </button>
                 <button class="icon-btn" onclick="sim.showTruthTable()" title="진리표 생성">
                     <svg>
                         <use href="#icon-chart" />
@@ -1556,6 +1563,7 @@
     <script src="js/modules/TouchHandler.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/CircuitValidator.js"></script>
     <script src="js/modules/Main.js"></script>
     <script>
         async function goHome() {
@@ -1569,6 +1577,87 @@
             location.href = 'index.html';
         }
     </script>
+
+    <!-- ======== Validation Panel ======== -->
+    <div id="validation-panel" class="validation-panel">
+        <div class="validation-header">
+            <h2>회로 검증</h2>
+            <button class="validation-close" onclick="sim.validator?.togglePanel()">×</button>
+        </div>
+
+        <div class="validation-actions">
+            <button class="validate-btn" onclick="sim.validator?.validateCircuit()">
+                검증 시작
+            </button>
+            <button class="auto-validate-toggle" id="auto-validate-toggle"
+                onclick="sim.validator && toggleAutoValidate()">
+                자동
+            </button>
+        </div>
+
+        <div class="validation-stats" id="validation-stats" style="display: none;">
+            <div class="stat-item errors">
+                <span class="stat-value" id="stat-errors">0</span>
+                <span class="stat-label">오류</span>
+            </div>
+            <div class="stat-item warnings">
+                <span class="stat-value" id="stat-warnings">0</span>
+                <span class="stat-label">경고</span>
+            </div>
+            <div class="stat-item suggestions">
+                <span class="stat-value" id="stat-suggestions">0</span>
+                <span class="stat-label">제안</span>
+            </div>
+        </div>
+
+        <div class="validation-content">
+            <div class="validation-empty">
+                <div class="validation-empty-icon">🔍</div>
+                <div class="validation-empty-text">
+                    '검증 시작' 버튼을 클릭하여<br>
+                    회로 오류를 검사하세요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 자동 검증 토글
+        function toggleAutoValidate() {
+            const toggle = document.getElementById('auto-validate-toggle');
+            const isActive = toggle.classList.toggle('active');
+
+            if (isActive) {
+                // 자동 검증 활성화: 변경사항 감지 시 검증
+                if (window.sim && window.sim.validator) {
+                    window.autoValidateEnabled = true;
+                }
+            } else {
+                window.autoValidateEnabled = false;
+            }
+        }
+
+        // 통계 업데이트
+        function updateValidationStats(results) {
+            const statsEl = document.getElementById('validation-stats');
+            if (!statsEl) return;
+
+            const errors = results.errors?.length || 0;
+            const warnings = results.warnings?.length || 0;
+            const suggestions = results.suggestions?.length || 0;
+
+            document.getElementById('stat-errors').textContent = errors;
+            document.getElementById('stat-warnings').textContent = warnings;
+            document.getElementById('stat-suggestions').textContent = suggestions;
+
+            if (errors + warnings + suggestions > 0) {
+                statsEl.style.display = 'flex';
+            } else {
+                statsEl.style.display = 'none';
+            }
+        }
+    </script>
+
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal" style="display: none; z-index: 3000;">
         <div class="modal-window"

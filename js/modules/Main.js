@@ -10,12 +10,31 @@ document.addEventListener('DOMContentLoaded', () => {
         window.sim.initTabs();
     }
 
+    // 회로 검증 도구 초기화
+    if (window.CircuitValidator) {
+        window.sim.validator = new CircuitValidator(window.sim);
+    }
+
     // 메인 루프 실행
     function animate() {
         if (window.sim) {
             window.sim.loop();
             if (window.sim.oscilloscope) {
                 window.sim.oscilloscope.draw();
+            }
+
+            // 자동 검증 모드인 경우
+            if (window.autoValidateEnabled && window.sim.validator) {
+                // 변경사항이 있을 때만 검증 (debounce 적용)
+                clearTimeout(window.autoValidateTimer);
+                window.autoValidateTimer = setTimeout(() => {
+                    if (window.sim.validator) {
+                        const results = window.sim.validator.validateCircuit();
+                        if (window.updateValidationStats) {
+                            window.updateValidationStats(results);
+                        }
+                    }
+                }, 2000); // 2초 후 검증
             }
         }
         requestAnimationFrame(animate);
