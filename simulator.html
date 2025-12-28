@@ -576,6 +576,16 @@
                     </svg>
                     <span class="btn-text">협업</span>
                 </button>
+                <button class="icon-btn" onclick="showPublishModal()" title="프로젝트 공개 설정">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                    </svg>
+                    <span class="btn-text">공개</span>
+                </button>
                 <button class="icon-btn" onclick="sim.validator?.validateCircuit()" title="회로 검증">
                     <svg>
                         <use href="#icon-settings" />
@@ -1846,6 +1856,143 @@
             } catch (error) {
                 console.error('Invite error:', error);
                 errorDiv.textContent = error.message || '초대 실패';
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+
+    <!-- Publish Settings Modal -->
+    <div id="publish-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-window"
+            style="width: 500px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: 12px;">
+            <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: var(--text-primary);">프로젝트 공개 설정
+            </h2>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                    <input type="checkbox" id="is-public-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 15px; color: var(--text-primary);">커뮤니티에 공개</span>
+                </label>
+                <small
+                    style="display: block; margin-top: 6px; margin-left: 30px; color: var(--text-secondary); font-size: 12px;">
+                    공개하면 라이브러리 페이지에 표시됩니다
+                </small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                    프로젝트 설명
+                </label>
+                <textarea id="project-description-input" placeholder="이 회로가 무엇을 하는지 설명하세요..."
+                    style="width: 100%; padding: 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; min-height: 80px;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                    태그 (쉼표로 구분)
+                </label>
+                <input type="text" id="project-tags-input" placeholder="예: logic, gates, adder"
+                    style="width: 100%; padding: 10px 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                <small style="display: block; margin-top: 6px; color: var(--text-secondary); font-size: 12px;">
+                    검색과 필터링에 사용됩니다
+                </small>
+            </div>
+
+            <div id="publish-error" style="color: #ef4444; font-size: 13px; margin-bottom: 16px; display: none;"></div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closePublishModal()"
+                    style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 14px; font-weight: 500;">
+                    취소
+                </button>
+                <button onclick="savePublishSettings()"
+                    style="flex: 1; padding: 12px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                    저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 공개 설정 모달 열기
+        async function showPublishModal() {
+            if (!window.sim || !window.sim.currentProjectId) {
+                alert('프로젝트를 먼저 저장해주세요.');
+                return;
+            }
+
+            // 현재 프로젝트 정보 불러오기
+            try {
+                const { data: project } = await window.sb
+                    .from('projects')
+                    .select('is_public, description, tags')
+                    .eq('id', window.sim.currentProjectId)
+                    .single();
+
+                if (project) {
+                    document.getElementById('is-public-checkbox').checked = project.is_public || false;
+                    document.getElementById('project-description-input').value = project.description || '';
+                    document.getElementById('project-tags-input').value = project.tags ? project.tags.join(', ') : '';
+                }
+            } catch (error) {
+                console.error('Failed to load project settings:', error);
+            }
+
+            document.getElementById('publish-modal').style.display = 'flex';
+        }
+
+        // 공개 설정 모달 닫기
+        function closePublishModal() {
+            document.getElementById('publish-modal').style.display = 'none';
+            document.getElementById('publish-error').style.display = 'none';
+        }
+
+        // 공개 설정 저장
+        async function savePublishSettings() {
+            const isPublic = document.getElementById('is-public-checkbox').checked;
+            const description = document.getElementById('project-description-input').value.trim();
+            const tagsStr = document.getElementById('project-tags-input').value.trim();
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+            const errorDiv = document.getElementById('publish-error');
+
+            if (!window.sim || !window.sim.currentProjectId) {
+                errorDiv.textContent = '프로젝트 ID를 찾을 수 없습니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!window.library) {
+                errorDiv.textContent = 'LibraryManager가 초기화되지 않았습니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                if (isPublic) {
+                    await window.library.makeProjectPublic(
+                        window.sim.currentProjectId,
+                        description,
+                        tags
+                    );
+                    if (window.sim.showToast) {
+                        window.sim.showToast('✓ 프로젝트가 공개되었습니다!', 'success');
+                    } else {
+                        alert('✓ 프로젝트가 공개되었습니다!');
+                    }
+                } else {
+                    await window.library.makeProjectPrivate(window.sim.currentProjectId);
+                    if (window.sim.showToast) {
+                        window.sim.showToast('✓ 프로젝트가 비공개로 전환되었습니다', 'info');
+                    } else {
+                        alert('✓ 프로젝트가 비공개로 전환되었습니다');
+                    }
+                }
+                closePublishModal();
+            } catch (error) {
+                console.error('Publish error:', error);
+                errorDiv.textContent = '오류: ' + (error.message || '알 수 없는 오류');
                 errorDiv.style.display = 'block';
             }
         }
