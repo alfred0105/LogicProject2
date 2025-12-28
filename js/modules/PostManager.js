@@ -82,6 +82,9 @@ class PostManager {
      * 게시글 상세 보기
      */
     async getPost(postId) {
+        // 조회수 증가 (먼저 실행하여 최신 조회수 반영)
+        await this.incrementViews(postId);
+
         const { data, error } = await window.sb
             .from('posts')
             .select('*')
@@ -89,9 +92,6 @@ class PostManager {
             .single();
 
         if (error) throw error;
-
-        // 조회수 증가
-        await this.incrementViews(postId);
 
         return data;
     }
@@ -130,17 +130,23 @@ class PostManager {
      * 조회수 증가
      */
     async incrementViews(postId) {
-        const { error } = await window.sb.rpc('increment', {
-            table_name: 'posts',
-            row_id: postId,
-            column_name: 'views'
-        }).catch(() => {
-            // Fallback if RPC doesn't exist
-            window.sb
-                .from('posts')
-                .update({ views: window.sb.sql`views + 1` })
-                .eq('id', postId);
-        });
+        // 중복 방지: 로컬 스토리지 확인 (1시간)
+        const storageKey = `viewed_post_${postId}`;
+        const lastViewed = localStorage.getItem(storageKey);
+        const now = Date.now();
+
+        if (lastViewed && (now - parseInt(lastViewed) < 3600000)) {
+            return; // 1시간 내 재방문 시 증가 안 함
+        }
+
+        // RPC 호출 (increment_views 함수가 DB에 있어야 함)
+        const { error } = await window.sb.rpc('increment_views', { row_id: postId });
+
+        if (!error) {
+            localStorage.setItem(storageKey, now.toString());
+        } else {
+            console.warn('Failed to increment views (RPC missing?):', error);
+        }
     }
 
     /**
