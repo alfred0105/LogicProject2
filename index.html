@@ -441,6 +441,7 @@
                 <a href="#categories" class="nav-link">카테고리</a>
                 <a href="library.html" class="nav-link">전체보기</a>
                 <a href="login.html" class="nav-link" id="nav-login">로그인</a>
+                <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">📊 대시보드</a>
                 <a href="create-post.html" class="nav-link" id="nav-create-post"
                     style="display: none; color: var(--accent-purple);">✍️ 글쓰기</a>
                 <a href="simulator.html" class="btn-cta">회로 만들기</a>
@@ -679,6 +680,7 @@
                 const { data: { user } } = await window.sb.auth.getUser();
                 if (user) {
                     document.getElementById('nav-login').style.display = 'none';
+                    document.getElementById('nav-dashboard').style.display = 'block';
                     document.getElementById('nav-create-post').style.display = 'block';
                 }
             }
