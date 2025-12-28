@@ -428,6 +428,14 @@
             </div>
 
             <div class="form-section">
+                <label class="form-label">회로 첨부 (선택)</label>
+                <select id="project-select" class="form-input" style="cursor: pointer;">
+                    <option value="">-- 내 프로젝트 선택 안 함 --</option>
+                </select>
+                <span class="form-hint">작성한 회로를 게시글에 첨부하면 미리보기가 표시됩니다.</span>
+            </div>
+
+            <div class="form-section">
                 <label class="form-label">내용</label>
                 <textarea id="post-content" class="form-input form-textarea" placeholder="마크다운을 지원합니다. 
                     
@@ -509,7 +517,32 @@
             // Character counters
             document.getElementById('post-title').addEventListener('input', updateTitleCount);
             document.getElementById('post-content').addEventListener('input', updateContentCount);
+
+            // Load users projects for attachment
+            await loadUserProjects(user.id);
         });
+
+        async function loadUserProjects(userId) {
+            try {
+                const { data, error } = await window.sb
+                    .from('projects')
+                    .select('id, title')
+                    .eq('user_id', userId)
+                    .order('updated_at', { ascending: false });
+
+                if (data && data.length > 0) {
+                    const select = document.getElementById('project-select');
+                    data.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = p.title || '제목 없음';
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load projects:', error);
+            }
+        }
 
         function updateTitleCount() {
             const count = document.getElementById('post-title').value.length;
@@ -582,6 +615,7 @@
         async function publishPost() {
             const title = document.getElementById('post-title').value.trim();
             const content = document.getElementById('post-content').value.trim();
+            const projectId = document.getElementById('project-select').value || null;
 
             if (!title) {
                 alert('제목을 입력하세요.');
@@ -598,7 +632,8 @@
             btn.textContent = '게시 중...';
 
             try {
-                await postManager.createPost(title, content, selectedCategory, tags);
+                // PostManager.createPost(title, content, category, tags, projectId)
+                await postManager.createPost(title, content, selectedCategory, tags, projectId);
                 alert('✓ 게시글이 작성되었습니다!');
                 location.href = 'index.html';
             } catch (error) {

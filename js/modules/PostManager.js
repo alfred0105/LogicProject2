@@ -33,7 +33,7 @@ class PostManager {
     /**
      * 게시글 작성
      */
-    async createPost(title, content, category = 'general', tags = []) {
+    async createPost(title, content, category = 'general', tags = [], projectId = null) {
         const user = await this.getCurrentUser();
         if (!user) throw new Error('로그인이 필요합니다');
 
@@ -47,6 +47,7 @@ class PostManager {
                 content: content,
                 category: category,
                 tags: tags,
+                project_id: projectId, // 회로 첨부
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
@@ -63,7 +64,7 @@ class PostManager {
     async getPosts(category = null, page = 1, limit = 10) {
         let query = window.sb
             .from('posts')
-            .select('*')
+            .select('*, projects(id, title)') // 프로젝트 정보 포함
             .order('is_pinned', { ascending: false })
             .order('created_at', { ascending: false })
             .range((page - 1) * limit, page * limit - 1);
@@ -249,8 +250,22 @@ class PostManager {
     async getTrendingPosts(limit = 5) {
         const { data, error } = await window.sb
             .from('posts')
-            .select('*')
+            .select('*, projects(id, title)')
             .order('likes', { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+        return data || [];
+    }
+
+    /**
+     * 최신 게시글 가져오기 (메인 페이지용)
+     */
+    async getRecentPosts(limit = 4) {
+        const { data, error } = await window.sb
+            .from('posts')
+            .select('*, projects(id, title)')
+            .order('created_at', { ascending: false })
             .limit(limit);
 
         if (error) throw error;

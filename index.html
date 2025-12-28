@@ -463,6 +463,20 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        .circuit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-primary);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: auto;
+        }
     </style>
 </head>
 
@@ -733,6 +747,8 @@
                 if (posts && posts.length > 0) {
                     grid.innerHTML = posts.map(post => {
                         const author = post.user_email?.split('@')[0] || 'Anonymous';
+                        const linkedProject = post.projects; // Joined project data
+
                         return `
                             <div class="project-card" onclick="location.href='view-post.html?id=${post.id}'">
                                 <div class="card-body">
@@ -746,7 +762,8 @@
                                     <div class="card-title">${post.title}</div>
                                     <div class="card-description">${post.content.substring(0, 100)}...</div>
                                     <div class="card-footer">
-                                        <div class="card-stats">
+                                        ${linkedProject ? `<div class="circuit-badge">🔌 ${linkedProject.title || '회로 포함'}</div>` : ''}
+                                        <div class="card-stats" style="${linkedProject ? '' : 'margin-left: auto;'}">
                                             <span class="stat">💬 ${post.comments_count || 0}</span>
                                             <span class="stat">❤️ ${post.likes || 0}</span>
                                         </div>
