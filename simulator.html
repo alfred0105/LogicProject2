@@ -1623,8 +1623,9 @@
                 font-size: 24px;
                 cursor: pointer;
                 box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-                z-index: 1000;
+                z-index: 99999;
                 transition: transform 0.2s, box-shadow 0.2s;
+                pointer-events: auto;
             `;
             fab.onmouseenter = () => fab.style.transform = 'scale(1.1)';
             fab.onmouseleave = () => fab.style.transform = 'scale(1)';
@@ -1645,12 +1646,13 @@
                 border-top-left-radius: 16px;
                 border-left: 1px solid rgba(255,255,255,0.1);
                 border-top: 1px solid rgba(255,255,255,0.1);
-                z-index: 1001;
+                z-index: 100000;
                 transform: translateX(100%);
                 transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 display: flex;
                 flex-direction: column;
                 font-family: 'Inter', sans-serif;
+                pointer-events: auto;
             `;
             panel.innerHTML = `
                 <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
