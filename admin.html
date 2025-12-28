@@ -285,14 +285,62 @@
         <!-- Feedback Section -->
         <div class="section">
             <h2 class="section-title">최근 피드백</h2>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="filter-tab active" onclick="setFilter('all')">전체</button>
+                <button class="filter-tab" onclick="setFilter('pending')">⏳ 미해결 <span id="count-pending"
+                        class="count-badge">0</span></button>
+                <button class="filter-tab" onclick="setFilter('in_progress')">🔥 해결중 <span id="count-in_progress"
+                        class="count-badge">0</span></button>
+                <button class="filter-tab" onclick="setFilter('resolved')">✅ 해결완료 <span id="count-resolved"
+                        class="count-badge">0</span></button>
+            </div>
+
             <div id="feedback-list" class="feedback-list">
                 <div class="loading">피드백을 불러오는 중...</div>
             </div>
         </div>
     </div>
 
+    <style>
+        .filter-tab {
+            padding: 8px 16px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 20px;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-tab.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .filter-tab:hover:not(.active) {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .count-badge {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+    </style>
+
     <script>
-        // 관리자 권한 체크
+        let currentFilter = 'all';
+
+        // 관리자 권한 체크 및 초기화
         document.addEventListener('DOMContentLoaded', async () => {
             if (!window.sb) {
                 alert('잠시 후 다시 시도해주세요.');
@@ -308,10 +356,39 @@
                 return;
             }
 
-            // 통계 로드
+            // 초기 데이터 로드
             await loadStats();
+            await updateFeedbackCounts();
             await loadFeedback();
         });
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.onclick.toString().includes(`'${filter}'`)) tab.classList.add('active');
+            });
+            loadFeedback();
+        }
+
+        async function updateFeedbackCounts() {
+            try {
+                // 각 상태별 카운트 조회
+                const statuses = ['pending', 'in_progress', 'resolved', 'rejected'];
+
+                for (const status of statuses) {
+                    const { count } = await window.sb
+                        .from('feedback')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', status);
+
+                    const badge = document.getElementById(`count-${status}`);
+                    if (badge) badge.textContent = count || 0;
+                }
+            } catch (error) {
+                console.error('Failed to update counts:', error);
+            }
+        }
 
         async function loadStats() {
             try {
@@ -333,7 +410,7 @@
                     .select('*', { count: 'exact', head: true });
                 document.getElementById('total-feedback').textContent = feedbackCount || 0;
 
-                // 사용자 수 (user_profiles)
+                // 사용자 수
                 const { count: userCount } = await window.sb
                     .from('user_profiles')
                     .select('*', { count: 'exact', head: true });
@@ -345,18 +422,24 @@
 
         async function loadFeedback() {
             try {
-                const { data, error } = await window.sb
+                let query = window.sb
                     .from('feedback')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(50); // 개수 늘림
+                    .limit(50);
+
+                if (currentFilter !== 'all') {
+                    query = query.eq('status', currentFilter);
+                }
+
+                const { data, error } = await query;
 
                 if (error) throw error;
 
                 const container = document.getElementById('feedback-list');
 
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
+                    container.innerHTML = `<div class="empty-state">${currentFilter === 'all' ? '피드백이 없습니다.' : '해당 상태의 피드백이 없습니다.'}</div>`;
                     return;
                 }
 
@@ -374,13 +457,6 @@
                 feature: '✨ 기능',
                 improvement: '📈 개선',
                 other: '💡 기타'
-            };
-
-            const statusLabels = {
-                pending: '⏳ 미해결',
-                in_progress: '🔥 해결중',
-                resolved: '✅ 해결완료',
-                rejected: '❌ 거절됨'
             };
 
             const date = new Date(feedback.created_at);
@@ -434,10 +510,14 @@
 
                 if (error) throw error;
 
-                // 색상 업데이트 시각적 피드백
                 const select = document.querySelector(`#feedback-${id} .status-select`);
                 select.style.borderColor = getStatusColor(newStatus);
-                alert('상태가 변경되었습니다.');
+
+                // 카운트 리로드
+                await updateFeedbackCounts();
+
+                // 필터링 중이라면 목록에서 사라질 수 있으므로 리로드 (선택사항)
+                // loadFeedback(); // 사용자 경험상 바로 사라지는 게 나을지 유지하는 게 나을지? 보통 유지함.
             } catch (error) {
                 console.error('Update status error:', error);
                 alert('상태 변경 실패: ' + error.message);
@@ -446,7 +526,6 @@
 
         async function saveComment(id) {
             const comment = document.getElementById(`comment-${id}`).value;
-
             try {
                 const { error } = await window.sb
                     .from('feedback')
@@ -460,10 +539,8 @@
                 alert('답변이 저장되었습니다.');
             } catch (error) {
                 console.error('Save comment error:', error);
-                alert('답변 저장 실패 (DB 스키마 확인 필요): ' + error.message);
+                alert('답변 저장 실패: ' + error.message);
             }
         }
     </script>
 </body>
-
-</html>
