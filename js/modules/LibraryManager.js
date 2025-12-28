@@ -282,24 +282,15 @@ class LibraryManager {
     async incrementViews(projectId) {
         if (!window.sb) return;
 
-        // 조회 기록 추가
-        const { data: { user } } = await window.sb.auth.getUser();
-
-        await window.sb
-            .from('project_views')
-            .insert({
-                project_id: projectId,
-                user_id: user?.id || null,
-                ip_address: null // 클라이언트 측에서는 IP를 알 수 없음
+        try {
+            // RPC가 있으면 사용, 없으면 그냥 스킵 (조회수는 선택적 기능)
+            await window.sb.rpc('increment_project_views', { p_id: projectId }).catch(() => {
+                // RPC가 없으면 무시
             });
-
-        // 조회수 증가
-        const { error } = await window.sb
-            .from('projects')
-            .update({ views: window.sb.raw('views + 1') })
-            .eq('id', projectId);
-
-        if (error) console.error('Failed to increment views:', error);
+        } catch (e) {
+            // 조회수 증가 실패해도 진행
+            console.warn('[LibraryManager] incrementViews failed (non-critical):', e);
+        }
     }
 
     /**
