@@ -120,6 +120,11 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     onMouseDown(e) {
+        // [FIX] UI 요소(입력 필드, 버튼 등) 클릭 시에는 기본 동작 허용
+        if (e.target.closest('input, textarea, button, select, [contenteditable], #comment-panel, .modal-overlay')) {
+            return; // 댓글 입력 등 UI 인터랙션 허용
+        }
+
         // 모듈 편집 모드 감지 (DOM 기반 포함)
         const isModuleMode = (this.currentTab && this.currentTab.startsWith('module')) || (e.target.closest && !!e.target.closest('#module-canvas'));
 
