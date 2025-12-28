@@ -1089,15 +1089,23 @@
 
             // 게시글 작성 모달 열기
             function showCreatePostModal() {
-                document.getElementById('create-post-modal').style.display = 'flex';
+                const modal = document.getElementById('create-post-modal');
+                if (modal) modal.style.display = 'flex';
             }
 
             // 게시글 작성 모달 닫기
             function closeCreatePostModal() {
-                document.getElementById('create-post-modal').style.display = 'none';
-                document.getElementById('post-title').value = '';
-                document.getElementById('post-content').value = '';
-                document.getElementById('post-tags').value = '';
+                const modal = document.getElementById('create-post-modal');
+                if (modal) modal.style.display = 'none';
+
+                const title = document.getElementById('post-title');
+                if (title) title.value = '';
+
+                const content = document.getElementById('post-content');
+                if (content) content.value = '';
+
+                const tags = document.getElementById('post-tags');
+                if (tags) tags.value = '';
             }
 
             // 게시글 제출
