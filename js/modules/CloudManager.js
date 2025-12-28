@@ -193,7 +193,8 @@ class CloudManager {
         if (!window.sb) return;
 
         try {
-            const { data, error } = await window.sb
+            // 1. 프로젝트 데이터 로드
+            const { data: projectData, error } = await window.sb
                 .from('projects')
                 .select('*')
                 .eq('id', projectId)
@@ -201,19 +202,75 @@ class CloudManager {
 
             if (error) throw error;
 
-            if (data && data.data) {
-                this.sim.importProjectData(data.data);
+            if (projectData && projectData.data) {
+                // 2. 데이터 가져오기 (컴포넌트, 와이어 등)
+                this.sim.importProjectData(projectData.data);
 
-                this.sim.currentCloudId = data.id;
-                this.sim.currentProjectId = data.id;
-                this.sim.currentProjectName = data.title;
+                this.sim.currentCloudId = projectData.id;
+                this.sim.currentProjectId = projectData.id;
+                this.sim.currentProjectName = projectData.title;
 
-                // UI 업데이트
+                // 3. UI 업데이트
                 const nameInput = document.getElementById('project-name-input');
-                if (nameInput) nameInput.value = data.title;
+                if (nameInput) nameInput.value = projectData.title;
 
                 this.updateSaveStatusUI('saved', '불러오기 완료');
-                console.log('Project loaded from Cloud:', data.title);
+                console.log('Project loaded from Cloud:', projectData.title);
+
+                // 4. [보안] 권한 체크 및 읽기 모드 강제 적용
+                const { data: { user } } = await window.sb.auth.getUser();
+                const currentUserId = user ? user.id : null;
+                const ownerId = projectData.user_id;
+
+                // 이미 URL로 읽기 모드이거나, 주인이 아닌 경우
+                // (ownerId가 없으면 로컬 프로젝트일 수 있으므로 건드리지 않음. 하지만 클라우드에서 왔다면 ownerId는 있음)
+                const isOwner = currentUserId && ownerId && (currentUserId === ownerId);
+
+                if (window.isReadOnlyMode || (ownerId && !isOwner)) {
+                    console.log(`🔒 Read-only enforced. Owner: ${ownerId}, You: ${currentUserId}`);
+
+                    // 상태 강제 설정
+                    window.isReadOnlyMode = true;
+                    this.sim.isReadOnly = true;
+                    if (this.sim.setMode) {
+                        this.sim.setMode('pan');
+                    }
+
+                    // CSS 방어막 가동
+                    document.body.classList.add('readonly-mode');
+
+                    // 배너가 없으면 추가 (simulator.html의 로직 복사)
+                    if (!document.querySelector('.readonly-banner-dynamic')) {
+                        const banner = document.createElement('div');
+                        banner.className = 'readonly-banner-dynamic'; // 중복 방지용 클래스
+                        banner.style.cssText = `
+                            width: 100%;
+                            height: 40px;
+                            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 14px;
+                            font-weight: 600;
+                            z-index: 900;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                            font-family: 'Inter', sans-serif;
+                            flex-shrink: 0;
+                        `;
+                        banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. (편집 권한 없음)</span>';
+
+                        // workspace-wrapper 찾기
+                        const wrapper = document.querySelector('.workspace-wrapper');
+                        if (wrapper) {
+                            wrapper.insertBefore(banner, wrapper.firstChild);
+                        } else {
+                            banner.style.position = 'fixed';
+                            banner.style.top = '64px';
+                            document.body.appendChild(banner);
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.error('Load failed:', e);
