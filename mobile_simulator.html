@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LoCAD Mobile</title>
+    <meta name="description" content="교육용 디지털 논리 회로 시뮬레이터">
+    <!-- [보안] 모든 호스팅(Netlify, GitHub Pages 등)에서 eval() 허용 -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile_simulator.css?v=2.0">
+    <link rel="stylesheet" href="css/tabs.css?v=2.0">
+
+    <link rel="stylesheet" href="css/validation.css">
+    <link rel="stylesheet" href="css/collaboration.css">
+    <script src="js/modules/Security.js"></script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script>
+        // 초기 로딩 에러(ReferenceError: sim is not defined) 방지용 더미 객체
+        window.sim = window.sim || {
+            showTooltip: function () { },
+            hideTooltip: function () { },
+            positionTooltip: function () { },
+            toggleSection: function () { },
+            addModule: function () { },
+            saveProject: function () { },
+            updateProjectName: function () { },
+            exportProject: function () { },
+            cloud: {
+                saveProjectToCloud: function () { },
+                triggerAutoSave: function () { }
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <svg viewBox="0 0 24 24" width="80" height="80">
+                    <path
+                        d="M6 6 L10 2 L12 6 H20 A2 2 0 0 1 22 8 V17 A2 2 0 0 1 20 19 H14 L10 23 L9 19 H4 A2 2 0 0 1 2 17 V8 A2 2 0 0 1 4 6 Z"
+                        fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    </path>
+                    <circle cx="9" cy="12.5" r="1.5" fill="#3b82f6" stroke="none"></circle>
+                    <circle cx="15" cy="12.5" r="1.5" fill="#3b82f6" stroke="none"></circle>
+                </svg>
+            </div>
+            <h2 class="loading-title">LoCAD</h2>
+            <p class="loading-subtitle">시뮬레이터 초기화 중...</p>
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-logo {
+            margin-bottom: 24px;
+        }
+
+        .loading-circle {
+            animation: loading-spin 1.5s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes loading-spin {
+            to {
+                stroke-dashoffset: -176;
+            }
+        }
+
+        .loading-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .loading-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0 0 24px 0;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+            animation: loading-progress 2s ease-out forwards;
+        }
+
+        @keyframes loading-progress {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <!-- SVG Icon Definitions -->
+    <svg style="display: none;">
+        <defs>
+            <!-- Logo (Lightning Speech Bubble) -->
+            <symbol id="icon-logo" viewBox="0 0 24 24">
+                <path
+                    d="M6 6 L10 2 L12 6 H20 A2 2 0 0 1 22 8 V17 A2 2 0 0 1 20 19 H14 L10 23 L9 19 H4 A2 2 0 0 1 2 17 V8 A2 2 0 0 1 4 6 Z"
+                    fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                </path>
+                <circle cx="9" cy="12.5" r="1.5" fill="#3b82f6" stroke="none"></circle>
+                <circle cx="15" cy="12.5" r="1.5" fill="#3b82f6" stroke="none"></circle>
+            </symbol>
+
+            <symbol id="icon-lightning" viewBox="0 0 24 24">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor" stroke="none" />
+            </symbol>
+
+            <symbol id="icon-settings" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </symbol>
+
+            <!-- UI Icons -->
+            <symbol id="icon-home" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </symbol>
+            <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </symbol>
+            <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+            </symbol>
+            <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+            </symbol>
+
+            <!-- File Icons -->
+            <symbol id="icon-file" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+            </symbol>
+            <symbol id="icon-save" viewBox="0 0 24 24">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+            </symbol>
+            <symbol id="icon-export" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+            </symbol>
+
+            <!-- Edit Icons (Undo/Redo Updated) -->
+            <symbol id="icon-undo" viewBox="0 0 24 24">
+                <path
+                    d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.17 8 12.5 8z" />
+            </symbol>
+            <symbol id="icon-redo" viewBox="0 0 24 24">
+                <path
+                    d="M18.4 10.6C16.55 9 14.15 8 11.5 8c-4.67 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z" />
+            </symbol>
+            <symbol id="icon-copy" viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </symbol>
+            <symbol id="icon-paste" viewBox="0 0 24 24">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+            </symbol>
+            <symbol id="icon-duplicate" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="8" height="8" rx="1" />
+                <rect x="13" y="13" width="8" height="8" rx="1" />
+                <path d="M11 8h2v3h3v2h-3v3h-2v-3H8v-2h3V8z" />
+            </symbol>
+            <symbol id="icon-trash" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </symbol>
+
+            <!-- Tool Icons -->
+            <symbol id="icon-select" viewBox="0 0 24 24">
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+            </symbol>
+            <symbol id="icon-pan" viewBox="0 0 24 24">
+                <path
+                    d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v1a2 2 0 0 0-2-2 2 2 0 0 0-2 2v5a6 6 0 0 0 6 6h2a6 6 0 0 0 6-6V9a2 2 0 0 0-2-2 2 2 0 0 0-2 2" />
+            </symbol>
+            <symbol id="icon-wire" viewBox="0 0 24 24">
+                <rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="19" x2="9" y2="23" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="19" x2="15" y2="23" stroke="currentColor" stroke-width="2" />
+                <line x1="9" y1="1" x2="9" y2="5" stroke="currentColor" stroke-width="2" />
+                <line x1="15" y1="1" x2="15" y2="5" stroke="currentColor" stroke-width="2" />
+                <line x1="1" y1="9" x2="5" y2="9" stroke="currentColor" stroke-width="2" />
+                <line x1="1" y1="15" x2="5" y2="15" stroke="currentColor" stroke-width="2" />
+                <line x1="19" y1="9" x2="23" y2="9" stroke="currentColor" stroke-width="2" />
+                <line x1="19" y1="15" x2="23" y2="15" stroke="currentColor" stroke-width="2" />
+            </symbol>
+            <symbol id="icon-grid" viewBox="0 0 24 24">
+                <path d="M3 3h18v18H3z" stroke="currentColor" fill="none" stroke-width="2" />
+                <path d="M8 3v18M13 3v18M18 3v18M3 8h18M3 13h18M3 18h18" stroke="currentColor" stroke-width="1"
+                    opacity="0.6" />
+            </symbol>
+
+            <!-- Playback Icons -->
+            <symbol id="icon-play" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3" />
+            </symbol>
+            <symbol id="icon-pause" viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+            </symbol>
+            <symbol id="icon-step" viewBox="0 0 24 24">
+                <polygon points="5 4 15 12 5 20 5 4" />
+                <line x1="19" y1="5" x2="19" y2="19" />
+            </symbol>
+            <symbol id="icon-reset" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10" />
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </symbol>
+
+            <!-- Zoom Icons -->
+            <symbol id="icon-zoom-in" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <line x1="11" y1="8" x2="11" y2="14" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+            </symbol>
+            <symbol id="icon-zoom-out" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <line x1="8" y1="11" x2="14" y2="11" />
+            </symbol>
+            <symbol id="icon-zoom-fit" viewBox="0 0 24 24">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </symbol>
+
+            <!-- Component Icons -->
+            <symbol id="icon-switch" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4l3 3" />
+            </symbol>
+            <symbol id="icon-led" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
+            </symbol>
+            <symbol id="icon-clock" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <polyline points="8 12 11 12 11 8" />
+                <polyline points="13 12 16 16" />
+            </symbol>
+
+            <!-- Gate Icons (ANSI Standard Symbols) -->
+            <!-- AND Gate: D shape -->
+            <symbol id="icon-gate-and" viewBox="0 0 60 40">
+                <path d="M10 5 L30 5 A 15 15 0 0 1 30 35 L10 35 Z" fill="none" stroke="currentColor" stroke-width="3" />
+                <line x1="10" y1="5" x2="10" y2="35" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- OR Gate: Curved shape -->
+            <symbol id="icon-gate-or" viewBox="0 0 60 40">
+                <path d="M10 5 C 10 5, 20 5, 30 15 C 40 25, 30 35, 10 35 C 15 25, 15 15, 10 5 Z" fill="none"
+                    stroke="currentColor" stroke-width="3" />
+                <!-- Output line is handled by pin or extended path -->
+            </symbol>
+
+            <!-- NOT Gate: Triangle + Bubble -->
+            <symbol id="icon-gate-not" viewBox="0 0 60 40">
+                <path d="M15 5 L40 20 L15 35 Z" fill="none" stroke="currentColor" stroke-width="3" />
+                <circle cx="44" cy="20" r="3" fill="none" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- NAND Gate: AND + Bubble -->
+            <symbol id="icon-gate-nand" viewBox="0 0 60 40">
+                <path d="M10 5 L30 5 A 15 15 0 0 1 30 35 L10 35 Z" fill="none" stroke="currentColor" stroke-width="3" />
+                <line x1="10" y1="5" x2="10" y2="35" stroke="currentColor" stroke-width="3" />
+                <circle cx="48" cy="20" r="3" fill="none" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- NOR Gate: OR + Bubble -->
+            <symbol id="icon-gate-nor" viewBox="0 0 60 40">
+                <path d="M10 5 C 10 5, 20 5, 30 15 C 40 25, 30 35, 10 35 C 15 25, 15 15, 10 5 Z" fill="none"
+                    stroke="currentColor" stroke-width="3" />
+                <circle cx="44" cy="20" r="3" fill="none" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- XOR Gate: Double curve -->
+            <symbol id="icon-gate-xor" viewBox="0 0 60 40">
+                <path d="M15 5 C 15 5, 25 5, 35 15 C 45 25, 35 35, 15 35 C 20 25, 20 15, 15 5 Z" fill="none"
+                    stroke="currentColor" stroke-width="3" />
+                <path d="M8 5 C 13 15, 13 25, 8 35" fill="none" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- XNOR Gate: XOR + Bubble -->
+            <symbol id="icon-gate-xnor" viewBox="0 0 60 40">
+                <path d="M15 5 C 15 5, 25 5, 35 15 C 45 25, 35 35, 15 35 C 20 25, 20 15, 15 5 Z" fill="none"
+                    stroke="currentColor" stroke-width="3" />
+                <path d="M8 5 C 13 15, 13 25, 8 35" fill="none" stroke="currentColor" stroke-width="3" />
+                <circle cx="48" cy="20" r="3" fill="none" stroke="currentColor" stroke-width="3" />
+            </symbol>
+
+            <!-- Package/Expert Icons -->
+            <symbol id="icon-package" viewBox="0 0 24 24">
+                <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+            </symbol>
+            <symbol id="icon-transistor" viewBox="0 0 24 24">
+                <line x1="12" y1="2" x2="12" y2="22" />
+                <path d="M4 12h8l-4 6M4 12l4-6" />
+            </symbol>
+            <symbol id="icon-plus" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </symbol>
+
+            <!-- Misc Icons -->
+            <symbol id="icon-chart" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </symbol>
+            <symbol id="icon-help" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+            </symbol>
+            <symbol id="icon-close" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </symbol>
+            <symbol id="icon-download" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+            </symbol>
+        </defs>
+    </svg>
+
+    <div class="app-container">
+        <!-- ======== Header ======== -->
+        <header class="header">
+            <div class="brand">
+                <button class="icon-btn" style="width: 32px; height: 32px; min-width: auto; padding: 0;" title="홈으로"
+                    onclick="goHome()">
+                    <svg>
+                        <use href="#icon-home" />
+                    </svg>
+                </button>
+                <div class="brand-divider"></div>
+                <div class="brand-divider"></div>
+                <!-- Brand Logo & Title -->
+                <div class="brand-logo" onclick="location.href='index.html'"
+                    style="cursor:pointer; padding: 4px; display:flex; align-items:center; gap: 12px;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Lightning Speech Bubble -->
+                        <path
+                            d="M6 6 L10 2 L12 6 H20 A2 2 0 0 1 22 8 V17 A2 2 0 0 1 20 19 H14 L10 23 L9 19 H4 A2 2 0 0 1 2 17 V8 A2 2 0 0 1 4 6 Z">
+                        </path>
+                        <!-- Two Eyes -->
+                        <circle cx="9" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                        <circle cx="15" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                    </svg>
+                    <span
+                        style="font-family:'Inter', sans-serif; font-weight:800; font-size:22px; color:white; letter-spacing: -0.5px;">LoCAD</span>
+                </div>
+            </div>
+
+            <div class="header-controls" style="display:flex; align-items:center; gap: 6px; margin-left: 16px;">
+                <input type="text" id="project-name-input" onchange="sim.updateProjectName(this.value)"
+                    value="Untitled Project"
+                    style="background: transparent; border: none; color: var(--text-primary); font-size: 14px; font-weight: 500; text-align: left; width: auto; min-width: 120px;">
+                <span id="save-status"
+                    style="font-size:11px; color:var(--text-secondary); opacity: 1; transition: opacity 0.5s; white-space: nowrap;">저장됨</span>
+            </div>
+
+            <!-- File -->
+            <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.newProject()" title="새 프로젝트 (N)">
+                    <svg>
+                        <use href="#icon-file" />
+                    </svg>
+                    <span class="btn-text">새 파일</span>
+                </button>
+                <button class="icon-btn" onclick="sim.saveProject()" title="파일 저장 (S)">
+                    <svg>
+                        <use href="#icon-save" />
+                    </svg>
+                    <span class="btn-text">수동 저장</span>
+                </button>
+
+                <button class="icon-btn" onclick="sim.exportProject()" title="JSON 내보내기">
+                    <svg>
+                        <use href="#icon-export" />
+                    </svg>
+                    <span class="btn-text">내보내기</span>
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Edit -->
+            <div class="toolbar-group">
+                <button class="icon-btn" onclick="sim.undo()" title="실행 취소 (Ctrl+Z)">
+                    <svg>
+                        <use href="#icon-undo" />
+                    </svg>
+                    <span class="btn-text">취소</span>
+                </button>
+                <button class="icon-btn" onclick="sim.redo()" title="다시 실행 (Ctrl+Y)">
+                    <svg>
+                        <use href="#icon-redo" />
+                    </svg>
+                    <span class="btn-text">복구</span>
+                </button>
+                <div class="toolbar-divider"></div>
+                <button class="icon-btn" onclick="sim.copySelection()" title="복사 (Ctrl+C)">
+                    <svg>
+                        <use href="#icon-copy" />
+                    </svg>
+                    <span class="btn-text">복사</span>
+                </button>
+                <button class="icon-btn" onclick="sim.pasteFromClipboard()" title="붙여넣기 (Ctrl+V)">
+                    <svg>
+                        <use href="#icon-paste" />
+                    </svg>
+                    <span class="btn-text">붙여넣기</span>
+                </button>
+                <button class="icon-btn" onclick="sim.deleteSelected()" title="삭제 (Del)">
+                    <svg>
+                        <use href="#icon-trash" />
+                    </svg>
+                    <span class="btn-text">삭제</span>
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Tools -->
+            <div class="toolbar-group">
+                <!-- Tool Buttons Removed (Integrated functionality)
+                <div class="tool-toggle">
+                    <button class="icon-btn active" id="btn-select" onclick="sim.setMode('edit')" title="선택 도구 (V)">
+                        <svg>
+                            <use href="#icon-select" />
+                        </svg>
+                        <span class="tool-label">선택</span>
+                    </button>
+                    <button class="icon-btn" id="btn-pan" onclick="sim.setMode('pan')" title="화면 이동 (H)">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2 L12 22 M2 12 L22 12" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" />
+                            <path d="M12 2 L8 6 M12 2 L16 6" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M12 22 L8 18 M12 22 L16 18" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M2 12 L6 8 M2 12 L6 16" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M22 12 L18 8 M22 12 L18 16" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="tool-label">이동</span>
+                    </button>
+                </div>
+                -->
+
+                <!-- Grid & Wire Mode -->
+                <div class="edit-options">
+                    <button class="icon-btn small" id="btn-grid-snap" onclick="sim.toggleGridSnap()"
+                        title="그리드 스냅 ON/OFF">
+                        <svg>
+                            <use href="#icon-grid" />
+                        </svg>
+                        <span class="btn-text">그리드</span>
+                    </button>
+                    <button class="icon-btn small" id="btn-wire-mode" onclick="sim.toggleWireMode()" title="와이어 연결 모드">
+                        <svg>
+                            <use href="#icon-wire" />
+                        </svg>
+                        <span class="btn-text">전선</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Simulation -->
+            <div class="toolbar-group">
+                <button class="icon-btn" id="btn-run" onclick="sim.toggleSimulation()" title="시뮬레이션 시작/정지">
+                    <svg>
+                        <use href="#icon-play" />
+                    </svg>
+                    <span class="btn-text">실행</span>
+                </button>
+                <button class="icon-btn" onclick="sim.stepSimulation()" title="한 단계 실행">
+                    <svg>
+                        <use href="#icon-step" />
+                    </svg>
+                    <span class="btn-text">스텝</span>
+                </button>
+                <button class="icon-btn" onclick="sim.resetSimulation()" title="시뮬레이션 초기화">
+                    <svg>
+                        <use href="#icon-reset" />
+                    </svg>
+                    <span class="btn-text">리셋</span>
+                </button>
+            </div>
+
+            <!-- Speed Control -->
+
+
+            <div class="toolbar-spacer" style="flex-grow: 1;"></div>
+
+            <!-- Zoom -->
+            <!-- Zoom Removed -->
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Selection Indicator -->
+            <span class="selection-indicator" id="selection-count" style="display: none;">선택: 0개</span>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Utils -->
+            <div class="toolbar-group">
+                <button class="icon-btn btn-collaborate" id="btn-collaborate" onclick="toggleCollaboration()"
+                    title="실시간 협업">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="btn-text">협업</span>
+                </button>
+                <button class="icon-btn" onclick="showPublishModal()" title="프로젝트 공개 설정">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path
+                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                        </path>
+                    </svg>
+                    <span class="btn-text">공개</span>
+                </button>
+                <button class="icon-btn" onclick="sim.validator?.validateCircuit()" title="회로 검증">
+                    <svg>
+                        <use href="#icon-settings" />
+                    </svg>
+                    <span class="btn-text">검증</span>
+                </button>
+                <button class="icon-btn" onclick="sim.showTruthTable()" title="진리표 생성">
+                    <svg>
+                        <use href="#icon-chart" />
+                    </svg>
+                    <span class="btn-text">진리표</span>
+                </button>
+                <button class="icon-btn" onclick="sim.showHelp()" title="도움말">
+                    <svg>
+                        <use href="#icon-help" />
+                    </svg>
+                    <span class="btn-text">도움말</span>
+                </button>
+                <button class="icon-btn" onclick="sim.openSettings()" title="설정">
+                    <svg>
+                        <use href="#icon-settings" />
+                    </svg>
+                    <span class="btn-text">설정</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ======== Sidebar ======== -->
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle-btn" onclick="sim.toggleSidebar()" title="사이드바 열기/닫기">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M8 2 L4 6 L8 10" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" />
+                </svg>
+            </button>
+
+            <div class="sidebar-content">
+                <!-- Account Status -->
+                <div class="account-section">
+                    <div class="account-avatar">👤</div>
+                    <div class="account-info">
+                        <span class="account-name" id="account-name">Guest</span>
+                        <span class="account-plan">Free Plan</span>
+                    </div>
+                </div>
+
+                <!-- IO -->
+                <section class="section" id="sec-io">
+                    <div class="section-header" onclick="sim.toggleSection('sec-io')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            입출력
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn io" onclick="sim.addModule('SWITCH')"
+                                onmouseenter="sim.showTooltip('SWITCH'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 44">
+                                        <circle cx="22" cy="22" r="16" fill="none" stroke="#22c55e"
+                                            stroke-width="2.5" />
+                                        <line x1="22" y1="10" x2="22" y2="22" stroke="#22c55e" stroke-width="2.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                </div>
+                                <span class="name">스위치</span>
+                            </button>
+                            <button class="comp-btn io" onclick="sim.addModule('LED')"
+                                onmouseenter="sim.showTooltip('LED'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 32 32">
+                                        <circle cx="16" cy="16" r="11" fill="#ef4444" stroke="#fca5a5"
+                                            stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">LED</span>
+                            </button>
+                            <button class="comp-btn io" onclick="sim.addModule('CLOCK')"
+                                onmouseenter="sim.showTooltip('CLOCK'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 56 40">
+                                        <rect x="6" y="8" width="44" height="24" rx="2" fill="none" stroke="#8b5cf6"
+                                            stroke-width="2" />
+                                        <polyline points="12,24 12,16 20,16 20,24 28,24 28,16 36,16 36,24 44,24 44,16"
+                                            fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="miter" />
+                                    </svg>
+                                </div>
+                                <span class="name">클럭</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Gates -->
+                <section class="section" id="sec-gates">
+                    <div class="section-header" onclick="sim.toggleSection('sec-gates')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            논리 게이트
+                        </span>
+                        <span class="section-count">7</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn gate-and" onclick="sim.addModule('AND')"
+                                onmouseenter="sim.showTooltip('AND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M8 4 L24 4 A 12 14 0 0 1 24 28 L8 28 Z" fill="none" stroke="#3b82f6"
+                                            stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">AND</span>
+                            </button>
+                            <button class="comp-btn gate-or" onclick="sim.addModule('OR')"
+                                onmouseenter="sim.showTooltip('OR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M6 4 Q 14 16 6 28 Q 24 28 38 16 Q 24 4 6 4 Z" fill="none"
+                                            stroke="#10b981" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">OR</span>
+                            </button>
+                            <button class="comp-btn gate-not" onclick="sim.addModule('NOT')"
+                                onmouseenter="sim.showTooltip('NOT'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 32">
+                                        <path d="M6 4 L30 16 L6 28 Z" fill="none" stroke="#ef4444" stroke-width="2" />
+                                        <circle cx="35" cy="16" r="4" fill="none" stroke="#ef4444" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NOT</span>
+                            </button>
+                            <button class="comp-btn gate-nand" onclick="sim.addModule('NAND')"
+                                onmouseenter="sim.showTooltip('NAND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M6 4 L20 4 A 12 14 0 0 1 20 28 L6 28 Z" fill="none" stroke="#8b5cf6"
+                                            stroke-width="2" />
+                                        <circle cx="36" cy="16" r="4" fill="none" stroke="#8b5cf6" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NAND</span>
+                            </button>
+                            <button class="comp-btn gate-nor" onclick="sim.addModule('NOR')"
+                                onmouseenter="sim.showTooltip('NOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M4 4 Q 12 16 4 28 Q 20 28 32 16 Q 20 4 4 4 Z" fill="none"
+                                            stroke="#f59e0b" stroke-width="2" />
+                                        <circle cx="38" cy="16" r="4" fill="none" stroke="#f59e0b" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NOR</span>
+                            </button>
+                            <button class="comp-btn gate-xor" onclick="sim.addModule('XOR')"
+                                onmouseenter="sim.showTooltip('XOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M10 4 Q 18 16 10 28 Q 26 28 40 16 Q 26 4 10 4 Z" fill="none"
+                                            stroke="#06b6d4" stroke-width="2" />
+                                        <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#06b6d4" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">XOR</span>
+                            </button>
+                            <button class="comp-btn gate-xnor" onclick="sim.addModule('XNOR')"
+                                onmouseenter="sim.showTooltip('XNOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 32">
+                                        <path d="M10 4 Q 18 16 10 28 Q 24 28 34 16 Q 24 4 10 4 Z" fill="none"
+                                            stroke="#ec4899" stroke-width="2" />
+                                        <path d="M4 4 Q 12 16 4 28" fill="none" stroke="#ec4899" stroke-width="2" />
+                                        <circle cx="40" cy="16" r="4" fill="none" stroke="#ec4899" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">XNOR</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Modules -->
+                <section class="section" id="section-modules">
+                    <div class="section-header" onclick="sim.toggleSection('section-modules')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            Modules
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn package" onclick="sim.addPackage('HALF_ADDER')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">Half Adder</span>
+                            </button>
+                            <button class="comp-btn package" onclick="sim.addPackage('FULL_ADDER')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">Full Adder</span>
+                            </button>
+                            <button class="comp-btn package" onclick="sim.addPackage('SR_LATCH')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-package" />
+                                    </svg></div>
+                                <span class="name">SR Latch</span>
+                            </button>
+                            <button class="comp-btn package" onclick="sim.addPackage('D_FLIPFLOP')">
+                                <div class="icon"><svg>
+                                        <use href="#icon-package" />
+                                    </svg></div>
+                                <span class="name">D Flip-Flop</span>
+                            </button>
+                            <button class="comp-btn dashed" onclick="sim.startNewModule()">
+                                <div class="icon"><svg>
+                                        <use href="#icon-plus" />
+                                    </svg></div>
+                                <span class="name">새 모듈</span>
+                            </button>
+                        </div>
+                        <div id="user-packages" style="margin-top: 8px;"></div>
+                    </div>
+                </section>
+
+                <!-- Transistors -->
+                <section class="section" id="section-transistors">
+                    <div class="section-header" onclick="sim.toggleSection('section-transistors')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            Transistors
+                        </span>
+                        <span class="section-count">4</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn trans-npn" onclick="sim.addModule('TRANSISTOR')"
+                                onmouseenter="sim.showTooltip('TRANSISTOR'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 48">
+                                        <!-- NPN Transistor Symbol -->
+                                        <line x1="16" y1="12" x2="16" y2="36" stroke="#06b6d4" stroke-width="2.5" />
+                                        <line x1="16" y1="18" x2="32" y2="10" stroke="#06b6d4" stroke-width="2.5" />
+                                        <line x1="16" y1="30" x2="32" y2="38" stroke="#06b6d4" stroke-width="2.5" />
+                                        <polygon points="28,34 32,38 26,38" fill="#06b6d4" />
+                                        <line x1="4" y1="24" x2="16" y2="24" stroke="#06b6d4" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">NPN</span>
+                            </button>
+                            <button class="comp-btn trans-pmos" onclick="sim.addModule('PMOS')"
+                                onmouseenter="sim.showTooltip('PMOS'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 48 48">
+                                        <!-- PMOS Transistor Symbol -->
+                                        <line x1="16" y1="12" x2="16" y2="36" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <line x1="16" y1="18" x2="32" y2="10" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <line x1="16" y1="30" x2="32" y2="38" stroke="#8b5cf6" stroke-width="2.5" />
+                                        <polygon points="20,22 16,24 20,26" fill="#8b5cf6" />
+                                        <line x1="4" y1="24" x2="16" y2="24" stroke="#8b5cf6" stroke-width="2" />
+                                        <circle cx="12" cy="24" r="2" fill="none" stroke="#8b5cf6" stroke-width="1.5" />
+                                    </svg>
+                                </div>
+                                <span class="name">PMOS</span>
+                            </button>
+                            <button class="comp-btn power-vcc" onclick="sim.addModule('VCC')"
+                                onmouseenter="sim.showTooltip('VCC'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 40">
+                                        <!-- VCC: 화살표 오른쪽, 선 왼쪽 -->
+                                        <line x1="0" y1="20" x2="24" y2="20" stroke="#ef4444" stroke-width="3" />
+                                        <polygon points="40,20 24,10 24,30" fill="#ef4444" stroke="#ef4444"
+                                            stroke-width="2" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                                <span class="name">VCC</span>
+                            </button>
+                            <button class="comp-btn power-gnd" onclick="sim.addModule('GND')"
+                                onmouseenter="sim.showTooltip('GND'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon">
+                                    <svg viewBox="0 0 44 40">
+                                        <!-- GND: 선 왼쪽, 접지 심볼 오른쪽 -->
+                                        <line x1="0" y1="20" x2="24" y2="20" stroke="#94a3b8" stroke-width="3" />
+                                        <line x1="24" y1="6" x2="24" y2="34" stroke="#94a3b8" stroke-width="3" />
+                                        <line x1="32" y1="10" x2="32" y2="30" stroke="#94a3b8" stroke-width="2.5" />
+                                        <line x1="40" y1="14" x2="40" y2="26" stroke="#94a3b8" stroke-width="2" />
+                                    </svg>
+                                </div>
+                                <span class="name">GND</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <!-- ======== Workspace with Tabs ======== -->
+        <main class="workspace-wrapper">
+            <!-- Tab Bar -->
+            <div class="workspace-tabs" id="workspace-tabs">
+                <div class="tab active" data-tab="main" onclick="sim.switchTab('main')">
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-wire" />
+                        </svg></span>
+                    <span class="tab-title">메인 회로</span>
+                </div>
+                <div class="tab" data-tab="module" id="module-tab" style="display: none;"
+                    onclick="sim.switchTab('module')">
+                    <span class="tab-icon"><svg>
+                            <use href="#icon-package" />
+                        </svg></span>
+                    <span class="tab-title" id="module-tab-title">모듈 편집</span>
+                    <button class="tab-close" onclick="event.stopPropagation(); sim.closeModuleTab()">×</button>
+                </div>
+            </div>
+
+            <!-- Main Circuit Workspace -->
+            <div id="workspace" class="workspace-content active">
+                <svg id="wire-layer"></svg>
+            </div>
+
+            <!-- Module Editor Workspace (Hidden by default) -->
+            <div id="module-workspace" class="workspace-content module-editor" style="display: none;">
+                <div class="module-editor-header">
+                    <div class="module-info">
+                        <input type="text" class="module-name-input" id="editing-module-name" value="새 모듈"
+                            placeholder="모듈 이름 입력">
+                        <span class="module-desc">소자를 배치하고 입출력 포트를 연결하세요</span>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn-module-action save" id="btn-save-as-new" onclick="sim.saveAsNewModule()">
+                            모듈로 저장
+                        </button>
+                        <button class="btn-module-action" id="btn-save-changes" onclick="sim.saveModuleChanges()"
+                            style="display: none;">
+                            변경사항 저장
+                        </button>
+                        <button class="btn-module-action secondary" onclick="sim.closeModuleTab()">
+                            닫기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="module-editor-body">
+                    <!-- Component Palette for Module -->
+                    <div class="module-palette">
+                        <div class="palette-section">
+                            <h5>입출력</h5>
+                            <div class="palette-grid">
+                                <button class="palette-btn input" onclick="sim.addModuleComponent('PORT_IN')"
+                                    title="입력 포트">
+                                    <span class="icon">→</span>
+                                    <span class="label">입력</span>
+                                </button>
+                                <button class="palette-btn output" onclick="sim.addModuleComponent('PORT_OUT')"
+                                    title="출력 포트">
+                                    <span class="icon">→</span>
+                                    <span class="label">출력</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>⚡ 게이트</h5>
+                            <div class="palette-grid">
+                                <button class="palette-btn" onclick="sim.addModuleComponent('AND')"
+                                    title="AND 게이트">AND</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('OR')"
+                                    title="OR 게이트">OR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NOT')"
+                                    title="NOT 게이트">NOT</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NAND')"
+                                    title="NAND 게이트">NAND</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('NOR')"
+                                    title="NOR 게이트">NOR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('XOR')"
+                                    title="XOR 게이트">XOR</button>
+                                <button class="palette-btn" onclick="sim.addModuleComponent('XNOR')"
+                                    title="XNOR 게이트">XNOR</button>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>📊 현재 모듈 정보</h5>
+                            <div class="module-stats">
+                                <div class="stat-row">
+                                    <span>입력:</span>
+                                    <span id="module-input-count">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>출력:</span>
+                                    <span id="module-output-count">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>게이트:</span>
+                                    <span id="module-gate-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="palette-section">
+                            <h5>패키지 크기</h5>
+                            <div class="size-inputs">
+                                <div class="size-row">
+                                    <label>너비:</label>
+                                    <input type="number" id="module-width" value="90" min="60" max="200" step="10">
+                                </div>
+                                <div class="size-row">
+                                    <label>높이:</label>
+                                    <input type="number" id="module-height" value="60" min="40" max="200" step="10">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module Canvas -->
+                    <div class="module-canvas" id="module-canvas">
+                        <svg id="module-wire-layer"></svg>
+                    </div>
+                </div>
+
+                <!-- Module I/O Summary Panel -->
+                <div class="module-io-panel">
+                    <div class="io-section">
+                        <h4>📥 입력 포트</h4>
+                        <div id="module-inputs" class="io-list"></div>
+                    </div>
+                    <div class="io-section">
+                        <h4>📤 출력 포트</h4>
+                        <div id="module-outputs" class="io-list"></div>
+                    </div>
+                    <div class="io-section wide">
+                        <h4>도움말</h4>
+                        <p class="io-help">입력/출력 포트를 배치하고 게이트로 연결하세요. 핀을 클릭하여 와이어를 연결합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="minimap" id="minimap">
+                <div class="minimap-viewport" id="minimap-viewport"></div>
+            </div>
+        </main>
+
+        <!-- Selection Box (body 직접 자식으로 이동 - transform containing block 문제 해결) -->
+        <div id="selection-box"></div>
+
+        <!-- Component Info Panel (좌측 상단 - 독립적 위치) -->
+        <div id="component-info-panel" class="component-info-panel hidden">
+            <div class="info-header">
+                <span class="info-type-icon"><svg width="16" height="16">
+                        <use href="#icon-wire" />
+                    </svg></span>
+                <span class="info-type-name">Component</span>
+            </div>
+            <!-- 애니메이션 영역 -->
+            <div class="info-animation" id="info-animation">
+                <!-- SVG 애니메이션이 여기에 삽입됨 -->
+            </div>
+            <div class="info-body">
+                <p class="info-description">소자를 선택하면 여기에 설명이 표시됩니다.</p>
+                <!-- 사용법 영역 -->
+                <div class="info-usage" id="info-usage-section">
+                    <div class="info-usage-title">Tip</div>
+                    <p class="info-usage-content" id="info-usage"></p>
+                </div>
+                <div class="info-details">
+                    <div class="info-row">
+                        <span class="info-label">입력:</span>
+                        <span class="info-value" id="info-inputs">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">출력:</span>
+                        <span class="info-value" id="info-outputs">-</span>
+                    </div>
+                </div>
+                <div class="info-truth-table" id="info-truth-table" style="display: none;">
+                    <span class="info-label">진리표:</span>
+                    <table class="truth-table"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== Status Bar ======== -->
+        <footer class="statusbar">
+            <div class="status-left">
+                <span id="status-components" class="status-item">부품: 0</span>
+                <span id="status-wires" class="status-item">전선: 0</span>
+            </div>
+
+            <!-- Enhanced Speed Control Pill -->
+            <div class="status-center">
+                <div class="speed-control-pill">
+                    <div class="speed-icon"><svg>
+                            <use href="#icon-lightning" />
+                        </svg></div>
+                    <span class="speed-label">속도</span>
+                    <input type="range" id="sim-speed" class="speed-slider" min="0.1" max="10" step="0.1" value="1.0"
+                        oninput="sim.setSimulationSpeed(parseFloat(this.value))">
+                    <span class="speed-value" id="speed-value">1.0x</span>
+                </div>
+            </div>
+
+            <div class="status-right">
+                <button class="icon-btn feedback-btn" onclick="openFeedbackModal()" title="피드백 보내기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="btn-text">피드백</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ======== Context Menu ======== -->
+    <div id="context-menu">
+        <div class="ctx-item" onclick="sim.copySelection()">
+            <svg>
+                <use href="#icon-copy" />
+            </svg>
+            복사
+            <span class="shortcut">Ctrl+C</span>
+        </div>
+        <div class="ctx-item" onclick="sim.pasteFromClipboard()">
+            <svg>
+                <use href="#icon-paste" />
+            </svg>
+            붙여넣기
+            <span class="shortcut">Ctrl+V</span>
+        </div>
+        <div class="ctx-item" onclick="sim.duplicateSelection()">
+            <svg>
+                <use href="#icon-duplicate" />
+            </svg>
+            복제
+            <span class="shortcut">Ctrl+D</span>
+        </div>
+        <div class="ctx-sep"></div>
+        <!-- LED Color Options -->
+        <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('red')">
+            <span style="color:#ef4444;">●</span> 빨강 LED
+        </div>
+        <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('green')">
+            <span style="color:#22c55e;">●</span> 초록 LED
+        </div>
+        <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('blue')">
+            <span style="color:#3b82f6;">●</span> 파랑 LED
+        </div>
+        <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('yellow')">
+            <span style="color:#eab308;">●</span> 노랑 LED
+        </div>
+        <div class="ctx-item ctx-led-only" onclick="sim.setLEDColor('white')">
+            <span style="color:#f8fafc;">●</span> 흰색 LED
+        </div>
+        <div class="ctx-sep ctx-led-only"></div>
+        <!-- Alignment Tools -->
+        <div class="ctx-item" onclick="sim.alignSelectedHorizontal()">
+            <svg viewBox="0 0 24 24">
+                <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2" />
+                <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" />
+            </svg>
+            수평 정렬
+        </div>
+        <div class="ctx-item" onclick="sim.alignSelectedVertical()">
+            <svg viewBox="0 0 24 24">
+                <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" />
+                <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2" />
+            </svg>
+            수직 정렬
+        </div>
+        <div class="ctx-item" onclick="sim.distributeHorizontal()">
+            ⬌ 수평 균등
+        </div>
+        <div class="ctx-item" onclick="sim.distributeVertical()">
+            ⬍ 수직 균등
+        </div>
+        <div class="ctx-sep"></div>
+        <!-- Rotate & Flip -->
+        <div class="ctx-item" onclick="sim.rotateSelected()">
+            <svg viewBox="0 0 24 24">
+                <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" fill="none" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor"
+                    stroke-width="2" fill="none" />
+            </svg>
+            회전
+            <span class="shortcut">R</span>
+        </div>
+        <div class="ctx-item" onclick="sim.flipHorizontal()">
+            ↔️ 좌우 반전
+        </div>
+        <div class="ctx-item" onclick="sim.flipVertical()">
+            ↕️ 상하 반전
+        </div>
+        <div class="ctx-sep"></div>
+        <div class="ctx-item danger" onclick="sim.deleteSelected()">
+            <svg>
+                <use href="#icon-trash" />
+            </svg>
+            삭제
+            <span class="shortcut">Del</span>
+        </div>
+    </div>
+
+    <!-- ======== Interactive Tooltip Panel ======== -->
+    <div id="tooltip" class="tooltip-panel">
+        <div class="tooltip-header">
+            <div class="tooltip-icon" id="tooltip-icon"></div>
+            <div class="tooltip-title-area">
+                <div id="tooltip-title" class="tooltip-title"></div>
+                <div id="tooltip-type" class="tooltip-type"></div>
+            </div>
+        </div>
+        <div class="tooltip-animation" id="tooltip-animation">
+            <!-- SVG animation will be inserted here -->
+        </div>
+        <div class="tooltip-content">
+            <div id="tooltip-desc" class="tooltip-desc"></div>
+            <div class="tooltip-usage">
+                <div class="tooltip-usage-title">Tip</div>
+                <div id="tooltip-usage" class="tooltip-usage-content"></div>
+            </div>
+            <div class="tooltip-shortcuts" id="tooltip-shortcuts"></div>
+        </div>
+    </div>
+
+    <!-- ======== Help Modal ======== -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal" style="max-width: 560px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="document.getElementById('help-modal').classList.remove('show')">
+                    <svg width="16" height="16">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item"><span class="shortcut-key">V</span><span class="shortcut-desc">Select
+                            Tool</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">H</span><span class="shortcut-desc">Pan
+                            Tool</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">W</span><span class="shortcut-desc">Wire
+                            Tool</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Space</span><span class="shortcut-desc">Temp
+                            Pan</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Del</span><span
+                            class="shortcut-desc">Delete</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Esc</span><span
+                            class="shortcut-desc">Deselect</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+A</span><span
+                            class="shortcut-desc">Select All</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+C</span><span
+                            class="shortcut-desc">Copy</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+V</span><span
+                            class="shortcut-desc">Paste</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+D</span><span
+                            class="shortcut-desc">Duplicate</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+S</span><span
+                            class="shortcut-desc">Save</span></div>
+                    <div class="shortcut-item"><span class="shortcut-key">Ctrl+Z</span><span
+                            class="shortcut-desc">Undo</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary"
+                    onclick="document.getElementById('help-modal').classList.remove('show')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== Truth Table Modal ======== -->
+    <div class="modal-overlay" id="truth-table-modal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Truth Table</h2>
+                <button class="modal-close"
+                    onclick="document.getElementById('truth-table-modal').classList.remove('show')">
+                    <svg width="16" height="16">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="truth-table-content">
+                <p style="color: var(--text-muted); text-align: center; padding: 32px;">
+                    Add switches and LEDs to generate a truth table.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="sim.exportTruthTable()">
+                    <svg width="14" height="14">
+                        <use href="#icon-download" />
+                    </svg>
+                    Export CSV
+                </button>
+                <button class="btn btn-primary" onclick="sim.generateTruthTable()">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== New Project Modal ======== -->
+    <div class="modal-overlay" id="new-project-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">New Project</h2>
+                <button class="modal-close"
+                    onclick="document.getElementById('new-project-modal').classList.remove('show')">
+                    <svg width="16" height="16">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">프로젝트 이름 (Project Name)</label>
+                    <input type="text" class="form-input" id="new-proj-name" placeholder="나의 회로">
+                </div>
+                <div class="form-row" style="display: flex; gap: 16px; margin-top: 16px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">너비 (Width)</label>
+                        <input type="number" class="form-input" id="new-proj-width" value="3000" step="100">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label">높이 (Height)</label>
+                        <input type="number" class="form-input" id="new-proj-height" value="2000" step="100">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost"
+                    onclick="document.getElementById('new-project-modal').classList.remove('show')">Cancel</button>
+                <button class="btn btn-primary" onclick="sim.confirmNewProject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== Feedback Floating Button & Modal ======== -->
+    <!-- FAB Removed -->
+
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal feedback-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">💬 피드백 보내기</h2>
+                <button class="modal-close" onclick="closeFeedbackModal()">
+                    <svg width="16" height="16">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">
+                    LoCAD를 사용해주셔서 감사합니다!<br>
+                    버그 리포트, 기능 제안, 또는 의견을 자유롭게 남겨주세요.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">카테고리</label>
+                    <select id="feedback-category" class="form-input" style="width: 100%;">
+                        <option value="bug">🐛 버그 리포트</option>
+                        <option value="feature">기능 제안</option>
+                        <option value="ux">🎨 UI/UX 개선</option>
+                        <option value="other">📝 기타 의견</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label">내용</label>
+                    <textarea id="feedback-content" class="form-input"
+                        style="width: 100%; min-height: 120px; resize: vertical;"
+                        placeholder="여기에 피드백을 작성해주세요..."></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="feedback-include-circuit" checked>
+                        현재 회로 상태 첨부 (디버깅에 도움됩니다)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeFeedbackModal()">취소</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    보내기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+
+    </style>
+
+    <script>
+
+    </script>
+
+    <!-- Error Handler -->
+    <script>
+        // 어드민 확인 함수
+        function isAdminUser() {
+            if (window.getCurrentUser) {
+                return window.getCurrentUser().then(user => {
+                    return user && user.email === 'ace060408@gmail.com';
+                }).catch(() => false);
+            }
+            return Promise.resolve(false);
+        }
+
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown';
+            var detailedMessage = "오류 [" + fileName + ":" + lineNo + "] " + msg;
+            var simpleMessage = "일시적인 오류가 발생했습니다.";
+
+            console.error(detailedMessage, error);
+
+            // 어드민에게만 상세 오류 표시
+            isAdminUser().then(function (isAdmin) {
+                if (window.sim && typeof window.sim.showToast === 'function') {
+                    if (isAdmin) {
+                        window.sim.showToast(detailedMessage, 'error');
+                    }
+                    // 일반 사용자에게는 오류 표시 안함 (콘솔에만 기록)
+                }
+            });
+            return true; // 오류 전파 중단
+        };
+
+        window.onunhandledrejection = function (event) {
+            var msg = event.reason ? event.reason.message : 'Unknown Error';
+            console.error("Unhandled Rejection:", event.reason);
+
+            // 어드민에게만 표시
+            isAdminUser().then(function (isAdmin) {
+                if (isAdmin && window.sim && window.sim.showToast) {
+                    window.sim.showToast("비동기 오류: " + msg, 'error');
+                }
+            });
+        };
+    </script>
+
+    <script src="js/modules/Constants.js"></script>
+    <script src="js/modules/CircuitSimulator.js"></script>
+    <script src="js/modules/PerformanceOptimizer.js"></script>
+    <script src="js/modules/InputHandler.js?v=2.0"></script>
+    <script src="js/modules/ProjectIO.js?v=20"></script>
+    <script src="js/modules/ComponentManager.js"></script>
+    <script src="js/modules/WireManager.js"></script>
+    <script src="js/modules/SelectionManager.js"></script>
+    <script src="js/modules/LogicEngine.js"></script>
+    <script src="js/modules/PackageManager.js"></script>
+    <script src="js/modules/TabManager.js"></script>
+    <script src="js/modules/UIManager.js"></script>
+    <script src="js/modules/HistoryManager.js"></script>
+    <script src="js/modules/Oscilloscope.js"></script>
+    <script src="js/modules/TutorialSystem.js"></script>
+    <script src="js/modules/TouchHandler.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/CircuitValidator.js"></script>
+    <script src="js/modules/CollaborationManager.js"></script>
+    <script src="js/modules/Main.js?v=2.0"></script>
+
+    <!-- 읽기 전용 모드 처리 -->
+    <script>
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReadOnly = urlParams.get('readonly') === 'true' || urlParams.get('view') === 'true';
+
+        // 전역 읽기 전용 플래그 설정 (다른 모듈에서 체크 가능하도록)
+        window.isReadOnlyMode = isReadOnly;
+
+        if (isReadOnly) {
+            console.log('🔒 Read-only mode active');
+
+            // [핵심] body에 클래스를 추가하여 CSS로 강제 제어 (로그인 로직이 덮어쓰지 못하도록)
+            document.body.classList.add('readonly-mode');
+
+            // 1. CSS로 UI 강제 숨김 (가장 강력한 방어)
+            const style = document.createElement('style');
+            style.textContent = `
+                /* 읽기 모드일 때 무조건 숨겨야 할 요소들 */
+                body.readonly-mode .toolbar-group,
+                body.readonly-mode .icon-btn:not(.home-btn),
+                body.readonly-mode .toolbar-divider,
+                body.readonly-mode .btn-collaborate,
+                body.readonly-mode .left-sidebar,
+                body.readonly-mode .component-panel,
+                body.readonly-mode #sidebar,
+                body.readonly-mode .sidebar-toggle-btn,
+                body.readonly-mode #section-modules,
+                body.readonly-mode #section-transistors,
+                body.readonly-mode .feedback-btn {
+                    display: none !important;
+                }
+
+                /* 레이아웃 강제 조정 */
+                body.readonly-mode .workspace-wrapper,
+                body.readonly-mode .canvas-container,
+                body.readonly-mode #app-container {
+                    margin-left: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                }
+                
+                /* 홈 버튼(Log out 등)은 보이게 - .home-btn 클래스가 없으면 onclick 속성으로 찾음 */
+                body.readonly-mode .icon-btn[onclick*="goHome"] {
+                    display: flex !important;
+                    z-index: 2000;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 2. DOMContentLoaded 대기 후 배너 추가 (안전하게)
+            document.addEventListener('DOMContentLoaded', () => {
+                // 기존 JS 숨김 로직 (혹시 모를 대비)
+                const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
+                toolbars.forEach(el => {
+                    const onClick = el.getAttribute('onclick');
+                    if (!onClick || !onClick.includes('goHome')) {
+                        el.style.display = 'none';
+                    }
+                });
+
+                const sidebars = document.querySelectorAll('.left-sidebar, .component-panel, #sidebar');
+                sidebars.forEach(el => el.style.display = 'none');
+
+                // 읽기 전용 배너 표시
+                const banner = document.createElement('div');
+                banner.id = 'readonly-banner';
+                banner.style.cssText = `
+                    width: 100%;
+                    height: 40px;
+                    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    font-weight: 600;
+                    z-index: 900;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    font-family: 'Inter', sans-serif;
+                    flex-shrink: 0;
+                `;
+                banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
+
+                const wrapper = document.querySelector('.workspace-wrapper');
+                if (wrapper) {
+                    wrapper.insertBefore(banner, wrapper.firstChild);
+                } else {
+                    banner.style.position = 'fixed';
+                    banner.style.top = '50px'; // 헤더 높이에 맞춤
+                    document.body.appendChild(banner);
+                }
+
+                // 캔버스 편집 차단
+                const canvas = document.querySelector('canvas');
+                if (canvas) {
+                    canvas.style.cursor = 'default';
+
+                    // 키보드 차단
+                    document.addEventListener('keydown', (e) => {
+                        const key = e.key.toUpperCase();
+                        const isCtrl = e.ctrlKey || e.metaKey;
+
+                        // [PASS] 시스템 키(F1~F12) 및 새로고침(Ctrl+R) 통과
+                        if (key.startsWith('F') || (isCtrl && key === 'R')) {
+                            return;
+                        }
+
+                        if (key === 'DELETE' || key === 'BACKSPACE') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
+
+                        if (isCtrl && ['C', 'V', 'X', 'Z', 'Y', 'S'].includes(key)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
+                    }, true);
+                }
+            });
+        }
+    </script>
+
+    <script>
+        async function goHome() {
+            if (window.getCurrentUser) {
+                const user = await window.getCurrentUser();
+                if (user) {
+                    location.href = 'dashboard.html';
+                    return;
+                }
+            }
+            location.href = 'index.html';
+        }
+    </script>
+
+    <!-- ======== Validation Panel ======== -->
+    <div id="validation-panel" class="validation-panel">
+        <div class="validation-header">
+            <h2>회로 검증</h2>
+            <button class="validation-close" onclick="sim.validator?.togglePanel()">×</button>
+        </div>
+
+        <div class="validation-actions">
+            <button class="validate-btn" onclick="sim.validator?.validateCircuit()">
+                검증 시작
+            </button>
+            <button class="auto-validate-toggle" id="auto-validate-toggle"
+                onclick="sim.validator && toggleAutoValidate()">
+                자동
+            </button>
+        </div>
+
+        <div class="validation-stats" id="validation-stats" style="display: none;">
+            <div class="stat-item errors">
+                <span class="stat-value" id="stat-errors">0</span>
+                <span class="stat-label">오류</span>
+            </div>
+            <div class="stat-item warnings">
+                <span class="stat-value" id="stat-warnings">0</span>
+                <span class="stat-label">경고</span>
+            </div>
+            <div class="stat-item suggestions">
+                <span class="stat-value" id="stat-suggestions">0</span>
+                <span class="stat-label">제안</span>
+            </div>
+        </div>
+
+        <div class="validation-content">
+            <div class="validation-empty">
+                <div class="validation-empty-icon">🔍</div>
+                <div class="validation-empty-text">
+                    '검증 시작' 버튼을 클릭하여<br>
+                    회로 오류를 검사하세요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 자동 검증 토글
+        function toggleAutoValidate() {
+            const toggle = document.getElementById('auto-validate-toggle');
+            const isActive = toggle.classList.toggle('active');
+
+            if (isActive) {
+                // 자동 검증 활성화: 변경사항 감지 시 검증
+                if (window.sim && window.sim.validator) {
+                    window.autoValidateEnabled = true;
+                }
+            } else {
+                window.autoValidateEnabled = false;
+            }
+        }
+
+        // 통계 업데이트
+        function updateValidationStats(results) {
+            const statsEl = document.getElementById('validation-stats');
+            if (!statsEl) return;
+
+            const errors = results.errors?.length || 0;
+            const warnings = results.warnings?.length || 0;
+            const suggestions = results.suggestions?.length || 0;
+
+            document.getElementById('stat-errors').textContent = errors;
+            document.getElementById('stat-warnings').textContent = warnings;
+            document.getElementById('stat-suggestions').textContent = suggestions;
+
+            if (errors + warnings + suggestions > 0) {
+                statsEl.style.display = 'flex';
+            } else {
+                statsEl.style.display = 'none';
+            }
+        }
+    </script>
+
+    <!-- ======== Collaboration Panel ======== -->
+    <div id="collaboration-panel" class="collaboration-panel hidden">
+        <div class="collab-header">
+            <span>실시간 협업</span>
+            <button class="collab-toggle" onclick="toggleCollaborationPanel()">×</button>
+        </div>
+
+        <div id="collaborators-list" class="no-collaborators">
+            협업 시작 버튼을 클릭하세요
+        </div>
+
+        <div style="padding: 12px;">
+            <button class="btn-invite-collab" onclick="showInviteModal()"
+                style="width: 100%; padding: 10px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; margin-bottom: 8px;">
+                👥 협업자 초대
+            </button>
+            <div id="collab-status"
+                style="font-size: 11px; color: var(--text-tertiary); text-align: center; margin-bottom: 8px;">
+                오프라인
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="invite-modal" class="invite-modal" style="display: none;">
+        <div class="invite-content">
+            <h3>협업자 초대</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+                이메일로 협업자를 초대하세요
+            </p>
+
+            <input type="email" id="invite-email" class="invite-input" placeholder="user@example.com">
+
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-secondary);">권한</label>
+                <select id="invite-role"
+                    style="width: 100%; padding: 10px; background: var(--bg-default, #0a0a0a); border: 1px solid var(--border-default, #333); border-radius: 6px; color: var(--text-primary, #fff);">
+                    <option value="editor">편집자 - 회로 수정 가능</option>
+                    <option value="viewer">뷰어 - 읽기만 가능</option>
+                </select>
+            </div>
+
+            <div id="invite-error" style="color: #ef4444; font-size: 12px; margin-bottom: 12px; display: none;"></div>
+
+            <div class="invite-actions">
+                <button class="btn-invite-cancel" onclick="closeInviteModal()">취소</button>
+                <button class="btn-invite-send" onclick="sendInvite()">초대 보내기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collaboration Status Indicator -->
+    <div id="collaboration-status" class="collaboration-status" style="display: none;">
+        <span id="status-icon">●</span>
+        <span id="status-text">협업 중...</span>
+    </div>
+
+    <script>
+        // 협업 토글
+        async function toggleCollaboration() {
+            if (!window.sim || !window.sim.collaboration) {
+                alert('협업 기능을 초기화하는 중입니다. 잠시 후 다시 시도하세요.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-collaborate');
+            const panel = document.getElementById('collaboration-panel');
+            const status = document.getElementById('collaboration-status');
+            const statusText = document.getElementById('collab-status');
+
+            if (window.sim.collaboration.isConnected) {
+                // 협업 종료
+                await window.sim.collaboration.stopCollaboration();
+                btn.classList.remove('active');
+                btn.style.background = '';
+                status.style.display = 'none';
+                statusText.textContent = '오프라인';
+                statusText.style.color = 'var(--text-tertiary)';
+
+                if (window.sim.showToast) {
+                    window.sim.showToast('협업이 종료되었습니다', 'info');
+                }
+            } else {
+                // 협업 시작
+                if (!window.sim.currentProjectId) {
+                    alert('프로젝트를 먼저 저장해주세요.');
+                    return;
+                }
+
+                try {
+                    await window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--accent-green, #22c55e)';
+                    status.style.display = 'flex';
+                    status.classList.add('connected');
+                    statusText.textContent = '온라인';
+                    statusText.style.color = 'var(--accent-green)';
+
+                    // 패널 표시
+                    panel.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Failed to start collaboration:', error);
+                    alert('협업을 시작할 수 없습니다: ' + error.message);
+                }
+            }
+        }
+
+        // 협업 패널 토글
+        function toggleCollaborationPanel() {
+            const panel = document.getElementById('collaboration-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        // 초대 모달 열기
+        function showInviteModal() {
+            if (!window.sim || !window.sim.currentProjectId) {
+                alert('프로젝트를 먼저 저장해주세요.');
+                return;
+            }
+            document.getElementById('invite-modal').style.display = 'flex';
+            document.getElementById('invite-email').focus();
+        }
+
+        // 초대 모달 닫기
+        function closeInviteModal() {
+            document.getElementById('invite-modal').style.display = 'none';
+            document.getElementById('invite-email').value = '';
+            document.getElementById('invite-role').value = 'editor';
+            document.getElementById('invite-error').style.display = 'none';
+        }
+
+        // 초대 보내기
+        async function sendInvite() {
+            const emailInput = document.getElementById('invite-email');
+            const roleSelect = document.getElementById('invite-role');
+            const errorDiv = document.getElementById('invite-error');
+
+            const email = emailInput.value.trim();
+            const role = roleSelect.value;
+
+            // 유효성 검사
+            if (!email) {
+                errorDiv.textContent = '이메일을 입력하세요.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorDiv.textContent = '올바른 이메일 형식이 아닙니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            try {
+                if (!window.sim.collaboration) {
+                    throw new Error('협업 기능이 초기화되지 않았습니다.');
+                }
+
+                await window.sim.collaboration.inviteCollaborator(
+                    window.sim.currentProjectId,
+                    email,
+                    role
+                );
+
+                if (window.sim.showToast) {
+                    window.sim.showToast('✓ 초대를 보냈습니다!', 'success');
+                }
+
+                closeInviteModal();
+            } catch (error) {
+                console.error('Invite error:', error);
+                errorDiv.textContent = error.message || '초대 실패';
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+
+    <!-- Publish Settings Modal -->
+    <div id="publish-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-window"
+            style="width: 500px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: 12px;">
+            <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: var(--text-primary);">프로젝트 공개 설정
+            </h2>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                    <input type="checkbox" id="is-public-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 15px; color: var(--text-primary);">커뮤니티에 공개</span>
+                </label>
+                <small
+                    style="display: block; margin-top: 6px; margin-left: 30px; color: var(--text-secondary); font-size: 12px;">
+                    공개하면 라이브러리 페이지에 표시됩니다
+                </small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                    프로젝트 설명
+                </label>
+                <textarea id="project-description-input" placeholder="이 회로가 무엇을 하는지 설명하세요..."
+                    style="width: 100%; padding: 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; min-height: 80px;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                    태그 (쉼표로 구분)
+                </label>
+                <input type="text" id="project-tags-input" placeholder="예: logic, gates, adder"
+                    style="width: 100%; padding: 10px 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                <small style="display: block; margin-top: 6px; color: var(--text-secondary); font-size: 12px;">
+                    검색과 필터링에 사용됩니다
+                </small>
+            </div>
+
+            <div id="publish-error" style="color: #ef4444; font-size: 13px; margin-bottom: 16px; display: none;"></div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closePublishModal()"
+                    style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 14px; font-weight: 500;">
+                    취소
+                </button>
+                <button onclick="savePublishSettings()"
+                    style="flex: 1; padding: 12px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                    저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 공개 설정 모달 열기
+        async function showPublishModal() {
+            if (!window.sim || !window.sim.currentProjectId) {
+                alert('프로젝트를 먼저 저장해주세요.');
+                return;
+            }
+
+            // 현재 프로젝트 정보 불러오기
+            try {
+                const { data: project } = await window.sb
+                    .from('projects')
+                    .select('is_public, description, tags')
+                    .eq('id', window.sim.currentProjectId)
+                    .single();
+
+                if (project) {
+                    document.getElementById('is-public-checkbox').checked = project.is_public || false;
+                    document.getElementById('project-description-input').value = project.description || '';
+                    document.getElementById('project-tags-input').value = project.tags ? project.tags.join(', ') : '';
+                }
+            } catch (error) {
+                console.error('Failed to load project settings:', error);
+            }
+
+            document.getElementById('publish-modal').style.display = 'flex';
+        }
+
+        // 공개 설정 모달 닫기
+        function closePublishModal() {
+            document.getElementById('publish-modal').style.display = 'none';
+            document.getElementById('publish-error').style.display = 'none';
+        }
+
+        // 공개 설정 저장
+        async function savePublishSettings() {
+            const isPublic = document.getElementById('is-public-checkbox').checked;
+            const description = document.getElementById('project-description-input').value.trim();
+            const tagsStr = document.getElementById('project-tags-input').value.trim();
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+            const errorDiv = document.getElementById('publish-error');
+
+            if (!window.sim || !window.sim.currentProjectId) {
+                errorDiv.textContent = '프로젝트 ID를 찾을 수 없습니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!window.library) {
+                errorDiv.textContent = 'LibraryManager가 초기화되지 않았습니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                if (isPublic) {
+                    await window.library.makeProjectPublic(
+                        window.sim.currentProjectId,
+                        description,
+                        tags
+                    );
+                    if (window.sim.showToast) {
+                        window.sim.showToast('✓ 프로젝트가 공개되었습니다!', 'success');
+                    } else {
+                        alert('✓ 프로젝트가 공개되었습니다!');
+                    }
+                } else {
+                    await window.library.makeProjectPrivate(window.sim.currentProjectId);
+                    if (window.sim.showToast) {
+                        window.sim.showToast('✓ 프로젝트가 비공개로 전환되었습니다', 'info');
+                    } else {
+                        alert('✓ 프로젝트가 비공개로 전환되었습니다');
+                    }
+                }
+                closePublishModal();
+            } catch (error) {
+                console.error('Publish error:', error);
+                errorDiv.textContent = '오류: ' + (error.message || '알 수 없는 오류');
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" style="display: none; z-index: 3000;">
+        <div class="modal-window"
+            style="width: 400px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 24px; border-radius: 12px;">
+            <div class="modal-header"
+                style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">설정
+                    (Settings)</h2>
+                <button onclick="sim.closeSettings()"
+                    style="background:none; border:none; color:var(--text-secondary); cursor:pointer;">
+                    <svg width="20" height="20">
+                        <use href="#icon-close" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="settings-group" style="margin-bottom: 24px;">
+                <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">언어
+                    (Language)</label>
+                <select id="sim-setting-language" onchange="sim.setLanguage(this.value)"
+                    style="width: 100%; padding: 10px; background: var(--bg-active); border: 1px solid var(--border-default); color: var(--text-primary); border-radius: 6px;">
+                    <option value="ko">한국어</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+
+            <div class="settings-group" style="margin-bottom: 24px;">
+                <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">UI
+                    크기
+                    (Scale)</label>
+                <div style="display:flex; align-items:center; gap: 12px;">
+                    <span style="font-size:12px; color:var(--text-muted);">80%</span>
+                    <input type="range" id="sim-setting-ui-scale" min="0.8" max="1.2" step="0.05" value="1.0"
+                        oninput="sim.setUIScale(parseFloat(this.value))"
+                        style="flex: 1; accent-color: var(--accent-blue);">
+                    <span style="font-size:12px; color:var(--text-muted);">120%</span>
+                </div>
+                <div style="text-align:center; font-size: 12px; color: var(--accent-blue); margin-top: 4px;"
+                    id="ui-scale-value">100%</div>
+            </div>
+
+
+
+            <div style="text-align: right;">
+                <button onclick="sim.closeSettings()"
+                    style="padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Apply UI Scale on load
+        (function () {
+            const s = localStorage.getItem('locad_ui_scale');
+            if (s) {
+                document.body.style.zoom = s;
+                // Wait for sim to initialize if needed, or rely on openSettings to sync
+            }
+        })();
+    </script>
+    <!-- Mobile UI Components -->
+    <div class="mobile-palette" id="mobile-palette">
+        <div class="palette-header">
+            부품 추가
+            <button class="palette-close" onclick="toggleMobilePalette()">×</button>
+        </div>
+        <div class="palette-content" id="mobile-palette-content">
+            <!-- Basic Gates -->
+            <div class="palette-item" onclick="addMobileModule('AND')">
+                <div class="palette-icon" style="border: 2px solid white; border-radius: 4px;">AND</div>
+                <span class="palette-label">AND</span>
+            </div>
+            <div class="palette-item" onclick="addMobileModule('OR')">
+                <div class="palette-icon" style="border: 2px solid white; border-radius: 4px;">OR</div>
+                <span class="palette-label">OR</span>
+            </div>
+            <div class="palette-item" onclick="addMobileModule('NOT')">
+                <div class="palette-icon" style="border: 2px solid white; border-radius: 4px;">NOT</div>
+                <span class="palette-label">NOT</span>
+            </div>
+            <!-- Inputs -->
+            <div class="palette-item" onclick="addMobileModule('SWITCH')">
+                <div class="palette-icon" style="border: 2px solid #3b82f6; border-radius: 50%;">SW</div>
+                <span class="palette-label">스위치</span>
+            </div>
+            <div class="palette-item" onclick="addMobileModule('BUTTON')">
+                <div class="palette-icon" style="border: 2px solid #3b82f6; border-radius: 4px;">Btn</div>
+                <span class="palette-label">버튼</span>
+            </div>
+            <!-- Outputs -->
+            <div class="palette-item" onclick="addMobileModule('LED')">
+                <div class="palette-icon" style="background: #ef4444; border-radius: 50%;"></div>
+                <span class="palette-label">LED</span>
+            </div>
+            <div class="palette-item" onclick="addMobileModule('SEGMENT_DISPLAY')">
+                <div class="palette-icon" style="border: 1px solid white;">8.</div>
+                <span class="palette-label">7-Seg</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="mobile-toolbar">
+        <button class="mobile-tool-btn active" id="btn-m-select" onclick="setMobileMode('select')">
+            <svg viewBox="0 0 24 24">
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+            </svg>
+            <span>선택</span>
+        </button>
+        <button class="mobile-tool-btn" id="btn-m-pan" onclick="setMobileMode('pan')">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z" />
+            </svg>
+            <span>이동</span>
+        </button>
+        <button class="mobile-tool-btn" onclick="toggleMobilePalette()">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+            <span>추가</span>
+        </button>
+        <button class="mobile-tool-btn" id="btn-m-wire" onclick="setMobileMode('wire')">
+            <svg viewBox="0 0 24 24">
+                <path d="M4 12h16M12 4v16" transform="rotate(45 12 12)" />
+            </svg>
+            <span>배선</span>
+        </button>
+        <button class="mobile-tool-btn" id="btn-m-run" onclick="window.sim.toggleSimulation()">
+            <svg viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+            <span>실행</span>
+        </button>
+    </nav>
+
+    <script>
+        // Mobile UI Logic
+        function setMobileMode(mode) {
+            if (!window.sim) return;
+            window.sim.setMode(mode);
+
+            // UI Update
+            document.querySelectorAll('.mobile-tool-btn').forEach(b => b.classList.remove('active'));
+            let btnId = 'btn-m-select';
+            if (mode === 'pan') btnId = 'btn-m-pan';
+            if (mode === 'wire') btnId = 'btn-m-wire';
+            document.getElementById(btnId)?.classList.add('active');
+        }
+
+        function toggleMobilePalette() {
+            const p = document.getElementById('mobile-palette');
+            p.classList.toggle('show');
+        }
+
+        function addMobileModule(type) {
+            if (!window.sim) return;
+
+            // 화면 중앙에 추가
+            // Canvas Wrapper가 아닌 window 기준? -> simulator.html 구조상 workspace wrapper 기준이 필요.
+            // sim.addModule는 pan/scale 역산해서 추가함.
+            // 일단 (100, 100) 정도로 하드코딩해서 추가해보고, 나중에 중앙 계산 로직 추가.
+            const centerX = window.innerWidth / 2; // 대강
+            const centerY = window.innerHeight / 2;
+
+            // LogicEngine의 addModule은 스크린 좌표가 아니라 월드 좌표를 받을 수도 있음.
+            // 그러나 addModule(type, x, y)는 보통 월드좌표.
+            // Pan 값을 알아야 함.
+
+            // 단순히 sim.addModule(type) 호출하면 기본 위치(보통 중앙)에 추가될 것임.
+            window.sim.addModule(type);
+
+            toggleMobilePalette(); // 닫기
+            setMobileMode('select'); // 선택 모드로 전환
+        }
+
+        // 초기화: 모바일 모드 강제 설정 (선택사항)
+        document.addEventListener('DOMContentLoaded', () => {
+            // 툴바 버튼 초기 상태
+            setMobileMode('select');
+        });
+    </script>
+</body>
+
+</html>
+```

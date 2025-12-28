@@ -1,0 +1,190 @@
+/* Base Styles from simulator.css - Mobile Optimized */
+@import 'simulator.css';
+
+/* === Mobile Overrides === */
+
+/* 1. Hide Desktop Elements */
+.sidebar-left,
+.sidebar-right,
+.properties-panel,
+.shortcut-hint,
+.zoom-controls,
+.header-actions .btn-export,
+/* 일부 헤더 버튼 숨김 */
+.header-actions .btn-save span,
+/* 버튼 텍스트 숨김 (아이콘만) */
+#validation-panel,
+/* 일단 숨김 */
+#collaboration-panel {
+    display: none !important;
+}
+
+/* 2. Layout Adjustments */
+body {
+    overflow: hidden;
+    /* 스크롤 방지 */
+    overscroll-behavior: none;
+}
+
+.header {
+    height: 50px;
+    /* 더 얇게 */
+    padding: 0 12px;
+}
+
+.header-title {
+    font-size: 16px;
+}
+
+.workspace-container {
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 110px);
+    /* Header 50 + Toolbar 60 */
+    border-radius: 0;
+    border: none;
+}
+
+/* 3. Mobile Bottom Toolbar */
+.mobile-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #1a1a1a;
+    /* Darker bg */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 2000;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #888;
+    gap: 4px;
+    cursor: pointer;
+    /* 터치 피드백용 */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tool-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.mobile-tool-btn span {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.mobile-tool-btn.active {
+    color: #3b82f6;
+}
+
+.mobile-tool-btn:active {
+    opacity: 0.7;
+}
+
+/* 4. Canvas Touch Fixes */
+canvas {
+    touch-action: none;
+}
+
+/* 5. Mobile Component Palette (Bottom Sheet) */
+.mobile-palette {
+    position: fixed;
+    bottom: 60px;
+    /* Toolbar height */
+    left: 0;
+    width: 100%;
+    height: 50vh;
+    /* 반 화면 */
+    background: #111;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-top: 1px solid #333;
+    z-index: 1900;
+    transform: translateY(110%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-palette.show {
+    transform: translateY(0);
+}
+
+.palette-header {
+    padding: 16px;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 1px solid #222;
+    position: relative;
+    color: #eee;
+}
+
+.palette-close {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 20px;
+    padding: 4px;
+}
+
+.palette-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.palette-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #1a1a1a;
+    padding: 12px 8px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+.palette-item:active {
+    background: #2a2a2a;
+    border-color: #3b82f6;
+}
+
+.palette-icon {
+    width: 32px;
+    height: 32px;
+    /* Icon styling */
+}
+
+.palette-label {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
