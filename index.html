@@ -441,7 +441,7 @@
                 <a href="#categories" class="nav-link">카테고리</a>
                 <a href="library.html" class="nav-link">전체보기</a>
                 <a href="login.html" class="nav-link" id="nav-login">로그인</a>
-                <a href="javascript:void(0)" onclick="showCreatePostModal()" class="nav-link" id="nav-create-post"
+                <a href="create-post.html" class="nav-link" id="nav-create-post"
                     style="display: none; color: var(--accent-purple);">✍️ 글쓰기</a>
                 <a href="simulator.html" class="btn-cta">회로 만들기</a>
             </div>
@@ -683,118 +683,6 @@
                 }
             }
         });
-    </script>
-
-    <!-- Create Post Modal -->
-    <div id="create-post-modal" class="modal-overlay">
-        <div class="modal-window">
-            <h2 style="margin-bottom: 24px; font-size: 22px;">게시글 작성</h2>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-sub);">카테고리</label>
-                <select id="post-category"
-                    style="width: 100%; padding: 10px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-main); font-size: 14px;">
-                    <option value="showcase">🎨 쇼케이스</option>
-                    <option value="tutorial">📚 튜토리얼</option>
-                    <option value="question">❓ 질문</option>
-                    <option value="general">💬 일반</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-sub);">제목</label>
-                <input type="text" id="post-title" placeholder="게시글 제목을 입력하세요" maxlength="100"
-                    style="width: 100%; padding: 10px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-main); font-size: 14px;">
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-sub);">내용</label>
-                <textarea id="post-content" placeholder="게시글 내용을 작성하세요..."
-                    style="width: 100%; min-height: 200px; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-main); font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
-            </div>
-
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-sub);">태그 (쉼표로
-                    구분)</label>
-                <input type="text" id="post-tags" placeholder="예: logic, tutorial, beginner"
-                    style="width: 100%; padding: 10px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-main); font-size: 14px;">
-            </div>
-
-            <div style="display: flex; gap: 12px;">
-                <button onclick="closeCreatePostModal()"
-                    style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 6px; color: var(--text-sub); cursor: pointer; font-size: 14px;">
-                    취소
-                </button>
-                <button onclick="submitPost()"
-                    style="flex: 1; padding: 12px; background: var(--accent-purple, #8b5cf6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
-                    게시하기
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PostManager 로드 -->
-    <script src="js/modules/PostManager.js"></script>
-    <script>
-        let postManager;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.PostManager) {
-                postManager = new PostManager();
-            }
-        });
-
-        function showCreatePostModal() {
-            // 로그인 체크
-            if (!window.sb) {
-                alert('잠시 후 다시 시도해주세요.');
-                return;
-            }
-
-            window.sb.auth.getUser().then(({ data: { user } }) => {
-                if (!user) {
-                    alert('로그인이 필요합니다.');
-                    location.href = 'login.html';
-                    return;
-                }
-                document.getElementById('create-post-modal').classList.add('show');
-            });
-        }
-
-        function closeCreatePostModal() {
-            document.getElementById('create-post-modal').classList.remove('show');
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-content').value = '';
-            document.getElementById('post-tags').value = '';
-        }
-
-        async function submitPost() {
-            const category = document.getElementById('post-category').value;
-            const title = document.getElementById('post-title').value.trim();
-            const content = document.getElementById('post-content').value.trim();
-            const tagsStr = document.getElementById('post-tags').value.trim();
-            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
-
-            if (!title) {
-                alert('제목을 입력하세요.');
-                return;
-            }
-
-            if (!content) {
-                alert('내용을 입력하세요.');
-                return;
-            }
-
-            try {
-                await postManager.createPost(title, content, category, tags);
-                alert('✓ 게시글이 작성되었습니다!');
-                closeCreatePostModal();
-                location.reload(); // 새로고침하여 게시글 표시
-            } catch (error) {
-                console.error('Post creation error:', error);
-                alert('오류: ' + error.message);
-            }
-        }
     </script>
 </body>
 

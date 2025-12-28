@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성 - LoCAD</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/modules/Security.js"></script>
+    <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/PostManager.js"></script>
+
+    <style>
+        :root {
+            --bg-void: #050505;
+            --bg-card: #0a0a0a;
+            --bg-hover: #111111;
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --text-main: #e2e2e2;
+            --text-sub: #888888;
+            --text-dim: #555555;
+            --accent-primary: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            overflow-x: hidden;
+            background-image: radial-gradient(var(--border-dim) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        nav {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-main);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        /* Post Form */
+        .post-form {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        /* Category Tabs (Reddit Style) */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .category-tab {
+            padding: 12px 20px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-tab:hover {
+            background: var(--bg-card);
+            border-color: var(--border-light);
+        }
+
+        .category-tab.active {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+            color: white;
+        }
+
+        .category-icon {
+            font-size: 18px;
+        }
+
+        /* Input Fields */
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-hover);
+            border: 2px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            background: var(--bg-card);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-textarea {
+            min-height: 300px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .title-input {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Character Counter */
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        /* Tags Input */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-hover);
+            border: 2px solid var(--border-dim);
+            border-radius: 8px;
+            min-height: 48px;
+            cursor: text;
+            transition: all 0.2s;
+        }
+
+        .tags-container:focus-within {
+            border-color: var(--accent-purple);
+            background: var(--bg-card);
+        }
+
+        .tag-item {
+            padding: 6px 12px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 6px;
+            color: var(--accent-purple);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .tag-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            min-width: 120px;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-dim);
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-cancel {
+            background: var(--bg-hover);
+            color: var(--text-sub);
+            border: 1px solid var(--border-dim);
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .btn-draft {
+            background: var(--bg-hover);
+            color: var(--text-main);
+            border: 1px solid var(--border-light);
+            flex: 1;
+        }
+
+        .btn-draft:hover {
+            background: var(--bg-card);
+        }
+
+        .btn-publish {
+            background: var(--accent-purple);
+            color: white;
+            flex: 2;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-publish:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-publish:active {
+            transform: translateY(0);
+        }
+
+        .btn-publish:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Preview Sidebar */
+        .sidebar-tips {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .tips-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tip-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-dim);
+            font-size: 13px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .tip-icon {
+            color: var(--accent-purple);
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                    <path
+                        d="M6 6 L10 2 L12 6 H20 A2 2 0 0 1 22 8 V17 A2 2 0 0 1 20 19 H14 L10 23 L9 19 H4 A2 2 0 0 1 2 17 V8 A2 2 0 0 1 4 6 Z">
+                    </path>
+                    <circle cx="9" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                    <circle cx="15" cy="12.5" r="1.5" fill="currentColor" stroke="none"></circle>
+                </svg>
+                <span>LoCAD</span>
+            </a>
+            <a href="index.html" class="back-btn">← 커뮤니티로 돌아가기</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">게시글 작성</h1>
+            <p class="page-subtitle">커뮤니티와 당신의 지식을 공유하세요</p>
+        </div>
+
+        <!-- Category Selection -->
+        <div class="category-tabs">
+            <div class="category-tab active" data-category="showcase" onclick="selectCategory('showcase')">
+                <span class="category-icon">🎨</span>
+                <span>쇼케이스</span>
+            </div>
+            <div class="category-tab" data-category="tutorial" onclick="selectCategory('tutorial')">
+                <span class="category-icon">📚</span>
+                <span>튜토리얼</span>
+            </div>
+            <div class="category-tab" data-category="question" onclick="selectCategory('question')">
+                <span class="category-icon">❓</span>
+                <span>질문</span>
+            </div>
+            <div class="category-tab" data-category="general" onclick="selectCategory('general')">
+                <span class="category-icon">💬</span>
+                <span>일반</span>
+            </div>
+        </div>
+
+        <!-- Post Form -->
+        <div class="post-form">
+            <div class="form-section">
+                <label class="form-label">제목</label>
+                <input type="text" id="post-title" class="form-input title-input" placeholder="흥미로운 제목을 작성하세요..."
+                    maxlength="100">
+                <div class="char-counter"><span id="title-count">0</span>/100</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">내용</label>
+                <textarea id="post-content" class="form-input form-textarea" placeholder="마크다운을 지원합니다. 
+                    
+# 제목
+## 소제목
+
+**볼드** *이탤릭*
+
+- 리스트 항목 1
+- 리스트 항목 2
+
+상세한 내용을 작성하세요..."></textarea>
+                <div class="char-counter"><span id="content-count">0</span> characters</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">태그</label>
+                <span class="form-hint">Enter를 눌러 태그를 추가하세요 (최대 5개)</span>
+                <div class="tags-container" id="tags-container" onclick="focusTagInput()">
+                    <input type="text" id="tag-input" class="tag-input" placeholder="태그 입력..."
+                        onkeydown="handleTagInput(event)">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-cancel" onclick="cancelPost()">취소</button>
+                <button class="btn btn-publish" id="publish-btn" onclick="publishPost()">
+                    🚀 게시하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips Sidebar -->
+        <div class="sidebar-tips">
+            <h3 class="tips-title">✨ 작성 가이드</h3>
+            <div class="tip-item">
+                <span class="tip-icon">💡</span>
+                명확하고 설명적인 제목을 사용하세요
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">📝</span>
+                마크다운을 사용하여 내용을 구조화하세요
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">🏷️</span>
+                관련 태그를 추가하여 검색성을 높이세요
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">🎯</span>
+                카테고리를 올바르게 선택하세요
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let postManager;
+        let selectedCategory = 'showcase';
+        let tags = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 로그인 체크
+            if (!window.sb) {
+                alert('잠시 후 다시 시도해주세요.');
+                location.href = 'index.html';
+                return;
+            }
+
+            const { data: { user } } = await window.sb.auth.getUser();
+            if (!user) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            if (window.PostManager) {
+                postManager = new PostManager();
+            }
+
+            // Character counters
+            document.getElementById('post-title').addEventListener('input', updateTitleCount);
+            document.getElementById('post-content').addEventListener('input', updateContentCount);
+        });
+
+        function updateTitleCount() {
+            const count = document.getElementById('post-title').value.length;
+            document.getElementById('title-count').textContent = count;
+        }
+
+        function updateContentCount() {
+            const count = document.getElementById('post-content').value.length;
+            document.getElementById('content-count').textContent = count;
+        }
+
+        function selectCategory(category) {
+            selectedCategory = category;
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        function focusTagInput() {
+            document.getElementById('tag-input').focus();
+        }
+
+        function handleTagInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addTag();
+            } else if (event.key === 'Backspace' && event.target.value === '' && tags.length > 0) {
+                removeTag(tags.length - 1);
+            }
+        }
+
+        function addTag() {
+            const input = document.getElementById('tag-input');
+            const tag = input.value.trim().toLowerCase();
+
+            if (tag && !tags.includes(tag) && tags.length < 5) {
+                tags.push(tag);
+                renderTags();
+                input.value = '';
+            } else if (tags.length >= 5) {
+                alert('태그는 최대 5개까지만 추가할 수 있습니다.');
+            }
+        }
+
+        function removeTag(index) {
+            tags.splice(index, 1);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tags-container');
+            const input = container.querySelector('.tag-input');
+
+            // Remove existing tags
+            container.querySelectorAll('.tag-item').forEach(el => el.remove());
+
+            // Add tags
+            tags.forEach((tag, index) => {
+                const tagEl = document.createElement('div');
+                tagEl.className = 'tag-item';
+                tagEl.innerHTML = `
+                    <span>#${tag}</span>
+                    <span class="tag-remove" onclick="removeTag(${index})">×</span>
+                `;
+                container.insertBefore(tagEl, input);
+            });
+        }
+
+        async function publishPost() {
+            const title = document.getElementById('post-title').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+
+            if (!title) {
+                alert('제목을 입력하세요.');
+                return;
+            }
+
+            if (!content) {
+                alert('내용을 입력하세요.');
+                return;
+            }
+
+            const btn = document.getElementById('publish-btn');
+            btn.disabled = true;
+            btn.textContent = '게시 중...';
+
+            try {
+                await postManager.createPost(title, content, selectedCategory, tags);
+                alert('✓ 게시글이 작성되었습니다!');
+                location.href = 'index.html';
+            } catch (error) {
+                console.error('Post creation error:', error);
+                alert('오류: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = '🚀 게시하기';
+            }
+        }
+
+        function cancelPost() {
+            if (confirm('작성 중인 내용이 사라집니다. 정말 취소하시겠습니까?')) {
+                location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+
+</html>
