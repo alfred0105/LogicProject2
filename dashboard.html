@@ -925,13 +925,11 @@
                 // 프로젝트 로드
                 loadProjects(user.id);
 
-                // 관리자 체크
+                // 관리자 체크 (디버그 콘솔만 활성화)
                 if (user.email === 'ace060408@gmail.com') {
-                    document.getElementById('admin-feedback-section').style.display = 'block';
                     const dbg = document.getElementById('debug-console');
                     if (dbg) dbg.style.display = 'block';
                     if (window.log) window.log('Admin detected. Debug console activated.');
-                    loadFeedback();
                 }
             }
 
@@ -1058,156 +1056,6 @@
             }
 
 
-
-            // === Admin Feedback Logic ===
-            async function loadFeedback() {
-                console.log('Loading feedback...');
-                if (!window.sb) {
-                    console.error('Error: updateStatus Supabase client not ready');
-                    return;
-                }
-
-                try {
-                    const { data, error } = await window.sb.from('feedback').select('*').order('created_at', { ascending: false });
-
-                    if (error) {
-                        console.error('❌ Feedback load error:', error);
-                        return;
-                    }
-
-                    if (window.log) window.log(`✅ Feedback loaded: ${data?.length} items`);
-                    if (data && data.length > 0 && window.log) {
-                        window.log('Data Sample: ' + JSON.stringify(data[0]));
-                    }
-                    window._allFeedback = data || [];
-                    populateCategoryFilter(window._allFeedback);
-                    renderFeedbackList(window._allFeedback);
-                } catch (e) {
-                    console.error('❌ Unexpected error loading feedback:', e);
-                }
-            }
-
-            function populateCategoryFilter(items) {
-                const select = document.getElementById('feedback-category-filter');
-                if (!select) return;
-                const categories = [...new Set(items.map(i => i.category || '기타'))];
-                select.innerHTML = '<option value="all">전체</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-            }
-
-            window.filterFeedback = function () {
-                const select = document.getElementById('feedback-category-filter');
-                const filter = select ? select.value : 'all';
-                const items = window._allFeedback || [];
-                const filtered = filter === 'all' ? items : items.filter(i => (i.category || '기타') === filter);
-                renderFeedbackList(filtered);
-            };
-
-            function renderFeedbackList(items) {
-                const container = document.getElementById('feedback-list');
-                if (!container) return;
-                container.innerHTML = '';
-                if (items.length === 0) {
-                    container.innerHTML = '<div class="empty-state">피드백이 없습니다.</div>';
-                    return;
-                }
-                items.forEach(item => {
-                    const status = item.status || 'pending';
-                    const statusClass = status === 'pending' ? 'pending' : (status === 'in_progress' ? 'progress' : 'resolved');
-
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.style.height = 'auto';
-                    card.style.cursor = 'default';
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <div style="display:flex; gap:8px; align-items:center;">
-                                <span style="background:var(--accent-primary); color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">${item.category || '기타'}</span>
-                                <select class="status-select ${statusClass}" onchange="updateStatus('${item.id}', this.value)" onclick="event.stopPropagation()">
-                                    <option value="pending" ${status === 'pending' ? 'selected' : ''}>⏳ 미해결</option>
-                                    <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>🚧 해결중</option>
-                                    <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>✅ 해결완료</option>
-                                </select>
-                            </div>
-                            <span style="font-size:11px; color:var(--text-sub);">${new Date(item.created_at).toLocaleString()}</span>
-                        </div>
-                        <div style="margin-bottom:12px; color:var(--text-main); line-height:1.5; white-space: pre-wrap;">${item.content}</div>
-                        <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">사용자: ${item.user_email || '익명'}</div>
-                        
-                        <div style="border-top:1px solid var(--border-dim); padding-top:8px; margin-top:8px;">
-                            <div style="font-size:11px; color:var(--text-sub); margin-bottom:4px;">관리자 메모</div>
-                            <textarea class="comment-input" data-id="${item.id}" placeholder="메모할 내용을 입력하세요..." style="width:100%; height:60px; margin-bottom:8px; background:var(--bg-hover); border:1px solid var(--border-dim); border-radius:4px; color:var(--text-main); padding:8px; resize:none;">${item.comment || ''}</textarea>
-                            <button class="btn-text" onclick="saveComment('${item.id}')" style="background:var(--accent-primary); color:#fff; padding:6px 12px; border-radius:4px; width:100%;">저장</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-
-            window.updateStatus = async function (id, newStatus) {
-                // UI 업데이트 (색상 변경)
-                const select = document.querySelector(`select[onchange="updateStatus('${id}', this.value)"]`);
-                if (select) {
-                    select.className = `status-select ${newStatus === 'pending' ? 'pending' : (newStatus === 'in_progress' ? 'progress' : 'resolved')}`;
-                }
-
-                try {
-                    const { error } = await window.sb.from('feedback').update({ status: newStatus }).eq('id', id);
-                    if (error) throw error;
-                    // 로컬 데이터 업데이트
-                    if (window._allFeedback) {
-                        const item = window._allFeedback.find(i => i.id === id);
-                        if (item) item.status = newStatus;
-                    }
-                    console.log('Status updated to', newStatus);
-                } catch (err) {
-                    console.error('Status update error:', err);
-                    if (err.message && err.message.includes('column')) {
-                        alert('⚠️ DB 오류: "status" 컬럼이 없습니다.\nSupabase SQL Editor에서 다음을 실행하세요:\nALTER TABLE feedback ADD COLUMN status text DEFAULT \'pending\';');
-                    } else {
-                        alert('상태 변경 실패: ' + err.message);
-                    }
-                }
-            };
-
-            window.saveComment = async function (id) {
-                if (window.log) window.log(`Saving comment for ID: ${id}`);
-                const textarea = document.querySelector(`textarea.comment-input[data-id="${id}"]`);
-                if (!textarea) {
-                    if (window.log) window.log('Error: Textarea not found');
-                    return;
-                }
-                const comment = textarea.value;
-                if (window.log) window.log(`Content: "${comment}"`);
-
-                try {
-                    // RLS 문제를 원천 봉쇄하기 위해 관리자 전용 함수(RPC)를 호출합니다.
-                    const { error } = await window.sb.rpc('admin_update_comment', {
-                        feedback_id: id,
-                        new_comment: comment
-                    });
-
-                    if (error) {
-                        // 함수가 없다는 에러면, 사용자에게 생성 SQL을 안내합니다.
-                        if (error.message && (error.message.includes('function') || error.message.includes('find'))) {
-                            alert('⛔ 마지막 단계!\n저장 기능을 활성화하려면 Supabase SQL Editor에서 아래 명령어를 한 번만 실행해주세요 (100% 해결됩니다):\n\ncreate or replace function admin_update_comment(feedback_id uuid, new_comment text)\nreturns void language plsql security definer\nas $$ begin update feedback set comment = new_comment where id = feedback_id; end; $$;');
-                            return;
-                        }
-                        throw error;
-                    }
-
-                    // alert 제거 (Silent Reload)
-                    location.reload();
-                } catch (err) {
-                    console.error('Comment save error:', err);
-                    if (window.log) window.log('Save Error: ' + err.message);
-
-                    if (err.message && err.message.includes('column')) {
-                        alert('⚠️ DB 설정 오류: "comment" 컬럼이 없습니다.');
-                    } else {
-                        alert('저장 실패: ' + err.message);
-                    }
-                }
-            };
 
             // Apply UI Scale on load
             (function () {
