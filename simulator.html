@@ -1588,6 +1588,61 @@
     <script src="js/modules/LibraryManager.js"></script>
     <script src="js/modules/CollaborationManager.js"></script>
     <script src="js/modules/Main.js"></script>
+
+    <!-- 읽기 전용 모드 처리 -->
+    <script>
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReadOnly = urlParams.get('readonly') === 'true' || urlParams.get('view') === 'true';
+
+        if (isReadOnly) {
+            // 페이지 로드 후 즉시 실행
+            document.addEventListener('DOMContentLoaded', () => {
+                // 툴바 전체 숨기기
+                const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
+                toolbars.forEach(el => el.style.display = 'none');
+
+                // 특정 버튼만 표시 (홈 버튼)
+                const homeBtn = document.querySelector('[onclick="goHome()"]');
+                if (homeBtn) homeBtn.style.display = 'flex';
+
+                // 읽기 전용 배너 표시
+                const banner = document.createElement('div');
+                banner.style.cssText = `
+                    position: fixed;
+                    top: 64px;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 12px;
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: 600;
+                    z-index: 1000;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                `;
+                banner.innerHTML = '👀 읽기 전용 모드 - 수정할 수 없습니다. 포크하여 나만의 회로를 만드세요!';
+                document.body.insertBefore(banner, document.body.firstChild);
+
+                // 캔버스 이벤트 차단
+                if (window.sim && window.sim.canvas) {
+                    window.sim.canvas.style.pointerEvents = 'none';
+                }
+
+                // 키보드 이벤트 차단
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }, true);
+
+                console.log('🔒 읽기 전용 모드 활성화');
+            });
+        }
+    </script>
+
     <script>
         async function goHome() {
             if (window.getCurrentUser) {
