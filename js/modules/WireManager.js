@@ -94,19 +94,19 @@ Object.assign(CircuitSimulator.prototype, {
         // 스냅 타겟 찾기
         this.findSnapTarget(mouseX, mouseY);
 
-        // 시작점 좌표
-        const pinRect = this.startPin.getBoundingClientRect();
-        const startX = (pinRect.left + pinRect.width / 2 - wsRect.left - pan.x) / scale;
-        const startY = (pinRect.top + pinRect.height / 2 - wsRect.top - pan.y) / scale;
+        // 시작점 좌표 (getPinCenter 사용 - 좌표 일관성 유지)
+        const startPos = this.getPinCenter(this.startPin);
+        const startX = startPos.x;
+        const startY = startPos.y;
 
         // 목표 좌표 (스냅 or 마우스)
         let targetX = mouseX;
         let targetY = mouseY;
 
         if (this.snappedPin) {
-            const snapRect = this.snappedPin.getBoundingClientRect();
-            targetX = (snapRect.left + snapRect.width / 2 - wsRect.left - pan.x) / scale;
-            targetY = (snapRect.top + snapRect.height / 2 - wsRect.top - pan.y) / scale;
+            const snapPos = this.getPinCenter(this.snappedPin);
+            targetX = snapPos.x;
+            targetY = snapPos.y;
 
             this.tempWire.style.stroke = '#2ecc71'; // 연결 가능 신호 (초록색)
             this.tempWire.style.strokeWidth = '4px';
@@ -154,9 +154,9 @@ Object.assign(CircuitSimulator.prototype, {
         const mouseX = (e.clientX - wsRect.left - pan.x) / scale;
         const mouseY = (e.clientY - wsRect.top - pan.y) / scale;
 
-        const pinRect = this.startPin.getBoundingClientRect();
-        const startX = (pinRect.left + pinRect.width / 2 - wsRect.left - pan.x) / scale;
-        const startY = (pinRect.top + pinRect.height / 2 - wsRect.top - pan.y) / scale;
+        const startPos = this.getPinCenter(this.startPin);
+        const startX = startPos.x;
+        const startY = startPos.y;
 
         const dist = Math.hypot(mouseX - startX, mouseY - startY);
 
