@@ -240,9 +240,10 @@ class CloudManager {
                     document.body.classList.add('readonly-mode');
 
                     // 배너가 없으면 추가 (simulator.html의 로직 복사)
-                    if (!document.querySelector('.readonly-banner-dynamic')) {
+                    if (!document.getElementById('readonly-banner')) {
                         const banner = document.createElement('div');
-                        banner.className = 'readonly-banner-dynamic'; // 중복 방지용 클래스
+                        banner.id = 'readonly-banner'; // 중복 방지 ID
+                        banner.className = 'readonly-banner-dynamic';
                         banner.style.cssText = `
                             width: 100%;
                             height: 40px;
@@ -266,7 +267,7 @@ class CloudManager {
                             wrapper.insertBefore(banner, wrapper.firstChild);
                         } else {
                             banner.style.position = 'fixed';
-                            banner.style.top = '64px';
+                            banner.style.top = '50px'; // 헤더 높이에 맞춤
                             document.body.appendChild(banner);
                         }
                     }

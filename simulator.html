@@ -1657,6 +1657,7 @@
 
                 // 읽기 전용 배너 표시
                 const banner = document.createElement('div');
+                banner.id = 'readonly-banner';
                 banner.style.cssText = `
                     width: 100%;
                     height: 40px;
@@ -1679,7 +1680,7 @@
                     wrapper.insertBefore(banner, wrapper.firstChild);
                 } else {
                     banner.style.position = 'fixed';
-                    banner.style.top = '64px';
+                    banner.style.top = '50px'; // 헤더 높이에 맞춤
                     document.body.appendChild(banner);
                 }
 
