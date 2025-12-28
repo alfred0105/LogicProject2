@@ -674,6 +674,48 @@
             }
         }
 
+        async function loadCommunityPosts() {
+            const grid = document.getElementById('posts-grid');
+            if (!postManager) {
+                grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글 시스템을 불러올 수 없습니다</p>';
+                return;
+            }
+
+            try {
+                const posts = await postManager.getRecentPosts(4);
+                if (posts && posts.length > 0) {
+                    grid.innerHTML = posts.map(post => {
+                        const author = post.user_email?.split('@')[0] || 'Anonymous';
+                        return `
+                            <div class="project-card" onclick="location.href='view-post.html?id=${post.id}'">
+                                <div class="card-body">
+                                    <div class="card-header">
+                                        <div class="author-avatar">${author[0].toUpperCase()}</div>
+                                        <div class="author-info">
+                                            <div class="author-name">${author}</div>
+                                            <div class="project-date">${formatDate(post.created_at)}</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-title">${post.title}</div>
+                                    <div class="card-description">${post.content.substring(0, 100)}...</div>
+                                    <div class="card-footer">
+                                        <div class="card-stats">
+                                            <span class="stat">💬 ${post.comments_count || 0}</span>
+                                            <span class="stat">❤️ ${post.likes || 0}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글이 없습니다</p>';
+                }
+            } catch (error) {
+                grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글을 불러올 수 없습니다</p>';
+            }
+        }
+
         function createProjectCard(project, isTrending = false) {
             const title = project.title || 'Untitled Project';
             const description = project.description || '설명 없음';
