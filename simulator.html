@@ -566,6 +566,16 @@
 
             <!-- Utils -->
             <div class="toolbar-group">
+                <button class="icon-btn btn-collaborate" id="btn-collaborate" onclick="toggleCollaboration()"
+                    title="실시간 협업">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="btn-text">협업</span>
+                </button>
                 <button class="icon-btn" onclick="sim.validator?.validateCircuit()" title="회로 검증">
                     <svg>
                         <use href="#icon-settings" />
@@ -1658,6 +1668,88 @@
             } else {
                 statsEl.style.display = 'none';
             }
+        }
+    </script>
+
+    <!-- ======== Collaboration Panel ======== -->
+    <div id="collaboration-panel" class="collaboration-panel hidden">
+        <div class="collab-header">
+            <span>실시간 협업</span>
+            <button class="collab-toggle" onclick="toggleCollaborationPanel()">×</button>
+        </div>
+
+        <div id="collaborators-list" class="no-collaborators">
+            협업 시작 버튼을 클릭하세요
+        </div>
+
+        <div style="padding: 12px;">
+            <div id="collab-status"
+                style="font-size: 11px; color: var(--text-tertiary); text-align: center; margin-bottom: 8px;">
+                오프라인
+            </div>
+        </div>
+    </div>
+
+    <!-- Collaboration Status Indicator -->
+    <div id="collaboration-status" class="collaboration-status" style="display: none;">
+        <span id="status-icon">●</span>
+        <span id="status-text">협업 중...</span>
+    </div>
+
+    <script>
+        // 협업 토글
+        async function toggleCollaboration() {
+            if (!window.sim || !window.sim.collaboration) {
+                alert('협업 기능을 초기화하는 중입니다. 잠시 후 다시 시도하세요.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-collaborate');
+            const panel = document.getElementById('collaboration-panel');
+            const status = document.getElementById('collaboration-status');
+            const statusText = document.getElementById('collab-status');
+
+            if (window.sim.collaboration.isConnected) {
+                // 협업 종료
+                await window.sim.collaboration.stopCollaboration();
+                btn.classList.remove('active');
+                btn.style.background = '';
+                status.style.display = 'none';
+                statusText.textContent = '오프라인';
+                statusText.style.color = 'var(--text-tertiary)';
+
+                if (window.sim.showToast) {
+                    window.sim.showToast('협업이 종료되었습니다', 'info');
+                }
+            } else {
+                // 협업 시작
+                if (!window.sim.currentProjectId) {
+                    alert('프로젝트를 먼저 저장해주세요.');
+                    return;
+                }
+
+                try {
+                    await window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--accent-green, #22c55e)';
+                    status.style.display = 'flex';
+                    status.classList.add('connected');
+                    statusText.textContent = '온라인';
+                    statusText.style.color = 'var(--accent-green)';
+
+                    // 패널 표시
+                    panel.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Failed to start collaboration:', error);
+                    alert('협업을 시작할 수 없습니다: ' + error.message);
+                }
+            }
+        }
+
+        // 협업 패널 토글
+        function toggleCollaborationPanel() {
+            const panel = document.getElementById('collaboration-panel');
+            panel.classList.toggle('hidden');
         }
     </script>
 
