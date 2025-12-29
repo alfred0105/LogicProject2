@@ -4356,6 +4356,8 @@ div.component[data-type="NOT"] {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
+    filter: none !important;
+    /* 컨테이너 레벨 글로우(네모 박스) 제거 */
 }
 
 /* CLOCK - Neon Style Enhancement */
@@ -4375,7 +4377,13 @@ div.component[data-type="NOT"] {
 }
 
 /* SWITCH - Ensure SVG glow */
-.component[data-type="SWITCH"][data-value="1"] svg {
-    stroke: var(--accent-green) !important;
-    filter: drop-shadow(0 0 12px var(--accent-green-glow)) drop-shadow(0 0 4px var(--accent-green)) !important;
+filter: drop-shadow(0 0 12px var(--accent-green-glow)) drop-shadow(0 0 4px var(--accent-green)) !important;
+}
+
+/* LED - Ensure SVG glow only (No box glow) */
+.component[data-type="LED"][data-value="1"] svg {
+    fill: #ef4444 !important;
+    stroke: #fca5a5 !important;
+    /* 원형 글로우만 적용 */
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 6px rgba(239, 68, 68, 1)) !important;
 }
