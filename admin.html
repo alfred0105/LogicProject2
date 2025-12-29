@@ -844,24 +844,38 @@
                     return;
                 }
 
-                // 밴 목록 가져오기 (banned_users 테이블이 있다면)
-                let bannedIds = [];
+                // 밴 목록 가져오기 (이메일 기반)
+                let bannedEmails = {};
                 try {
-                    const { data: banned } = await window.sb.from('banned_users').select('user_id');
-                    bannedIds = banned?.map(b => b.user_id) || [];
+                    const { data: banned } = await window.sb.from('banned_users').select('user_email, ban_type, ban_until');
+                    if (banned) {
+                        banned.forEach(b => {
+                            bannedEmails[b.user_email] = { ban_type: b.ban_type, ban_until: b.ban_until };
+                        });
+                    }
                 } catch (e) {
                     // 테이블 없을 수 있음
                 }
 
                 container.innerHTML = uniqueUsers.map(user => {
-                    const isBanned = bannedIds.includes(user.user_id);
+                    const banInfo = bannedEmails[user.user_email];
+                    let banLabel = '';
+                    if (banInfo) {
+                        if (banInfo.ban_type === 'permanent') {
+                            banLabel = '🚫 영구 차단';
+                        } else {
+                            const until = new Date(banInfo.ban_until).toLocaleDateString('ko-KR');
+                            banLabel = `⏸️ 정지 (~${until})`;
+                        }
+                    }
+
                     return `
-                        <div class="user-item" id="user-${user.user_id}">
+                        <div class="user-item" id="user-${user.user_email?.replace('@', '_at_')}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>👤 ${user.user_email || user.user_id}</span>
-                                ${isBanned
-                            ? `<button class="ban-btn unban-btn" onclick="unbanUser('${user.user_id}')">✅ 차단 해제</button>`
-                            : `<button class="ban-btn" onclick="banUser('${user.user_id}', '${user.user_email}')">🚫 차단</button>`
+                                <span>👤 ${user.user_email || user.user_id} ${banLabel ? `<span style="color: #ef4444; margin-left: 8px;">${banLabel}</span>` : ''}</span>
+                                ${banInfo
+                            ? `<button class="ban-btn unban-btn" onclick="unbanUser('${user.user_email}')">✅ 차단 해제</button>`
+                            : `<button class="ban-btn" onclick="banUser('${user.user_id}', '${user.user_email}')">🚫 차단/정지</button>`
                         }
                             </div>
                         </div>
@@ -874,19 +888,35 @@
         }
 
         async function banUser(userId, email) {
-            const reason = prompt('차단 사유를 입력하세요:');
+            const banType = prompt('차단 유형을 선택하세요:\n1 = 영구 차단\n2 = 7일 정지\n3 = 30일 정지\n\n번호를 입력하세요:');
+            if (!banType || !['1', '2', '3'].includes(banType)) return;
+
+            const reason = prompt('차단/정지 사유를 입력하세요:');
             if (reason === null) return;
 
             try {
-                const { error } = await window.sb.from('banned_users').insert({
-                    user_id: userId,
+                const banData = {
                     user_email: email,
                     reason: reason,
                     banned_at: new Date().toISOString()
-                });
+                };
+
+                if (banType === '1') {
+                    banData.ban_type = 'permanent';
+                } else if (banType === '2') {
+                    banData.ban_type = 'temporary';
+                    banData.ban_until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+                } else if (banType === '3') {
+                    banData.ban_type = 'temporary';
+                    banData.ban_until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                }
+
+                const { error } = await window.sb.from('banned_users').upsert(banData, { onConflict: 'user_email' });
 
                 if (error) throw error;
-                alert('사용자가 차단되었습니다.');
+
+                const typeLabel = banType === '1' ? '영구 차단' : (banType === '2' ? '7일 정지' : '30일 정지');
+                alert(`사용자가 ${typeLabel} 되었습니다.`);
                 await loadUsers();
             } catch (error) {
                 console.error('Ban user error:', error);
@@ -894,14 +924,14 @@
             }
         }
 
-        async function unbanUser(userId) {
-            if (!confirm('이 사용자의 차단을 해제하시겠습니까?')) return;
+        async function unbanUser(email) {
+            if (!confirm('이 사용자의 차단/정지를 해제하시겠습니까?')) return;
 
             try {
                 const { error } = await window.sb
                     .from('banned_users')
                     .delete()
-                    .eq('user_id', userId);
+                    .eq('user_email', email);
 
                 if (error) throw error;
                 alert('차단이 해제되었습니다.');

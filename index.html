@@ -477,6 +477,85 @@
             font-weight: 500;
             margin-right: auto;
         }
+
+        /* Posts Filter Tabs */
+        .posts-filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .posts-filter-tab {
+            padding: 10px 20px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-sub);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .posts-filter-tab:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .posts-filter-tab.active {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-purple);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .page-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .delete-post-btn {
+            padding: 4px 8px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 4px;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.2s;
+        }
+
+        .delete-post-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
     </style>
 </head>
 
@@ -582,6 +661,14 @@
             <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
                 style="color: var(--accent-purple);">글쓰기 →</a>
         </div>
+
+        <!-- Posts Filter Tabs -->
+        <div class="posts-filter-tabs" id="posts-filter-container">
+            <button class="posts-filter-tab active" onclick="setPostsTab('all')">전체 게시글</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab" style="display: none;">📝 내
+                게시글</button>
+        </div>
+
         <div class="grid" id="posts-grid">
             <div class="loading">
                 <div class="spinner"></div>
@@ -676,6 +763,8 @@
     <script>
         let library;
         let postManager;
+        let currentPostsTab = 'all';
+        let currentUserId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.LibraryManager) {
@@ -684,8 +773,25 @@
             if (window.PostManager) {
                 postManager = new PostManager();
             }
+
+            // 로그인 여부 확인하여 "내 게시글" 탭 표시
+            if (window.sb) {
+                const { data: { user } } = await window.sb.auth.getUser();
+                if (user) {
+                    currentUserId = user.id;
+                    document.getElementById('my-posts-tab').style.display = 'block';
+                }
+            }
+
             await loadAllSections();
         });
+
+        function setPostsTab(tab) {
+            currentPostsTab = tab;
+            document.querySelectorAll('.posts-filter-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadCommunityPosts();
+        }
 
         async function loadAllSections() {
             await Promise.all([
@@ -743,11 +849,28 @@
             }
 
             try {
-                const posts = await postManager.getRecentPosts(4);
+                let posts;
+
+                if (currentPostsTab === 'my' && currentUserId) {
+                    // 내 게시글만 조회
+                    const { data, error } = await window.sb
+                        .from('posts')
+                        .select('*, projects(id, title)')
+                        .eq('user_id', currentUserId)
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+
+                    if (error) throw error;
+                    posts = data;
+                } else {
+                    // 전체 게시글
+                    posts = await postManager.getRecentPosts(8);
+                }
+
                 if (posts && posts.length > 0) {
                     grid.innerHTML = posts.map(post => {
-                        const author = post.user_email?.split('@')[0] || 'Anonymous';
-                        const linkedProject = post.projects; // Joined project data
+                        const author = post.user_name || post.user_email?.split('@')[0] || 'Anonymous';
+                        const linkedProject = post.projects;
 
                         return `
                             <div class="project-card" onclick="location.href='view-post.html?id=${post.id}'">
@@ -758,9 +881,10 @@
                                             <div class="author-name">${author}</div>
                                             <div class="project-date">${formatDate(post.created_at)}</div>
                                         </div>
+                                        ${currentPostsTab === 'my' ? `<button class="delete-post-btn" onclick="event.stopPropagation(); deleteMyPost('${post.id}')">🗑️</button>` : ''}
                                     </div>
                                     <div class="card-title">${post.title}</div>
-                                    <div class="card-description">${post.content.substring(0, 100)}...</div>
+                                    <div class="card-description">${(post.content || '').substring(0, 100)}...</div>
                                     <div class="card-footer">
                                         ${linkedProject ? `<div class="circuit-badge">🔌 ${linkedProject.title || '회로 포함'}</div>` : ''}
                                         <div class="card-stats" style="${linkedProject ? '' : 'margin-left: auto;'}">
@@ -773,10 +897,30 @@
                         `;
                     }).join('');
                 } else {
-                    grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글이 없습니다</p>';
+                    grid.innerHTML = `<p style="text-align:center;color:var(--text-dim)">${currentPostsTab === 'my' ? '작성한 게시글이 없습니다' : '게시글이 없습니다'}</p>`;
                 }
             } catch (error) {
+                console.error('Load posts error:', error);
                 grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글을 불러올 수 없습니다</p>';
+            }
+        }
+
+        async function deleteMyPost(postId) {
+            if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
+
+            try {
+                // 댓글 삭제
+                await window.sb.from('post_comments').delete().eq('post_id', postId);
+                // 좋아요 삭제
+                await window.sb.from('post_likes').delete().eq('post_id', postId);
+                // 게시글 삭제
+                const { error } = await window.sb.from('posts').delete().eq('id', postId);
+
+                if (error) throw error;
+                alert('게시글이 삭제되었습니다.');
+                loadCommunityPosts();
+            } catch (error) {
+                alert('삭제 실패: ' + error.message);
             }
         }
 
