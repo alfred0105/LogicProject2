@@ -283,38 +283,60 @@
         </div>
 
         <!-- Feedback Section -->
-        <div class="section">
-            <h2 class="section-title">최근 피드백</h2>
-
-            <!-- Filter Tabs -->
-            <div class="filter-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="filter-tab active" onclick="setFilter('all')">전체</button>
-                <button class="filter-tab" onclick="setFilter('pending')">⏳ 미해결 <span id="count-pending"
-                        class="count-badge">0</span></button>
-                <button class="filter-tab" onclick="setFilter('in_progress')">🔥 해결중 <span id="count-in_progress"
-                        class="count-badge">0</span></button>
-                <button class="filter-tab" onclick="setFilter('resolved')">✅ 해결완료 <span id="count-resolved"
-                        class="count-badge">0</span></button>
-            </div>
-
-            <div id="feedback-list" class="feedback-list">
-                <div class="loading">피드백을 불러오는 중...</div>
+        <div class="section" id="section-feedback">
+            <h2 class="section-title collapsible" onclick="toggleSection('feedback')">
+                <span>최근 피드백</span>
+                <span class="toggle-icon" id="toggle-feedback">▼</span>
+            </h2>
+            <div class="section-content" id="content-feedback">
+                <!-- Filter Tabs -->
+                <div class="filter-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="filter-tab active" onclick="setFilter('all')">전체</button>
+                    <button class="filter-tab" onclick="setFilter('pending')">⏳ 미해결 <span id="count-pending"
+                            class="count-badge">0</span></button>
+                    <button class="filter-tab" onclick="setFilter('in_progress')">🔥 해결중 <span id="count-in_progress"
+                            class="count-badge">0</span></button>
+                    <button class="filter-tab" onclick="setFilter('resolved')">✅ 해결완료 <span id="count-resolved"
+                            class="count-badge">0</span></button>
+                </div>
+                <div id="feedback-list" class="feedback-list">
+                    <div class="loading">피드백을 불러오는 중...</div>
+                </div>
             </div>
         </div>
 
         <!-- Posts Management Section -->
-        <div class="section">
-            <h2 class="section-title">게시글 관리</h2>
-            <div id="posts-list" class="feedback-list">
-                <div class="loading">게시글을 불러오는 중...</div>
+        <div class="section" id="section-posts">
+            <h2 class="section-title collapsible" onclick="toggleSection('posts')">
+                <span>게시글 관리</span>
+                <span class="toggle-icon" id="toggle-posts">▼</span>
+            </h2>
+            <div class="section-content" id="content-posts">
+                <!-- Category Filter Tabs -->
+                <div class="filter-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="filter-tab post-filter active" onclick="setPostFilter('all')">전체</button>
+                    <button class="filter-tab post-filter" onclick="setPostFilter('showcase')">🎨 쇼케이스</button>
+                    <button class="filter-tab post-filter" onclick="setPostFilter('question')">❓ 질문</button>
+                    <button class="filter-tab post-filter" onclick="setPostFilter('tutorial')">📚 튜토리얼</button>
+                    <button class="filter-tab post-filter" onclick="setPostFilter('discussion')">💬 토론</button>
+                    <button class="filter-tab post-filter" onclick="setPostFilter('general')">📝 일반</button>
+                </div>
+                <div id="posts-list" class="feedback-list">
+                    <div class="loading">게시글을 불러오는 중...</div>
+                </div>
             </div>
         </div>
 
         <!-- Users Management Section -->
-        <div class="section">
-            <h2 class="section-title">사용자 관리</h2>
-            <div id="users-list" class="feedback-list">
-                <div class="loading">사용자를 불러오는 중...</div>
+        <div class="section" id="section-users">
+            <h2 class="section-title collapsible" onclick="toggleSection('users')">
+                <span>사용자 관리</span>
+                <span class="toggle-icon" id="toggle-users">▼</span>
+            </h2>
+            <div class="section-content" id="content-users">
+                <div id="users-list" class="feedback-list">
+                    <div class="loading">사용자를 불러오는 중...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -350,6 +372,42 @@
             padding: 2px 6px;
             border-radius: 10px;
             font-size: 11px;
+        }
+
+        /* Collapsible Sections */
+        .section-title.collapsible {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .section-title.collapsible:hover {
+            color: var(--accent-primary);
+        }
+
+        .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s;
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
         }
 
         .delete-btn {
@@ -410,6 +468,31 @@
 
     <script>
         let currentFilter = 'all';
+        let currentPostFilter = 'all';
+
+        // 섹션 토글 (접기/펼치기)
+        function toggleSection(sectionName) {
+            const content = document.getElementById(`content-${sectionName}`);
+            const icon = document.getElementById(`toggle-${sectionName}`);
+
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+
+        // 게시글 카테고리 필터
+        function setPostFilter(category) {
+            currentPostFilter = category;
+            document.querySelectorAll('.post-filter').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            loadPosts();
+        }
 
         // 관리자 권한 체크 및 초기화
         document.addEventListener('DOMContentLoaded', async () => {
@@ -642,23 +725,43 @@
         // ===== 게시글 관리 =====
         async function loadPosts() {
             try {
-                const { data, error } = await window.sb
+                let query = window.sb
                     .from('posts')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(50);
 
+                // 카테고리 필터 적용
+                if (currentPostFilter !== 'all') {
+                    query = query.eq('category', currentPostFilter);
+                }
+
+                const { data, error } = await query;
+
                 if (error) throw error;
 
                 const container = document.getElementById('posts-list');
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">게시글이 없습니다.</div>';
+                    container.innerHTML = `<div class="empty-state">${currentPostFilter === 'all' ? '게시글이 없습니다.' : '해당 카테고리의 게시글이 없습니다.'}</div>`;
                     return;
                 }
 
+                const categoryLabels = {
+                    showcase: '🎨 쇼케이스',
+                    question: '❓ 질문',
+                    tutorial: '📚 튜토리얼',
+                    discussion: '💬 토론',
+                    general: '📝 일반'
+                };
+
                 container.innerHTML = data.map(post => `
                     <div class="post-item" id="post-${post.id}">
-                        <div class="post-title">${post.title || '(제목 없음)'}</div>
+                        <div class="post-title">
+                            <span style="background: rgba(139,92,246,0.2); color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 8px;">
+                                ${categoryLabels[post.category] || post.category}
+                            </span>
+                            ${post.title || '(제목 없음)'}
+                        </div>
                         <div class="post-meta">
                             <span>👤 ${post.user_name || 'Anonymous'} | 📅 ${new Date(post.created_at).toLocaleDateString('ko-KR')} | 👁 ${post.views || 0}</span>
                             <button class="delete-btn" onclick="deletePost('${post.id}')">🗑️ 삭제</button>
