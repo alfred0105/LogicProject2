@@ -178,51 +178,25 @@
             margin-bottom: 16px;
         }
 
-        /* Project Preview Box */
-        .project-preview {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            display: none;
-        }
-
-        .project-preview.show {
-            display: block;
-        }
-
-        .project-preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .project-preview-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-main);
-            display: flex;
+        /* 본문 내 프로젝트 링크 */
+        .inline-project-link {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .project-open-btn {
-            padding: 8px 16px;
-            background: var(--accent-purple);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+            margin-top: 24px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            color: var(--accent-purple);
             text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
             transition: all 0.2s;
         }
 
-        .project-open-btn:hover {
-            background: #7c3aed;
+        .inline-project-link:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
             transform: translateY(-1px);
         }
 
@@ -419,15 +393,6 @@
                 </div>
             </header>
 
-            <!-- Project Preview (if attached) -->
-            <div class="project-preview" id="project-preview">
-                <div class="project-preview-header">
-                    <span class="project-preview-title">🔌 첨부된 회로</span>
-                    <a id="project-link" href="#" class="project-open-btn" target="_blank">회로 열기 →</a>
-                </div>
-                <div id="project-name" style="font-size: 14px; color: var(--text-sub);"></div>
-            </div>
-
             <div class="post-body" id="post-content"></div>
 
             <div class="post-tags" id="post-tags"></div>
@@ -554,9 +519,14 @@
                     .single();
 
                 if (project) {
-                    document.getElementById('project-preview').classList.add('show');
-                    document.getElementById('project-name').textContent = project.title || '(제목 없음)';
-                    document.getElementById('project-link').href = `simulator.html?id=${project.id}&readonly=true`;
+                    // 본문 내에 프로젝트 링크 추가
+                    const postBody = document.getElementById('post-content');
+                    const projectLink = document.createElement('a');
+                    projectLink.className = 'inline-project-link';
+                    projectLink.href = `simulator.html?id=${project.id}&readonly=true`;
+                    projectLink.target = '_blank';
+                    projectLink.innerHTML = `🔌 첨부된 회로: <strong>${project.title || '(제목 없음)'}</strong> → 열기`;
+                    postBody.appendChild(projectLink);
                 }
             } catch (e) {
                 console.warn('Failed to load attached project:', e);
