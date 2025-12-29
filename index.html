@@ -741,48 +741,25 @@
 
             <!-- Main Navigation Tabs -->
             <div class="nav-tabs">
-                <a href="#projects-section" class="nav-tab active" onclick="showSection('projects')">🔌 프로젝트</a>
-                <a href="#posts" class="nav-tab" onclick="showSection('community')">💬 커뮤니티</a>
+                <a href="#projects-section" class="nav-tab active" onclick="showSection('projects')">프로젝트</a>
+                <a href="#posts" class="nav-tab" onclick="showSection('community')">커뮤니티</a>
             </div>
 
             <div class="nav-links">
-                <a href="library.html" class="nav-link">🗂️ 라이브러리</a>
-                <a href="javascript:void(0)" onclick="showFeedbackModal()" class="nav-link">📨 피드백</a>
+                <a href="library.html" class="nav-link">라이브러리</a>
+                <a href="javascript:void(0)" onclick="showFeedbackModal()" class="nav-link">피드백</a>
 
                 <a href="login.html" class="nav-link" id="nav-login">로그인</a>
-                <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">🏠 내 작업실</a>
+                <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">내 작업실</a>
                 <a href="admin.html" class="nav-link" id="nav-admin"
-                    style="display: none; color: var(--accent-orange);">⚙️ 관리자</a>
+                    style="display: none; color: var(--accent-orange);">관리자</a>
                 <a href="create-post.html" class="nav-link" id="nav-create-post"
-                    style="display: none; color: var(--accent-purple);">✍️ 글쓰기</a>
+                    style="display: none; color: var(--accent-purple);">글쓰기</a>
                 <a href="simulator.html" class="btn-cta">회로 만들기</a>
             </div>
         </nav>
     </header>
 
-    <!-- Hero Section -->
-    <div class="hero">
-        <h1>논리 회로 커뮤니티</h1>
-        <p class="hero-subtitle">
-            전 세계 개발자들이 만든 논리 회로를 탐색하고,<br>
-            당신만의 회로를 공유하세요.
-        </p>
-
-        <div class="hero-stats">
-            <div class="stat-item">
-                <span class="stat-number" id="total-projects">0</span>
-                <span class="stat-label">공개 프로젝트</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="total-likes">0</span>
-                <span class="stat-label">총 좋아요</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number" id="total-forks">0</span>
-                <span class="stat-label">포크됨</span>
-            </div>
-        </div>
-    </div>
 
     <!-- Projects Section Container -->
     <div id="projects-section">
@@ -790,7 +767,7 @@
         <section id="trending">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">🔥 인기 프로젝트</h2>
+                    <h2 class="section-title">인기 프로젝트</h2>
                     <p class="section-subtitle">지금 가장 인기있는 논리 회로</p>
                 </div>
                 <a href="library.html?sort=trending" class="view-all">전체보기 →</a>
@@ -807,7 +784,7 @@
         <section id="latest">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">🆕 최신 프로젝트</h2>
+                    <h2 class="section-title">최신 프로젝트</h2>
                     <p class="section-subtitle">방금 막 공유된 회로들</p>
                 </div>
                 <a href="library.html?sort=latest" class="view-all">전체보기 →</a>
@@ -826,20 +803,20 @@
         <section id="posts">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">📢 커뮤니티</h2>
+                    <h2 class="section-title">커뮤니티</h2>
                     <p class="section-subtitle">다양한 주제로 소통해보세요</p>
                 </div>
                 <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
-                    style="color: var(--accent-purple);">✍️ 글쓰기 →</a>
+                    style="color: var(--accent-purple);">글쓰기 →</a>
             </div>
 
             <!-- Posts Filter Tabs -->
             <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 20px;">
-                <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체</button>
-                <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 글</button>
-                <button class="posts-filter-tab" onclick="setPostsTab('showcase')">🎨 쇼케이스</button>
-                <button class="posts-filter-tab" onclick="setPostsTab('question')">❓ 질문</button>
-                <button class="posts-filter-tab" onclick="setPostsTab('tutorial')">📚 튜토리얼</button>
+                <button class="posts-filter-tab active" onclick="setPostsTab('all')">전체</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">내 글</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('showcase')">쇼케이스</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('question')">질문</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('tutorial')">튜토리얼</button>
             </div>
 
             <!-- List View Container -->
@@ -1041,11 +1018,11 @@
 
                 if (posts && posts.length > 0) {
                     const categoryLabels = {
-                        showcase: '🎨 쇼케이스',
-                        question: '❓ 질문',
-                        tutorial: '📚 튜토리얼',
-                        discussion: '💬 토론',
-                        general: '📝 일반'
+                        showcase: '쇼케이스',
+                        question: '질문',
+                        tutorial: '튜토리얼',
+                        discussion: '토론',
+                        general: '일반'
                     };
 
                     container.innerHTML = posts.map(post => {
@@ -1067,12 +1044,12 @@
                                     <div class="post-meta-row">
                                         <span class="author">@${author}</span>
                                         <span>• ${timeAgo}</span>
-                                        ${post.projects ? '<span>• 🔌 회로 첨부</span>' : ''}
+                                        ${post.projects ? '<span>• 회로 첨부</span>' : ''}
                                         <div class="stats">
-                                            <span class="stat-item">💬 ${post.comments_count || 0}</span>
-                                            <span class="stat-item">👁 ${post.views || 0}</span>
+                                            <span class="stat-item">댓글 ${post.comments_count || 0}</span>
+                                            <span class="stat-item">조회 ${post.views || 0}</span>
                                         </div>
-                                        ${currentPostsTab === 'my' ? `<button class="delete-post-btn" onclick="event.stopPropagation(); deleteMyPost('${post.id}')">🗑️</button>` : ''}
+                                        ${currentPostsTab === 'my' ? `<button class="delete-post-btn" onclick="event.stopPropagation(); deleteMyPost('${post.id}')">삭제</button>` : ''}
                                     </div>
                                 </div>
                             </div>
