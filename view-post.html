@@ -47,8 +47,8 @@
             min-height: 100vh;
         }
 
-        /* Header */
-        header {
+        /* Main Header Only (not .post-header) */
+        body>header {
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -94,6 +94,8 @@
         }
 
         .post-header {
+            position: static;
+            /* 절대 sticky로 올라가면 안 됨 */
             margin-bottom: 32px;
             border-bottom: 1px solid var(--border-dim);
             padding-bottom: 24px;
