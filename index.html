@@ -649,24 +649,22 @@
         </div>
     </section>
 
-
-
-    <!-- Community Posts Section -->
-    <section id="posts">
+    <!-- Community Posts Section (상단 배치) -->
+    <section id="posts"
+        style="background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%); padding: 40px 0; margin: 0 -40px; padding-left: 40px; padding-right: 40px;">
         <div class="section-header">
             <div>
-                <h2 class="section-title">📢 커뮤니티 게시글</h2>
+                <h2 class="section-title">📢 커뮤니티</h2>
                 <p class="section-subtitle">다양한 주제로 소통해보세요</p>
             </div>
             <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
-                style="color: var(--accent-purple);">글쓰기 →</a>
+                style="color: var(--accent-purple);">✍️ 글쓰기 →</a>
         </div>
 
-        <!-- Posts Filter Tabs -->
-        <div class="posts-filter-tabs" id="posts-filter-container">
-            <button class="posts-filter-tab active" onclick="setPostsTab('all')">전체 게시글</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab" style="display: none;">📝 내
-                게시글</button>
+        <!-- Posts Filter Tabs (눈에 띄는 탭 디자인) -->
+        <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 24px;">
+            <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체 게시글</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 게시글</button>
         </div>
 
         <div class="grid" id="posts-grid">
@@ -774,12 +772,11 @@
                 postManager = new PostManager();
             }
 
-            // 로그인 여부 확인하여 "내 게시글" 탭 표시
+            // 로그인 여부 확인
             if (window.sb) {
                 const { data: { user } } = await window.sb.auth.getUser();
                 if (user) {
                     currentUserId = user.id;
-                    document.getElementById('my-posts-tab').style.display = 'block';
                 }
             }
 
@@ -787,6 +784,14 @@
         });
 
         function setPostsTab(tab) {
+            // 내 게시글 탭 클릭 시 로그인 체크
+            if (tab === 'my' && !currentUserId) {
+                if (confirm('내 게시글을 보려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                    location.href = 'dashboard.html';
+                }
+                return;
+            }
+
             currentPostsTab = tab;
             document.querySelectorAll('.posts-filter-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
