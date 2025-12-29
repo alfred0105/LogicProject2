@@ -4374,3 +4374,11 @@ div.component[data-type="NOT"] {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* [HOTFIX] Remove All Glow Effects per User Request (Flat Design) */
+.component,
+.component *,
+.component svg,
+.component svg * {
+    filter: none !important;
+}
