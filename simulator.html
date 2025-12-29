@@ -1531,9 +1531,20 @@
     <script src="js/modules/TouchHandler.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/modules/SupabaseClient.js"></script>
+    <script src="js/modules/LibraryManager.js"></script>
     <script src="js/modules/CircuitValidator.js"></script>
     <script src="js/modules/CollaborationManager.js"></script>
     <script src="js/modules/Main.js?v=2.0"></script>
+
+    <!-- LibraryManager 초기화 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.LibraryManager) {
+                window.library = new LibraryManager();
+                console.log('LibraryManager initialized');
+            }
+        });
+    </script>
 
     <!-- 읽기 전용 모드 처리 -->
     <script>
