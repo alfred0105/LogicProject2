@@ -93,8 +93,9 @@ Object.assign(CircuitSimulator.prototype, {
             const label = clk.querySelector('.comp-label');
             if (label) label.innerText = next === '1' ? 'HIGH' : 'LOW';
 
-            clk.style.background = next === '1' ? '#9b59b6' : '#8e44ad';
-            clk.style.boxShadow = next === '1' ? '0 0 10px #9b59b6' : '3px 3px 10px rgba(0,0,0,0.2)';
+            // [Style removed to use CSS]
+            // clk.style.background = next === '1' ? '#9b59b6' : '#8e44ad';
+            // clk.style.boxShadow = next === '1' ? '0 0 10px #9b59b6' : '3px 3px 10px rgba(0,0,0,0.2)';
         });
         this.updateCircuit();
     },
@@ -172,10 +173,10 @@ Object.assign(CircuitSimulator.prototype, {
             const val = led.getAttribute('data-value');
             if (val === '1') {
                 led.classList.add('led-on');
-                led.style.boxShadow = `0 0 15px ${led.getAttribute('data-color') || 'red'}`;
+                led.style.boxShadow = ''; // [Style removed to use CSS]
             } else {
                 led.classList.remove('led-on');
-                led.style.boxShadow = 'none';
+                led.style.boxShadow = ''; // [Style removed to use CSS]
             }
         });
     },
