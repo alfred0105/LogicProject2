@@ -178,6 +178,54 @@
             margin-bottom: 16px;
         }
 
+        /* Project Preview Box */
+        .project-preview {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .project-preview.show {
+            display: block;
+        }
+
+        .project-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .project-preview-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-open-btn {
+            padding: 8px 16px;
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .project-open-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
         .post-body blockquote {
             border-left: 4px solid var(--accent-purple);
             padding-left: 16px;
@@ -371,6 +419,15 @@
                 </div>
             </header>
 
+            <!-- Project Preview (if attached) -->
+            <div class="project-preview" id="project-preview">
+                <div class="project-preview-header">
+                    <span class="project-preview-title">🔌 첨부된 회로</span>
+                    <a id="project-link" href="#" class="project-open-btn" target="_blank">회로 열기 →</a>
+                </div>
+                <div id="project-name" style="font-size: 14px; color: var(--text-sub);"></div>
+            </div>
+
             <div class="post-body" id="post-content"></div>
 
             <div class="post-tags" id="post-tags"></div>
@@ -471,6 +528,11 @@
                 });
             }
 
+            // Load attached project
+            if (post.project_id) {
+                await loadAttachedProject(post.project_id);
+            }
+
             // Check Like Status
             const isLiked = await postManager.isLiked(postId);
             if (isLiked) {
@@ -480,6 +542,24 @@
             // Delete Button (Admin Only or Author)
             if (currentUser && (currentUser.email === 'ace060408@gmail.com' || currentUser.id === post.user_id)) {
                 document.getElementById('delete-btn').style.display = 'flex';
+            }
+        }
+
+        async function loadAttachedProject(projectId) {
+            try {
+                const { data: project, error } = await window.sb
+                    .from('projects')
+                    .select('id, title')
+                    .eq('id', projectId)
+                    .single();
+
+                if (project) {
+                    document.getElementById('project-preview').classList.add('show');
+                    document.getElementById('project-name').textContent = project.title || '(제목 없음)';
+                    document.getElementById('project-link').href = `simulator.html?id=${project.id}&readonly=true`;
+                }
+            } catch (e) {
+                console.warn('Failed to load attached project:', e);
             }
         }
 
