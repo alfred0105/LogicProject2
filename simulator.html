@@ -1406,7 +1406,56 @@
     </style>
 
     <script>
+        // === 피드백 모달 함수 ===
+        function openFeedbackModal() {
+            document.getElementById('feedback-modal').classList.add('show');
+        }
 
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.remove('show');
+            document.getElementById('feedback-content').value = '';
+        }
+
+        async function submitFeedback() {
+            const category = document.getElementById('feedback-category').value;
+            const content = document.getElementById('feedback-content').value.trim();
+            const includeCircuit = document.getElementById('feedback-include-circuit')?.checked;
+
+            if (!content) {
+                alert('내용을 입력하세요.');
+                return;
+            }
+
+            try {
+                const user = window.sb ? await window.sb.auth.getUser() : null;
+                const userEmail = user?.data?.user?.email || 'anonymous';
+
+                // 회로 상태 첨부 (선택 시)
+                let circuitData = null;
+                if (includeCircuit && window.sim) {
+                    try {
+                        circuitData = JSON.stringify(window.sim.currentProjectData || {});
+                    } catch (e) {
+                        console.warn('Could not serialize circuit:', e);
+                    }
+                }
+
+                await window.sb.from('feedback').insert({
+                    category: category,
+                    content: content,
+                    user_email: userEmail,
+                    circuit_data: circuitData,
+                    page_url: window.location.href,
+                    created_at: new Date().toISOString()
+                });
+
+                alert('✓ 피드백이 전송되었습니다. 감사합니다!');
+                closeFeedbackModal();
+            } catch (error) {
+                console.error('Feedback error:', error);
+                alert('피드백 전송에 실패했습니다. 다시 시도해주세요.');
+            }
+        }
     </script>
 
     <!-- Error Handler -->
