@@ -423,7 +423,7 @@ Object.assign(CircuitSimulator.prototype, {
 
             if (isOn !== wasOn) {
                 led.classList.toggle('led-on', isOn);
-                led.style.boxShadow = ''; // [Style removed to use CSS]
+
                 // ? `0 0 15px ${led.getAttribute('data-color') || 'red'}`
                 // : 'none';
             }

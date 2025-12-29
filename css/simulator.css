@@ -1228,7 +1228,7 @@ body.mode-wire #workspace {
 
 .component[data-type="SWITCH"][data-value="1"] svg {
     stroke: var(--accent-green);
-    filter: drop-shadow(0 0 12px var(--accent-green-glow));
+    /* filter removed */
 }
 
 .component[data-type="SWITCH"] .comp-label {
@@ -1268,14 +1268,14 @@ body.mode-wire #workspace {
 .component[data-type="LED"][data-value="1"] svg {
     fill: #ef4444;
     stroke: #fca5a5;
-    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8)) drop-shadow(0 0 32px rgba(239, 68, 68, 0.5));
+    /* filter removed */
 }
 
 /* LED Custom Colors */
 .component[data-type="LED"][data-color="red"][data-value="1"] svg {
     fill: #ef4444;
     stroke: #fca5a5;
-    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8));
+    /* filter removed */
 }
 
 .component[data-type="LED"][data-color="green"][data-value="1"] svg {
@@ -1328,7 +1328,7 @@ body.mode-wire #workspace {
 
 .component[data-type="CLOCK"][data-value="1"] svg {
     stroke: #d8b4fe !important;
-    filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.8)) drop-shadow(0 0 4px rgba(168, 85, 247, 1)) !important;
+    /* filter removed */
 }
 
 /* === JOINT - Wire Connection Node === */
@@ -4373,12 +4373,4 @@ div.component[data-type="NOT"] {
     z-index: 9999;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* [HOTFIX] Remove All Glow Effects per User Request (Flat Design) */
-.component,
-.component *,
-.component svg,
-.component svg * {
-    filter: none !important;
 }
