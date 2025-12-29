@@ -3,8 +3,9 @@
  */
 Object.assign(CircuitSimulator.prototype, {
     toggleSwitch(e, el) {
-        // pan 모드에서만 스위치 비활성화 (edit, wire, select 모드에서는 작동)
-        if (this.mode === 'pan') return;
+        // [수정] 읽기 전용 모드에서도 스위치 토글 허용 (인터랙티브 미리보기)
+        // pan 모드일 때만 차단하되, 읽기 전용 모드에서는 예외 허용
+        if (this.mode === 'pan' && !window.isReadOnlyMode) return;
         // 선택 여부와 상관없이 즉시 토글되도록 수정
 
         const current = el.getAttribute('data-value');
