@@ -301,6 +301,22 @@
                 <div class="loading">피드백을 불러오는 중...</div>
             </div>
         </div>
+
+        <!-- Posts Management Section -->
+        <div class="section">
+            <h2 class="section-title">게시글 관리</h2>
+            <div id="posts-list" class="feedback-list">
+                <div class="loading">게시글을 불러오는 중...</div>
+            </div>
+        </div>
+
+        <!-- Users Management Section -->
+        <div class="section">
+            <h2 class="section-title">사용자 관리</h2>
+            <div id="users-list" class="feedback-list">
+                <div class="loading">사용자를 불러오는 중...</div>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -335,6 +351,61 @@
             border-radius: 10px;
             font-size: 11px;
         }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: var(--accent-danger);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .post-item,
+        .user-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .post-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .post-meta {
+            font-size: 12px;
+            color: var(--text-sub);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ban-btn {
+            padding: 6px 12px;
+            background: var(--accent-orange);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .ban-btn:hover {
+            background: #d97706;
+        }
+
+        .unban-btn {
+            background: var(--accent-green);
+        }
     </style>
 
     <script>
@@ -360,6 +431,8 @@
             await loadStats();
             await updateFeedbackCounts();
             await loadFeedback();
+            await loadPosts();
+            await loadUsers();
         });
 
         function setFilter(filter) {
@@ -486,7 +559,10 @@
                         <label style="font-size: 12px; color: var(--text-dim);">관리자 답변</label>
                         <textarea id="comment-${feedback.id}" class="admin-comment-box" 
                             placeholder="답변을 입력하세요...">${feedback.admin_comment || ''}</textarea>
-                        <button class="btn-save" onclick="saveComment('${feedback.id}')">저장</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-save" onclick="saveComment('${feedback.id}')">저장</button>
+                            <button class="delete-btn" onclick="deleteFeedback('${feedback.id}')">🗑️ 삭제</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -540,6 +616,167 @@
             } catch (error) {
                 console.error('Save comment error:', error);
                 alert('답변 저장 실패: ' + error.message);
+            }
+        }
+
+        async function deleteFeedback(id) {
+            if (!confirm('이 피드백을 삭제하시겠습니까?')) return;
+
+            try {
+                const { error } = await window.sb
+                    .from('feedback')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                document.getElementById(`feedback-${id}`)?.remove();
+                await updateFeedbackCounts();
+                alert('피드백이 삭제되었습니다.');
+            } catch (error) {
+                console.error('Delete feedback error:', error);
+                alert('삭제 실패: ' + error.message);
+            }
+        }
+
+        // ===== 게시글 관리 =====
+        async function loadPosts() {
+            try {
+                const { data, error } = await window.sb
+                    .from('posts')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                const container = document.getElementById('posts-list');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">게시글이 없습니다.</div>';
+                    return;
+                }
+
+                container.innerHTML = data.map(post => `
+                    <div class="post-item" id="post-${post.id}">
+                        <div class="post-title">${post.title || '(제목 없음)'}</div>
+                        <div class="post-meta">
+                            <span>👤 ${post.user_name || 'Anonymous'} | 📅 ${new Date(post.created_at).toLocaleDateString('ko-KR')} | 👁 ${post.views || 0}</span>
+                            <button class="delete-btn" onclick="deletePost('${post.id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Load posts error:', error);
+                document.getElementById('posts-list').innerHTML = '<div class="empty-state">게시글 로드 실패</div>';
+            }
+        }
+
+        async function deletePost(id) {
+            if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
+
+            try {
+                // 댓글 먼저 삭제
+                await window.sb.from('post_comments').delete().eq('post_id', id);
+                // 좋아요 삭제
+                await window.sb.from('post_likes').delete().eq('post_id', id);
+                // 게시글 삭제
+                const { error } = await window.sb.from('posts').delete().eq('id', id);
+
+                if (error) throw error;
+
+                document.getElementById(`post-${id}`)?.remove();
+                alert('게시글이 삭제되었습니다.');
+            } catch (error) {
+                console.error('Delete post error:', error);
+                alert('삭제 실패: ' + error.message);
+            }
+        }
+
+        // ===== 사용자 관리 =====
+        async function loadUsers() {
+            try {
+                // 프로젝트 기준 사용자 목록 (auth.users에 직접 접근 불가)
+                const { data, error } = await window.sb
+                    .from('projects')
+                    .select('user_id, user_email')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // 중복 제거
+                const uniqueUsers = [...new Map(data.map(item => [item.user_id, item])).values()];
+
+                const container = document.getElementById('users-list');
+                if (!uniqueUsers || uniqueUsers.length === 0) {
+                    container.innerHTML = '<div class="empty-state">사용자가 없습니다.</div>';
+                    return;
+                }
+
+                // 밴 목록 가져오기 (banned_users 테이블이 있다면)
+                let bannedIds = [];
+                try {
+                    const { data: banned } = await window.sb.from('banned_users').select('user_id');
+                    bannedIds = banned?.map(b => b.user_id) || [];
+                } catch (e) {
+                    // 테이블 없을 수 있음
+                }
+
+                container.innerHTML = uniqueUsers.map(user => {
+                    const isBanned = bannedIds.includes(user.user_id);
+                    return `
+                        <div class="user-item" id="user-${user.user_id}">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>👤 ${user.user_email || user.user_id}</span>
+                                ${isBanned
+                            ? `<button class="ban-btn unban-btn" onclick="unbanUser('${user.user_id}')">✅ 차단 해제</button>`
+                            : `<button class="ban-btn" onclick="banUser('${user.user_id}', '${user.user_email}')">🚫 차단</button>`
+                        }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Load users error:', error);
+                document.getElementById('users-list').innerHTML = '<div class="empty-state">사용자 로드 실패</div>';
+            }
+        }
+
+        async function banUser(userId, email) {
+            const reason = prompt('차단 사유를 입력하세요:');
+            if (reason === null) return;
+
+            try {
+                const { error } = await window.sb.from('banned_users').insert({
+                    user_id: userId,
+                    user_email: email,
+                    reason: reason,
+                    banned_at: new Date().toISOString()
+                });
+
+                if (error) throw error;
+                alert('사용자가 차단되었습니다.');
+                await loadUsers();
+            } catch (error) {
+                console.error('Ban user error:', error);
+                alert('차단 실패: ' + error.message);
+            }
+        }
+
+        async function unbanUser(userId) {
+            if (!confirm('이 사용자의 차단을 해제하시겠습니까?')) return;
+
+            try {
+                const { error } = await window.sb
+                    .from('banned_users')
+                    .delete()
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+                alert('차단이 해제되었습니다.');
+                await loadUsers();
+            } catch (error) {
+                console.error('Unban user error:', error);
+                alert('차단 해제 실패: ' + error.message);
             }
         }
     </script>
