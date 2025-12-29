@@ -2605,6 +2605,25 @@
                 }
             })();
         </script>
+        <script>
+            // [HOTFIX] Force clear inline styles that might be set by cached JS or other modules
+            (function () {
+                function clearArtifacts() {
+                    const selector = '.component[data-type="LED"], .component[data-type="CLOCK"], .component[data-type="SWITCH"]';
+                    const elements = document.querySelectorAll(selector);
+                    for (let i = 0; i < elements.length; i++) {
+                        const el = elements[i];
+                        // Remove inline styles that conflict with CSS
+                        if (el.style.boxShadow) el.style.boxShadow = '';
+                        if (el.style.filter) el.style.filter = '';
+                        if (el.style.background) el.style.background = '';
+                    }
+                    requestAnimationFrame(clearArtifacts);
+                }
+                // Start clearing loop
+                requestAnimationFrame(clearArtifacts);
+            })();
+        </script>
 </body>
 
 </html>
