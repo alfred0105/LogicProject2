@@ -73,23 +73,23 @@ Object.assign(CircuitSimulator.prototype, {
         // 모듈 편집 모드인지 확인 (다중 탭 지원: module_로 시작)
         const isModuleEditMode = this.currentTab && this.currentTab.startsWith('module_');
 
-        // 올바른 워크스페이스 참조 가져오기
+        // [수정] 워크스페이스 직접 참조 -> 핀 좌표계와 일치
         let wsRect;
         if (isModuleEditMode && this.moduleCanvas) {
             wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace && this.workspace.parentElement) {
-            // transform 없는 고정 컨테이너 기준 (parentElement)
-            wsRect = this.workspace.parentElement.getBoundingClientRect();
+        } else if (this.workspace) {
+            // workspace의 실제 위치 사용 (transform 포함)
+            wsRect = this.workspace.getBoundingClientRect();
         } else {
-            return; // 워크스페이스 참조 없음
+            return;
         }
 
         // 모듈 편집 모드에서는 pan/scale을 적용하지 않음
-        const pan = isModuleEditMode ? { x: 0, y: 0 } : { x: this.panX || 0, y: this.panY || 0 };
         const scale = isModuleEditMode ? 1 : (this.scale || 1);
 
-        const mouseX = (e.clientX - wsRect.left - pan.x) / scale;
-        const mouseY = (e.clientY - wsRect.top - pan.y) / scale;
+        // [수정] workspace rect가 이미 transform을 포함하므로 pan 제거
+        const mouseX = (e.clientX - wsRect.left) / scale;
+        const mouseY = (e.clientY - wsRect.top) / scale;
 
         // 스냅 타겟 찾기
         this.findSnapTarget(mouseX, mouseY);
