@@ -556,6 +556,141 @@
         .delete-post-btn:hover {
             background: rgba(239, 68, 68, 0.3);
         }
+
+        /* Community List View (Reddit/HN style) */
+        .community-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-dim);
+        }
+
+        .post-list-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border-dim);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .post-list-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .post-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-votes {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        .post-votes .vote-count {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        .post-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .post-category-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .post-category-badge.showcase {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+
+        .post-category-badge.question {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .post-category-badge.tutorial {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .post-category-badge.discussion {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .post-category-badge.general {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .post-list-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .post-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .post-meta-row .author {
+            color: var(--accent-primary);
+        }
+
+        .post-meta-row .stats {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .post-meta-row .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
@@ -661,13 +796,17 @@
         </div>
 
         <!-- Posts Filter Tabs -->
-        <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 24px;">
-            <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체 게시글</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 게시글</button>
+        <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 20px;">
+            <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 글</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('showcase')">🎨 쇼케이스</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('question')">❓ 질문</button>
+            <button class="posts-filter-tab" onclick="setPostsTab('tutorial')">📚 튜토리얼</button>
         </div>
 
-        <div class="grid" id="posts-grid">
-            <div class="loading">
+        <!-- List View Container -->
+        <div class="community-list" id="posts-list">
+            <div class="loading" style="padding: 40px;">
                 <div class="spinner"></div>
                 <p>게시글을 불러오는 중...</p>
             </div>
@@ -814,67 +953,98 @@
         }
 
         async function loadCommunityPosts() {
-            const grid = document.getElementById('posts-grid');
-            if (!postManager) {
-                grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글 시스템을 불러올 수 없습니다</p>';
+            const container = document.getElementById('posts-list');
+            if (!container) return;
+
+            if (!postManager && !window.sb) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">게시글 시스템을 불러올 수 없습니다</p>';
                 return;
             }
 
+            container.innerHTML = '<div class="loading" style="padding: 40px;"><div class="spinner"></div><p>불러오는 중...</p></div>';
+
             try {
-                let posts;
+                let query = window.sb
+                    .from('posts')
+                    .select('*, projects(id, title)')
+                    .order('created_at', { ascending: false })
+                    .limit(15);
 
+                // 탭별 필터
                 if (currentPostsTab === 'my' && currentUserId) {
-                    // 내 게시글만 조회
-                    const { data, error } = await window.sb
-                        .from('posts')
-                        .select('*, projects(id, title)')
-                        .eq('user_id', currentUserId)
-                        .order('created_at', { ascending: false })
-                        .limit(20);
-
-                    if (error) throw error;
-                    posts = data;
-                } else {
-                    // 전체 게시글
-                    posts = await postManager.getRecentPosts(8);
+                    query = query.eq('user_id', currentUserId);
+                } else if (['showcase', 'question', 'tutorial', 'discussion'].includes(currentPostsTab)) {
+                    query = query.eq('category', currentPostsTab);
                 }
 
+                const { data: posts, error } = await query;
+                if (error) throw error;
+
                 if (posts && posts.length > 0) {
-                    grid.innerHTML = posts.map(post => {
+                    const categoryLabels = {
+                        showcase: '🎨 쇼케이스',
+                        question: '❓ 질문',
+                        tutorial: '📚 튜토리얼',
+                        discussion: '💬 토론',
+                        general: '📝 일반'
+                    };
+
+                    container.innerHTML = posts.map(post => {
                         const author = post.user_name || post.user_email?.split('@')[0] || 'Anonymous';
-                        const linkedProject = post.projects;
+                        const timeAgo = formatTimeAgo(post.created_at);
+                        const category = post.category || 'general';
 
                         return `
-                            <div class="project-card" onclick="location.href='view-post.html?id=${post.id}'">
-                                <div class="card-body">
-                                    <div class="card-header">
-                                        <div class="author-avatar">${author[0].toUpperCase()}</div>
-                                        <div class="author-info">
-                                            <div class="author-name">${author}</div>
-                                            <div class="project-date">${formatDate(post.created_at)}</div>
+                            <div class="post-list-item" onclick="location.href='view-post.html?id=${post.id}'">
+                                <div class="post-votes">
+                                    <span class="vote-count">${post.likes || 0}</span>
+                                    <span>좋아요</span>
+                                </div>
+                                <div class="post-content">
+                                    <div class="post-title-row">
+                                        <span class="post-category-badge ${category}">${categoryLabels[category] || category}</span>
+                                        <span class="post-list-title">${post.title}</span>
+                                    </div>
+                                    <div class="post-meta-row">
+                                        <span class="author">@${author}</span>
+                                        <span>• ${timeAgo}</span>
+                                        ${post.projects ? '<span>• 🔌 회로 첨부</span>' : ''}
+                                        <div class="stats">
+                                            <span class="stat-item">💬 ${post.comments_count || 0}</span>
+                                            <span class="stat-item">👁 ${post.views || 0}</span>
                                         </div>
                                         ${currentPostsTab === 'my' ? `<button class="delete-post-btn" onclick="event.stopPropagation(); deleteMyPost('${post.id}')">🗑️</button>` : ''}
-                                    </div>
-                                    <div class="card-title">${post.title}</div>
-                                    <div class="card-description">${(post.content || '').substring(0, 100)}...</div>
-                                    <div class="card-footer">
-                                        ${linkedProject ? `<div class="circuit-badge">🔌 ${linkedProject.title || '회로 포함'}</div>` : ''}
-                                        <div class="card-stats" style="${linkedProject ? '' : 'margin-left: auto;'}">
-                                            <span class="stat">💬 ${post.comments_count || 0}</span>
-                                            <span class="stat">❤️ ${post.likes || 0}</span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    grid.innerHTML = `<p style="text-align:center;color:var(--text-dim)">${currentPostsTab === 'my' ? '작성한 게시글이 없습니다' : '게시글이 없습니다'}</p>`;
+                    const messages = {
+                        'all': '아직 게시글이 없습니다. 첫 글을 작성해보세요!',
+                        'my': '작성한 게시글이 없습니다',
+                        'showcase': '쇼케이스 게시글이 없습니다',
+                        'question': '질문 게시글이 없습니다',
+                        'tutorial': '튜토리얼 게시글이 없습니다'
+                    };
+                    container.innerHTML = `<p style="text-align:center;color:var(--text-dim);padding:40px;">${messages[currentPostsTab] || '게시글이 없습니다'}</p>`;
                 }
             } catch (error) {
                 console.error('Load posts error:', error);
-                grid.innerHTML = '<p style="text-align:center;color:var(--text-dim)">게시글을 불러올 수 없습니다</p>';
+                container.innerHTML = '<p style="text-align:center;color:var(--text-dim);padding:40px;">게시글을 불러올 수 없습니다</p>';
             }
+        }
+
+        function formatTimeAgo(dateString) {
+            const now = new Date();
+            const date = new Date(dateString);
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return '방금 전';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}분 전`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}시간 전`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}일 전`;
+            return date.toLocaleDateString('ko-KR');
         }
 
         async function deleteMyPost(postId) {
