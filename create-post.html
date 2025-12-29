@@ -523,24 +523,51 @@
         });
 
         async function loadUserProjects(userId) {
+            const select = document.getElementById('project-select');
+
             try {
+                console.log('Loading projects for user:', userId);
+
                 const { data, error } = await window.sb
                     .from('projects')
-                    .select('id, title')
+                    .select('id, title, updated_at')
                     .eq('user_id', userId)
                     .order('updated_at', { ascending: false });
 
+                if (error) {
+                    console.error('Supabase error loading projects:', error);
+                    const errorOption = document.createElement('option');
+                    errorOption.value = '';
+                    errorOption.textContent = '⚠️ 프로젝트 로드 실패';
+                    errorOption.disabled = true;
+                    select.appendChild(errorOption);
+                    return;
+                }
+
+                console.log('Loaded projects:', data);
+
                 if (data && data.length > 0) {
-                    const select = document.getElementById('project-select');
                     data.forEach(p => {
                         const option = document.createElement('option');
                         option.value = p.id;
-                        option.textContent = p.title || '제목 없음';
+                        option.textContent = p.title || '(제목 없음)';
                         select.appendChild(option);
                     });
+                } else {
+                    // 프로젝트가 없는 경우
+                    const emptyOption = document.createElement('option');
+                    emptyOption.value = '';
+                    emptyOption.textContent = '📂 저장된 프로젝트가 없습니다';
+                    emptyOption.disabled = true;
+                    select.appendChild(emptyOption);
                 }
             } catch (error) {
                 console.error('Failed to load projects:', error);
+                const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = '⚠️ 오류 발생';
+                errorOption.disabled = true;
+                select.appendChild(errorOption);
             }
         }
 
