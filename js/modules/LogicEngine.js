@@ -219,6 +219,12 @@ Object.assign(CircuitSimulator.prototype, {
         let changed = false;
         components.forEach(comp => {
             const type = comp.getAttribute('data-type');
+
+            // [FIX] Detect Package (Standard or Custom) and simulate internals
+            if (type === 'PACKAGE' || comp.classList.contains('package-comp')) {
+                this.evaluateComposite(comp);
+                return;
+            }
             let valStr = comp.getAttribute('data-value');
             if (type === 'SWITCH' && !valStr) valStr = '0';
 
@@ -260,9 +266,7 @@ Object.assign(CircuitSimulator.prototype, {
                     const ledInput = comp.querySelector('.pin.input')?.getAttribute('data-signal') === '1';
                     res = ledInput;
                     break;
-                case 'PACKAGE':
-                    this.evaluateComposite(comp);
-                    return;
+                // case 'PACKAGE' handled above
             }
 
             if (res !== currentVal) {
@@ -284,8 +288,8 @@ Object.assign(CircuitSimulator.prototype, {
 
             if (fromComp) {
                 const type = fromComp.getAttribute('data-type');
-                // [FIX] Package Multi-Output Support
-                if (type === 'PACKAGE') {
+                // [FIX] Package Multi-Output Support (Standard & Custom)
+                if (type === 'PACKAGE' || fromComp.classList.contains('package-comp')) {
                     signal = fromPin.getAttribute('data-output-signal') === '1';
                 } else {
                     let val = fromComp.getAttribute('data-value');
