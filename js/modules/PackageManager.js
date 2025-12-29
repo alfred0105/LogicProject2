@@ -374,15 +374,16 @@ Object.assign(CircuitSimulator.prototype, {
         ];
 
         container.innerHTML = standards.map(pkg =>
-            `<div class="package-item">
-                <button class="comp-btn package wide standard" onclick="sim.addPackage('${pkg.id}')"
-                    onmouseenter="sim.showTooltip('${pkg.name}', '${pkg.desc}')"
-                    onmouseleave="sim.hideTooltip()">
-                    <div class="icon"><svg><use href="#icon-package" /></svg></div>
-                    <span class="name">${pkg.name}</span>
-                    <span class="pkg-info">${pkg.label}</span>
-                </button>
-            </div>`
+            `<button class="comp-btn package wide standard" onclick="sim.addPackage('${pkg.id}')"
+                style="grid-column: 1 / -1; flex-direction: row; justify-content: flex-start; padding: 10px 16px; min-height: 50px; gap: 0;"
+                onmouseenter="sim.showTooltip('${pkg.name}', '${pkg.desc}')"
+                onmouseleave="sim.hideTooltip()">
+                <div class="icon" style="margin-right: 12px; width: 24px; height: 24px;"><svg><use href="#icon-package" /></svg></div>
+                <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                    <span class="name" style="font-size:13px; font-weight:600;">${pkg.name}</span>
+                    <span class="pkg-info" style="font-size:11px; opacity:0.6;">${pkg.label}</span>
+                </div>
+            </button>`
         ).join('');
     },
 
