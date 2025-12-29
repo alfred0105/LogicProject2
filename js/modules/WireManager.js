@@ -327,30 +327,29 @@ Object.assign(CircuitSimulator.prototype, {
 
     /**
      * 헬퍼: 핀 중심 좌표 구하기 (Workspace 기준)
-     * Transform과 무관하게 정확한 SVG 로컬 좌표 반환
+    /**
+     * [Refactored] Transform을 고려하여 시각적으로 정확한 핀 중심 좌표 반환 (getBoundingClientRect 기반)
      */
     getPinCenter(pin) {
-        // 핀이 속한 컴포넌트 찾기
-        const comp = pin.closest('.component');
-        if (!comp) {
-            console.warn('Pin has no parent component:', pin);
-            return { x: 0, y: 0 };
-        }
+        // 1. 핀의 화면상 절대 위치 (Viewport 기준)
+        const rect = pin.getBoundingClientRect();
+        const clientCenterX = rect.left + rect.width / 2;
+        const clientCenterY = rect.top + rect.height / 2;
 
-        // 컴포넌트의 SVG 로컬 좌표 (style.left/top은 이미 workspace 좌표)
-        const compX = parseFloat(comp.style.left) || 0;
-        const compY = parseFloat(comp.style.top) || 0;
+        // 2. 워크스페이스 기준 역변환 (Pan/Scale 고려)
+        // this.workspace는 transform이 적용되는 컨테이너
+        const wsRect = this.workspace.getBoundingClientRect();
 
-        // 핀의 컴포넌트 내 상대 위치
-        const pinRelX = pin.offsetLeft + pin.offsetWidth / 2;
-        const pinRelY = pin.offsetTop + pin.offsetHeight / 2;
+        // 워크스페이스 내부 좌표계로 변환 (Scale과 Pan이 이미 적용된 rect 기준)
+        // 주의: workspace 자체가 transform되어 있으므로, left/top 차이를 scale로 나누면 내부 로컬 좌표가 됨
+        // 단, 시뮬레이터 구조에 따라 workspace의 원점이 (0,0)이 아닐 수 있음 (중앙 정렬 등)
+        // 하지만 기존 handleWireMove 로직과 일관성을 유지하려면:
 
-        // 절대 좌표 = 컴포넌트 좌표 + 핀 상대 좌표
-        // [User Request] Y축 미세 보정 (-1px) - 시각적 중심 맞춤
-        return {
-            x: compX + pinRelX,
-            y: compY + pinRelY - 1
-        };
+        const scale = this.scale || 1;
+        const x = (clientCenterX - wsRect.left) / scale;
+        const y = (clientCenterY - wsRect.top) / scale;
+
+        return { x, y };
     },
 
     /**
