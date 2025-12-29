@@ -37,10 +37,28 @@ if (window.PostManager) {
 
         /**
          * 게시글 작성
+         * 회로를 첨부할 경우 스냅샷으로 저장 (원본 프로젝트 변경 시 영향 없음)
          */
         async createPost(title, content, category = 'general', tags = [], projectId = null) {
             const user = await this.getCurrentUser();
             if (!user) throw new Error('로그인이 필요합니다');
+
+            let circuitSnapshot = null;
+            let circuitTitle = null;
+
+            // 프로젝트가 선택된 경우 스냅샷 생성
+            if (projectId) {
+                const { data: project, error: projError } = await window.sb
+                    .from('projects')
+                    .select('title, description, data')
+                    .eq('id', projectId)
+                    .single();
+
+                if (!projError && project) {
+                    circuitTitle = project.title;
+                    circuitSnapshot = project.data; // 회로 데이터 스냅샷
+                }
+            }
 
             const { data, error } = await window.sb
                 .from('posts')
@@ -52,7 +70,9 @@ if (window.PostManager) {
                     content: content,
                     category: category,
                     tags: tags,
-                    project_id: projectId, // 회로 첨부
+                    project_id: projectId, // 레거시 호환성 (참조용)
+                    circuit_snapshot: circuitSnapshot, // 스냅샷 데이터
+                    circuit_title: circuitTitle, // 회로 제목
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 })

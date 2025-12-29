@@ -260,11 +260,11 @@
 
             <!-- Playback Icons -->
             <symbol id="icon-play" viewBox="0 0 24 24">
-                <polygon points="5 3 19 12 5 21 5 3" />
+                <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
             </symbol>
             <symbol id="icon-pause" viewBox="0 0 24 24">
-                <rect x="6" y="4" width="4" height="16" />
-                <rect x="14" y="4" width="4" height="16" />
+                <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+                <rect x="14" y="4" width="4" height="16" fill="currentColor" />
             </symbol>
             <symbol id="icon-step" viewBox="0 0 24 24">
                 <polygon points="5 4 15 12 5 20 5 4" />
@@ -2491,6 +2491,56 @@
                     errorDiv.style.display = 'block';
                 }
             }
+
+            // [스냅샷 로드] 게시글에서 첨부된 회로 스냅샷 확인 및 로드
+            document.addEventListener('DOMContentLoaded', async () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('snapshot') === 'true') {
+                    const snapshotData = localStorage.getItem('temp_circuit_snapshot');
+                    if (snapshotData) {
+                        console.log('🔍 스냅샷 데이터 감지됨');
+                        try {
+                            // 시뮬레이터 초기화 대기 (sim 객체가 생성될 때까지)
+                            let attempts = 0;
+                            const waitForSim = setInterval(() => {
+                                attempts++;
+                                if (window.sim && window.sim.loadProject) {
+                                    clearInterval(waitForSim);
+
+                                    try {
+                                        const data = JSON.parse(snapshotData);
+
+                                        // [중요] 원본 프로젝트 덮어쓰기 방지: ID 제거하여 새 프로젝트로 취급
+                                        delete data.id;
+
+                                        // 스냅샷 이름으로 타이틀 변경
+                                        if (data.projectName) {
+                                            document.querySelector('.project-name').value = data.projectName + ' (스냅샷)';
+                                        }
+
+                                        window.sim.loadProject(data);
+                                        window.sim.showToast('📑 게시글 회로 스냅샷을 불러왔습니다 (읽기 전용)', 'info');
+
+                                        // 읽기 전용 모드 강제 적용 (선택)
+                                        window.isReadOnlyMode = true;
+                                        document.body.classList.add('readonly-mode');
+                                    } catch (parseError) {
+                                        console.error('JSON Parse error:', parseError);
+                                    }
+                                } else if (attempts > 50) { // 5초 타임아웃
+                                    clearInterval(waitForSim);
+                                    console.error('시뮬레이터 초기화 타임아웃');
+                                }
+                            }, 100);
+
+                            // 1회용이면 삭제 (새로고침 시 사라지는 게 싫다면 주석 처리)
+                            // localStorage.removeItem('temp_circuit_snapshot');
+                        } catch (e) {
+                            console.error('Snapshot load error:', e);
+                        }
+                    }
+                }
+            });
         </script>
 
         <!-- Settings Modal -->

@@ -346,9 +346,10 @@ Object.assign(CircuitSimulator.prototype, {
         const pinRelY = pin.offsetTop + pin.offsetHeight / 2;
 
         // 절대 좌표 = 컴포넌트 좌표 + 핀 상대 좌표
+        // [User Request] Y축 미세 보정 (-1px) - 시각적 중심 맞춤
         return {
             x: compX + pinRelX,
-            y: compY + pinRelY
+            y: compY + pinRelY - 1
         };
     },
 

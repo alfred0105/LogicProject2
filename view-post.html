@@ -495,9 +495,9 @@
                 });
             }
 
-            // Load attached project
-            if (post.project_id) {
-                await loadAttachedProject(post.project_id);
+            // Load attached circuit - 스냅샷 우선, 레거시 호환성 유지
+            if (post.circuit_snapshot || post.project_id) {
+                await loadAttachedCircuit(post);
             }
 
             // Check Like Status
@@ -512,26 +512,78 @@
             }
         }
 
-        async function loadAttachedProject(projectId) {
+        /**
+         * 첨부된 회로 로드 - 스냅샷 우선 사용
+         */
+        async function loadAttachedCircuit(post) {
             try {
-                const { data: project, error } = await window.sb
-                    .from('projects')
-                    .select('id, title')
-                    .eq('id', projectId)
-                    .single();
+                const postBody = document.getElementById('post-content');
+                const circuitContainer = document.createElement('div');
+                circuitContainer.className = 'attached-circuit';
+                circuitContainer.style.cssText = 'margin-top: 24px; padding: 16px; background: var(--bg-hover); border: 1px solid var(--border-dim); border-radius: 8px;';
 
-                if (project) {
-                    // 본문 내에 프로젝트 링크 추가
-                    const postBody = document.getElementById('post-content');
-                    const projectLink = document.createElement('a');
-                    projectLink.className = 'inline-project-link';
-                    projectLink.href = `simulator.html?id=${project.id}&readonly=true`;
-                    projectLink.target = '_blank';
-                    projectLink.innerHTML = `🔌 첨부된 회로: <strong>${project.title || '(제목 없음)'}</strong> → 열기`;
-                    postBody.appendChild(projectLink);
+                // 스냅샷이 있으면 스냅샷 사용 (불변 데이터)
+                if (post.circuit_snapshot) {
+                    const circuitData = typeof post.circuit_snapshot === 'string'
+                        ? JSON.parse(post.circuit_snapshot)
+                        : post.circuit_snapshot;
+
+                    circuitContainer.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <div>
+                                <strong style="color: var(--text-main);">첨부된 회로</strong>
+                                <span style="color: var(--text-dim); font-size: 12px; margin-left: 8px;">(게시글 작성 시점의 스냅샷)</span>
+                            </div>
+                            <span style="color: var(--text-dim); font-size: 13px;">${post.circuit_title || '(제목 없음)'}</span>
+                        </div>
+                        <button onclick="loadCircuitSnapshot()" class="action-btn" style="width: 100%; justify-content: center;">
+                            시뮬레이터에서 열기
+                        </button>
+                    `;
+
+                    // 전역에 스냅샷 저장
+                    window.circuitSnapshotData = circuitData;
+                    postBody.appendChild(circuitContainer);
+                }
+                // 레거시: project_id로 참조 (이전 게시글 호환)
+                else if (post.project_id) {
+                    const { data: project, error } = await window.sb
+                        .from('projects')
+                        .select('id, title')
+                        .eq('id', post.project_id)
+                        .single();
+
+                    if (project) {
+                        circuitContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div>
+                                    <strong style="color: var(--text-main);">첨부된 회로</strong>
+                                    <span style="color: var(--accent-orange); font-size: 12px; margin-left: 8px;">(라이브 참조 - 변경될 수 있음)</span>
+                                </div>
+                                <span style="color: var(--text-dim); font-size: 13px;">${project.title || '(제목 없음)'}</span>
+                            </div>
+                            <a href="simulator.html?id=${project.id}&readonly=true" target="_blank" class="action-btn" style="width: 100%; justify-content: center; text-decoration: none;">
+                                시뮬레이터에서 열기
+                            </a>
+                        `;
+                        postBody.appendChild(circuitContainer);
+                    }
                 }
             } catch (e) {
-                console.warn('Failed to load attached project:', e);
+                console.warn('Failed to load attached circuit:', e);
+            }
+        }
+
+        /**
+         * 스냅샷 회로를 시뮬레이터에서 열기
+         */
+        function loadCircuitSnapshot() {
+            if (window.circuitSnapshotData) {
+                // 로컬 스토리지에 임시 저장 후 시뮬레이터로 이동
+                localStorage.setItem('temp_circuit_snapshot', JSON.stringify(window.circuitSnapshotData));
+                window.open('simulator.html?snapshot=true', '_blank');
+            } else {
+                alert('회로 데이터를 찾을 수 없습니다.');
             }
         }
 
