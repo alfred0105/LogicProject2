@@ -4332,11 +4332,46 @@ div.component[data-type="NOT"] {
     color: #60a5fa;
     /* Brighter blue */
 }
+
 /* Component Info Panel Fix */
 #component-info-panel {
     max-height: calc(100vh - 100px);
     overflow-y: auto;
     z-index: 9999;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   [HOTFIX] Component Style Overrides
+   ============================================ */
+
+/* Remove Background Box from Switch & Clock */
+.component[data-type="SWITCH"],
+.component[data-type="CLOCK"] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* CLOCK - Neon Style Enhancement */
+.component[data-type="CLOCK"] svg {
+    fill: none !important;
+    /* 배경 제거 */
+    stroke: var(--text-muted);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.1));
+    transition: all 0.1s ease;
+}
+
+/* CLOCK ON State - Bright Neon Glow */
+.component[data-type="CLOCK"][data-value="1"] svg {
+    stroke: #d8b4fe !important;
+    filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.8)) drop-shadow(0 0 4px rgba(168, 85, 247, 1)) !important;
+}
+
+/* SWITCH - Ensure SVG glow */
+.component[data-type="SWITCH"][data-value="1"] svg {
+    stroke: var(--accent-green) !important;
+    filter: drop-shadow(0 0 12px var(--accent-green-glow)) drop-shadow(0 0 4px var(--accent-green)) !important;
 }
