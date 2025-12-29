@@ -118,53 +118,21 @@ Object.assign(CircuitSimulator.prototype, {
         // 라우팅 (Manhattan Style)
         this.drawManhattanWire(this.tempWire, startX, startY, targetX, targetY);
     },
-
     /**
      * 전역 마우스 업 이벤트 처리 (InputHandler에서 호출)
+     * [수정] 클릭-클릭 모드: 허공에 놓아도 배선 취소 안 함
      */
     handleGlobalWireUp(e) {
         if (!this.isWiring) return;
 
-        // 1. 스냅된 핀이 있으면 연결
+        // 스냅된 핀이 있으면 연결
         if (this.snappedPin) {
             this.tryFinishWiring(this.snappedPin);
             return;
         }
 
-        // 2. 스냅되지 않았지만, 마우스가 시작점 근처라면? (단순 클릭으로 간주 -> 배선 모드 유지)
-        //    그게 아니라 멀리 드래그했다가 허공에 놓으면? -> 배선 취소
-
-        // 모듈 편집 모드인지 확인 (다중 탭 지원)
-        const isModuleEditMode = this.currentTab && this.currentTab.startsWith('module_');
-
-        let wsRect;
-        if (isModuleEditMode && this.moduleCanvas) {
-            wsRect = this.moduleCanvas.getBoundingClientRect();
-        } else if (this.workspace && this.workspace.parentElement) {
-            // transform 없는 고정 컨테이너 기준 (parentElement)
-            wsRect = this.workspace.parentElement.getBoundingClientRect();
-        } else {
-            this.cancelWiring();
-            return;
-        }
-
-        const pan = isModuleEditMode ? { x: 0, y: 0 } : { x: this.panX || 0, y: this.panY || 0 };
-        const scale = isModuleEditMode ? 1 : (this.scale || 1);
-
-        const mouseX = (e.clientX - wsRect.left - pan.x) / scale;
-        const mouseY = (e.clientY - wsRect.top - pan.y) / scale;
-
-        const startPos = this.getPinCenter(this.startPin);
-        const startX = startPos.x;
-        const startY = startPos.y;
-
-        const dist = Math.hypot(mouseX - startX, mouseY - startY);
-
-        // 20px 이상 드래그 후 허공에서 놓으면 취소
-        if (dist > 20) {
-            this.cancelWiring();
-        }
-        // 20px 이내면 클릭으로 간주, 배선 상태 유지 (떠 있는 전선)
+        // [클릭-클릭 모드] 허공에서 마우스를 놓아도 배선 상태 유지
+        // 취소는 ESC 키, 우클릭, 또는 시작 핀 재클릭으로만 가능
     },
 
     /**
