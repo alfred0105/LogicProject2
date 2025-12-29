@@ -406,9 +406,23 @@ Object.assign(CircuitSimulator.prototype, {
         this.updateMinimap();
     },
 
-    showTooltip(type, event) {
-        const info = this.getComponentInfo(type);
-        if (!info) return;
+    showTooltip(type, descriptionOverride = null) {
+        let info = this.getComponentInfo(type);
+        if (!info) {
+            // Fallback for custom packages or modules without predefined info
+            info = {
+                name: type,
+                description: descriptionOverride || '',
+                icon: '📦',
+                usage: '',
+                inputs: '',
+                outputs: ''
+            };
+        }
+
+        if (descriptionOverride) {
+            info.description = descriptionOverride;
+        }
 
         const panel = document.getElementById('component-info-panel');
         if (!panel) return;

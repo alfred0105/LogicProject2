@@ -181,9 +181,37 @@ Object.assign(CircuitSimulator.prototype, {
 
     evaluateComposite(comp) {
         if (!comp.internals) return;
-        for (let i = 0; i < 5; i++) {
+
+        // [Bridge Input] External Pin -> Internal PORT_IN
+        const extInPins = Array.from(comp.querySelectorAll('.pin.input'));
+        const intPortIns = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_IN');
+
+        // Sort by Y position (Top to Bottom)
+        extInPins.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        intPortIns.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+
+        for (let i = 0; i < Math.min(extInPins.length, intPortIns.length); i++) {
+            const signal = extInPins[i].getAttribute('data-signal') === '1';
+            intPortIns[i].setAttribute('data-value', signal ? '1' : '0');
+        }
+
+        // [Simulate Internals]
+        for (let i = 0; i < 10; i++) {
             this.propagateList(comp.internals.components, comp.internals.wires);
             this.propagate(comp.internals.wires);
+        }
+
+        // [Bridge Output] Internal PORT_OUT -> External Pin
+        const extOutPins = Array.from(comp.querySelectorAll('.pin.output'));
+        const intPortOuts = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_OUT');
+
+        extOutPins.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        intPortOuts.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+
+        for (let i = 0; i < Math.min(extOutPins.length, intPortOuts.length); i++) {
+            const inPin = intPortOuts[i].querySelector('.pin.input');
+            const val = inPin?.getAttribute('data-signal') === '1';
+            extOutPins[i].setAttribute('data-output-signal', val ? '1' : '0');
         }
     },
 
@@ -256,19 +284,21 @@ Object.assign(CircuitSimulator.prototype, {
 
             if (fromComp) {
                 const type = fromComp.getAttribute('data-type');
-                let val = fromComp.getAttribute('data-value');
+                // [FIX] Package Multi-Output Support
+                if (type === 'PACKAGE') {
+                    signal = fromPin.getAttribute('data-output-signal') === '1';
+                } else {
+                    let val = fromComp.getAttribute('data-value');
+                    if (type === 'SWITCH' && !val) val = '0';
+                    const isHigh = val === '1';
 
-                if (type === 'SWITCH' && !val) val = '0';
-
-                const isHigh = val === '1';
-
-                if (fromPin.classList.contains('emit')) {
-                    signal = isHigh;
-                } else if (fromPin.classList.contains('output')) {
-                    signal = isHigh;
-                } else if (fromPin.classList.contains('joint-pin') || type === 'JOINT') {
-                    // [FIX] JOINT support
-                    signal = isHigh;
+                    if (fromPin.classList.contains('emit')) {
+                        signal = isHigh;
+                    } else if (fromPin.classList.contains('output')) {
+                        signal = isHigh;
+                    } else if (fromPin.classList.contains('joint-pin') || type === 'JOINT') {
+                        signal = isHigh;
+                    }
                 }
             }
 

@@ -810,36 +810,18 @@
                         </span>
                     </div>
                     <div class="section-content">
-                        <div class="comp-grid">
-                            <button class="comp-btn package" onclick="sim.addPackage('HALF_ADDER')">
-                                <div class="icon"><svg>
-                                        <use href="#icon-plus" />
-                                    </svg></div>
-                                <span class="name">Half Adder</span>
-                            </button>
-                            <button class="comp-btn package" onclick="sim.addPackage('FULL_ADDER')">
-                                <div class="icon"><svg>
-                                        <use href="#icon-plus" />
-                                    </svg></div>
-                                <span class="name">Full Adder</span>
-                            </button>
-                            <button class="comp-btn package" onclick="sim.addPackage('SR_LATCH')">
-                                <div class="icon"><svg>
-                                        <use href="#icon-package" />
-                                    </svg></div>
-                                <span class="name">SR Latch</span>
-                            </button>
-                            <button class="comp-btn package" onclick="sim.addPackage('D_FLIPFLOP')">
-                                <div class="icon"><svg>
-                                        <use href="#icon-package" />
-                                    </svg></div>
-                                <span class="name">D Flip-Flop</span>
-                            </button>
+                        <!-- Standard Packages Container -->
+                        <div class="comp-grid" id="standard-packages">
+                            <!-- JS will render basic modules here -->
+                        </div>
+
+                        <div class="comp-grid"
+                            style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
                             <button class="comp-btn dashed" onclick="sim.startNewModule()">
                                 <div class="icon"><svg>
                                         <use href="#icon-plus" />
                                     </svg></div>
-                                <span class="name">새 모듈</span>
+                                <span class="name">새 모듈 만들기</span>
                             </button>
                         </div>
                         <div id="user-packages" style="margin-top: 8px;"></div>
@@ -2601,9 +2583,18 @@
                 const s = localStorage.getItem('locad_ui_scale');
                 if (s) {
                     document.body.style.zoom = s;
-                    // Wait for sim to initialize if needed, or rely on openSettings to sync
                 }
             })();
+
+            // Initialize Standard Packages
+            window.addEventListener('load', function () {
+                setTimeout(() => {
+                    if (typeof sim !== 'undefined' && sim.renderStandardPackages) {
+                        console.log('Rendering standard packages...');
+                        sim.renderStandardPackages();
+                    }
+                }, 500);
+            });
         </script>
 
 </body>

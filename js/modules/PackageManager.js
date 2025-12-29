@@ -160,7 +160,7 @@ Object.assign(CircuitSimulator.prototype, {
         el.setAttribute('data-type', pkgType);
         el.setAttribute('data-value', '0');
 
-        el.onmouseenter = () => this.showTooltip(pkg.name);
+        el.onmouseenter = () => this.showTooltip(pkg.name, pkg.description);
         el.onmouseleave = () => this.hideTooltip();
 
         el.onmousedown = (e) => this.handleComponentMouseDown(e, el);
@@ -242,6 +242,11 @@ Object.assign(CircuitSimulator.prototype, {
         if (this.workspace) {
             this.workspace.appendChild(el);
             this.components.push(el);
+        }
+
+        // [FIX] Build Internals for Simulation
+        if (pkg.circuit) {
+            this.buildInternals(el, pkg.circuit);
         }
 
         this.saveState();
@@ -355,6 +360,30 @@ Object.assign(CircuitSimulator.prototype, {
                 </div>`
             ).join('');
         }
+    },
+
+    renderStandardPackages() {
+        const container = document.getElementById('standard-packages');
+        if (!container) return;
+
+        const standards = [
+            { id: 'HALF_ADDER', name: 'Half Adder', label: 'HA', desc: '반가산기(Half Adder)는 두 1비트 수를 더해 합(S)과 자리올림(C)을 출력합니다.' },
+            { id: 'FULL_ADDER', name: 'Full Adder', label: 'FA', desc: '전가산기(Full Adder)는 두 비트와 하위 자리 올림을 더합니다.' },
+            { id: 'SR_LATCH', name: 'SR Latch', label: 'SR', desc: 'SR 래치는 Set과 Reset 입력으로 1비트 상태를 저장합니다.' },
+            { id: 'D_FLIPFLOP', name: 'D Flip-Flop', label: 'DFF', desc: 'D 플립플롭은 클럭 엣지에서 입력을 저장하는 순차 회로 소자입니다.' }
+        ];
+
+        container.innerHTML = standards.map(pkg =>
+            `<div class="package-item">
+                <button class="comp-btn package wide standard" onclick="sim.addPackage('${pkg.id}')"
+                    onmouseenter="sim.showTooltip('${pkg.name}', '${pkg.desc}')"
+                    onmouseleave="sim.hideTooltip()">
+                    <div class="icon"><svg><use href="#icon-package" /></svg></div>
+                    <span class="name">${pkg.name}</span>
+                    <span class="pkg-info">${pkg.label}</span>
+                </button>
+            </div>`
+        ).join('');
     },
 
     /**
@@ -579,7 +608,8 @@ Object.assign(CircuitSimulator.prototype, {
         parentComp.internals = { components: [], wires: [] };
         const idMap = {};
 
-        schematic.parts.forEach(part => {
+        const parts = schematic.components || schematic.parts || [];
+        parts.forEach(part => {
             const el = document.createElement('div');
             el.classList.add('component');
             el.id = parentComp.id + '_' + part.id;
@@ -612,8 +642,14 @@ Object.assign(CircuitSimulator.prototype, {
 
         // Wires
         schematic.wires.forEach(w => {
-            const [fromId, fromPinCls] = w.from.split('.');
-            const [toId, toPinCls] = w.to.split('.');
+            let fromId, fromPinCls, toId, toPinCls;
+            if (w.fromPin && w.toPin) {
+                fromId = w.from; fromPinCls = w.fromPin;
+                toId = w.to; toPinCls = w.toPin;
+            } else {
+                [fromId, fromPinCls] = w.from.split('.');
+                [toId, toPinCls] = w.to.split('.');
+            }
 
             const fromComp = idMap[fromId];
             const toComp = idMap[toId];
