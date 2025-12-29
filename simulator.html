@@ -1393,177 +1393,294 @@
                         placeholder="여기에 피드백을 작성해주세요..."></textarea>
                 </div>
                 <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label">📷 스크린샷 첨부 (선택)</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                        <input type="file" id="feedback-screenshot" accept="image/*" style="display: none;">
+                        <button class="btn btn-ghost" onclick="document.getElementById('feedback-screenshot').click()"
+                            style="padding: 8px 12px;">
+                            📁 이미지 선택
+                        </button>
+                        <button class="btn btn-ghost" onclick="captureScreenshot()" style="padding: 8px 12px;">
+                            📸 화면 캡처
+                        </button>
+                        <span id="screenshot-filename" style="color: var(--text-muted); font-size: 12px;"></span>
+                    </div>
+                    <div id="screenshot-preview" style="margin-top: 10px; display: none;">
+                        <img id="screenshot-img"
+                            style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--border);">
+                        <button onclick="clearScreenshot()"
+                            style="display: block; margin-top: 5px; font-size: 11px; color: var(--error); background: none; border: none; cursor: pointer;">❌
+                            제거</button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
                     <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="feedback-include-circuit" checked>
                         현재 회로 상태 첨부 (디버깅에 도움됩니다)
                     </label>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-ghost" onclick="closeFeedbackModal()">취소</button>
-                <button class="btn btn-primary" onclick="submitFeedback()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                    보내기
-                </button>
+                <!-- 에러 정보 숨김 필드 -->
+                <input type="hidden" id="feedback-error-info" value="">
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" onclick="closeFeedbackModal()">취소</button>
+                    <button class="btn btn-primary" onclick="submitFeedback()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        보내기
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <style>
+        <style>
 
-    </style>
+        </style>
 
-    <script>
-        // === 피드백 모달 함수 ===
-        function openFeedbackModal() {
-            document.getElementById('feedback-modal').classList.add('show');
-        }
+        <script>
+            // === 피드백 모달 함수 ===
+            let screenshotDataUrl = null;
 
-        function closeFeedbackModal() {
-            document.getElementById('feedback-modal').classList.remove('show');
-            document.getElementById('feedback-content').value = '';
-        }
-
-        async function submitFeedback() {
-            const category = document.getElementById('feedback-category').value;
-            const content = document.getElementById('feedback-content').value.trim();
-            const includeCircuit = document.getElementById('feedback-include-circuit')?.checked;
-
-            if (!content) {
-                alert('내용을 입력하세요.');
-                return;
+            function showFeedbackModal() {
+                document.getElementById('feedback-modal').classList.add('show');
             }
 
-            try {
-                const user = window.sb ? await window.sb.auth.getUser() : null;
-                const userEmail = user?.data?.user?.email || 'anonymous';
+            function closeFeedbackModal() {
+                document.getElementById('feedback-modal').classList.remove('show');
+                document.getElementById('feedback-content').value = '';
+                document.getElementById('feedback-error-info').value = '';
+                clearScreenshot();
+            }
 
-                // 회로 상태 첨부 (선택 시)
-                let circuitData = null;
-                if (includeCircuit && window.sim) {
-                    try {
-                        circuitData = JSON.stringify(window.sim.currentProjectData || {});
-                    } catch (e) {
-                        console.warn('Could not serialize circuit:', e);
+            // 스크린샷 파일 선택 처리
+            document.addEventListener('DOMContentLoaded', () => {
+                const fileInput = document.getElementById('feedback-screenshot');
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                screenshotDataUrl = event.target.result;
+                                showScreenshotPreview(screenshotDataUrl, file.name);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+
+            function showScreenshotPreview(dataUrl, filename) {
+                document.getElementById('screenshot-img').src = dataUrl;
+                document.getElementById('screenshot-preview').style.display = 'block';
+                document.getElementById('screenshot-filename').textContent = filename || '📷 캡처됨';
+            }
+
+            function clearScreenshot() {
+                screenshotDataUrl = null;
+                document.getElementById('screenshot-preview').style.display = 'none';
+                document.getElementById('screenshot-filename').textContent = '';
+                const fileInput = document.getElementById('feedback-screenshot');
+                if (fileInput) fileInput.value = '';
+            }
+
+            async function captureScreenshot() {
+                try {
+                    // html2canvas 라이브러리 사용 또는 Canvas API
+                    const workspace = document.getElementById('workspace');
+                    if (!workspace) {
+                        alert('캡처할 화면을 찾을 수 없습니다.');
+                        return;
                     }
+
+                    // 간단한 캔버스 캡처 (시뮬레이터 영역)
+                    const canvas = document.createElement('canvas');
+                    const rect = workspace.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+
+                    // SVG를 포함한 캡처는 복잡하므로 알림
+                    alert('📸 현재 화면을 캡처하려면 키보드의 Print Screen 키를 누르고,\n이미지 편집기에 붙여넣기(Ctrl+V) 후 저장하여 첨부해주세요.\n\n또는 "이미지 선택" 버튼으로 스크린샷 파일을 첨부하세요.');
+                } catch (error) {
+                    console.error('Screenshot error:', error);
+                    alert('스크린샷 캡처에 실패했습니다. "이미지 선택" 버튼을 사용해주세요.');
+                }
+            }
+
+            async function submitFeedback() {
+                const category = document.getElementById('feedback-category').value;
+                const content = document.getElementById('feedback-content').value.trim();
+                const includeCircuit = document.getElementById('feedback-include-circuit')?.checked;
+                const errorInfo = document.getElementById('feedback-error-info')?.value || '';
+
+                if (!content) {
+                    alert('내용을 입력하세요.');
+                    return;
                 }
 
-                await window.sb.from('feedback').insert({
-                    category: category,
-                    content: content,
-                    user_email: userEmail,
-                    circuit_data: circuitData,
-                    page_url: window.location.href,
-                    created_at: new Date().toISOString()
-                });
+                try {
+                    const user = window.sb ? await window.sb.auth.getUser() : null;
+                    const userEmail = user?.data?.user?.email || 'anonymous';
 
-                alert('✓ 피드백이 전송되었습니다. 감사합니다!');
-                closeFeedbackModal();
-            } catch (error) {
-                console.error('Feedback error:', error);
-                alert('피드백 전송에 실패했습니다. 다시 시도해주세요.');
+                    // 회로 상태 첨부 (선택 시)
+                    let circuitData = null;
+                    if (includeCircuit && window.sim) {
+                        try {
+                            circuitData = JSON.stringify(window.sim.currentProjectData || {});
+                        } catch (e) {
+                            console.warn('Could not serialize circuit:', e);
+                        }
+                    }
+
+                    // 피드백 데이터
+                    const feedbackData = {
+                        category: category,
+                        content: content + (errorInfo ? `\n\n--- 에러 정보 ---\n${errorInfo}` : ''),
+                        user_email: userEmail,
+                        circuit_data: circuitData,
+                        page_url: window.location.href,
+                        screenshot_url: screenshotDataUrl || null,
+                        created_at: new Date().toISOString()
+                    };
+
+                    await window.sb.from('feedback').insert(feedbackData);
+
+                    alert('✓ 피드백이 전송되었습니다. 감사합니다!');
+                    closeFeedbackModal();
+                } catch (error) {
+                    console.error('Feedback error:', error);
+                    alert('피드백 전송에 실패했습니다. 다시 시도해주세요.');
+                }
             }
-        }
-    </script>
 
-    <!-- Error Handler -->
-    <script>
-        // 어드민 확인 함수
-        function isAdminUser() {
-            if (window.getCurrentUser) {
-                return window.getCurrentUser().then(user => {
-                    return user && user.email === 'ace060408@gmail.com';
-                }).catch(() => false);
+            // === 에러 발생 시 자동 피드백 제안 ===
+            function showErrorFeedbackPrompt(errorMessage, errorStack) {
+                const shouldSend = confirm(
+                    `❌ 오류가 발생했습니다.\n\n` +
+                    `${errorMessage}\n\n` +
+                    `개발자에게 이 오류를 보고하시겠습니까?\n` +
+                    `(피드백 창이 열립니다)`
+                );
+
+                if (shouldSend) {
+                    // 에러 정보를 피드백 모달에 미리 채우기
+                    document.getElementById('feedback-category').value = 'bug';
+                    document.getElementById('feedback-content').value =
+                        `[자동 오류 보고]\n\n오류 메시지: ${errorMessage}\n\n추가 설명을 입력해주세요:`;
+                    document.getElementById('feedback-error-info').value =
+                        `Error: ${errorMessage}\nStack: ${errorStack || 'N/A'}\nURL: ${window.location.href}\nTime: ${new Date().toISOString()}`;
+                    showFeedbackModal();
+                }
             }
-            return Promise.resolve(false);
-        }
 
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown';
-            var detailedMessage = "오류 [" + fileName + ":" + lineNo + "] " + msg;
-            var simpleMessage = "일시적인 오류가 발생했습니다.";
+            // 전역 에러 핸들러에 연결
+            window.showErrorFeedbackPrompt = showErrorFeedbackPrompt;
+        </script>
 
-            console.error(detailedMessage, error);
+        <!-- Error Handler -->
+        <script>
+            // 어드민 확인 함수
+            function isAdminUser() {
+                if (window.getCurrentUser) {
+                    return window.getCurrentUser().then(user => {
+                        return user && user.email === 'ace060408@gmail.com';
+                    }).catch(() => false);
+                }
+                return Promise.resolve(false);
+            }
 
-            // 어드민에게만 상세 오류 표시
-            isAdminUser().then(function (isAdmin) {
-                if (window.sim && typeof window.sim.showToast === 'function') {
+            window.onerror = function (msg, url, lineNo, columnNo, error) {
+                var fileName = url ? url.substring(url.lastIndexOf('/') + 1) : 'Unknown';
+                var detailedMessage = "오류 [" + fileName + ":" + lineNo + "] " + msg;
+                var simpleMessage = "일시적인 오류가 발생했습니다.";
+
+                console.error(detailedMessage, error);
+
+                // 어드민에게만 상세 오류 표시, 일반 사용자에게는 피드백 제안
+                isAdminUser().then(function (isAdmin) {
                     if (isAdmin) {
-                        window.sim.showToast(detailedMessage, 'error');
+                        if (window.sim && typeof window.sim.showToast === 'function') {
+                            window.sim.showToast(detailedMessage, 'error');
+                        }
+                    } else {
+                        // 일반 사용자에게 피드백 보내기 제안 (심각한 오류만)
+                        if (error && window.showErrorFeedbackPrompt) {
+                            window.showErrorFeedbackPrompt(msg, error?.stack);
+                        }
                     }
-                    // 일반 사용자에게는 오류 표시 안함 (콘솔에만 기록)
+                });
+                return true; // 오류 전파 중단
+            };
+
+            window.onunhandledrejection = function (event) {
+                var msg = event.reason ? event.reason.message : 'Unknown Error';
+                console.error("Unhandled Rejection:", event.reason);
+
+                // 어드민에게만 표시, 일반 사용자에게는 피드백 제안
+                isAdminUser().then(function (isAdmin) {
+                    if (isAdmin && window.sim && window.sim.showToast) {
+                        window.sim.showToast("비동기 오류: " + msg, 'error');
+                    } else if (window.showErrorFeedbackPrompt) {
+                        // 일반 사용자에게 피드백 제안
+                        window.showErrorFeedbackPrompt(msg, event.reason?.stack);
+                    }
+                });
+            };
+        </script>
+
+        <script src="js/modules/Constants.js"></script>
+        <script src="js/modules/CircuitSimulator.js"></script>
+        <script src="js/modules/PerformanceOptimizer.js"></script>
+        <script src="js/modules/InputHandler.js?v=2.0"></script>
+        <script src="js/modules/ProjectIO.js?v=20"></script>
+        <script src="js/modules/ComponentManager.js"></script>
+        <script src="js/modules/WireManager.js"></script>
+        <script src="js/modules/SelectionManager.js"></script>
+        <script src="js/modules/LogicEngine.js"></script>
+        <script src="js/modules/PackageManager.js"></script>
+        <script src="js/modules/TabManager.js"></script>
+        <script src="js/modules/UIManager.js"></script>
+        <script src="js/modules/HistoryManager.js"></script>
+        <script src="js/modules/Oscilloscope.js"></script>
+        <script src="js/modules/TutorialSystem.js"></script>
+        <script src="js/modules/TouchHandler.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="js/modules/SupabaseClient.js"></script>
+        <script src="js/modules/LibraryManager.js"></script>
+        <script src="js/modules/CircuitValidator.js"></script>
+        <script src="js/modules/CollaborationManager.js"></script>
+        <script src="js/modules/Main.js?v=2.0"></script>
+
+        <!-- LibraryManager 초기화 -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.LibraryManager) {
+                    window.library = new LibraryManager();
+                    console.log('LibraryManager initialized');
                 }
             });
-            return true; // 오류 전파 중단
-        };
+        </script>
 
-        window.onunhandledrejection = function (event) {
-            var msg = event.reason ? event.reason.message : 'Unknown Error';
-            console.error("Unhandled Rejection:", event.reason);
+        <!-- 읽기 전용 모드 처리 -->
+        <script>
+            // URL 파라미터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const isReadOnly = urlParams.get('readonly') === 'true' || urlParams.get('view') === 'true';
 
-            // 어드민에게만 표시
-            isAdminUser().then(function (isAdmin) {
-                if (isAdmin && window.sim && window.sim.showToast) {
-                    window.sim.showToast("비동기 오류: " + msg, 'error');
-                }
-            });
-        };
-    </script>
+            // 전역 읽기 전용 플래그 설정 (다른 모듈에서 체크 가능하도록)
+            window.isReadOnlyMode = isReadOnly;
 
-    <script src="js/modules/Constants.js"></script>
-    <script src="js/modules/CircuitSimulator.js"></script>
-    <script src="js/modules/PerformanceOptimizer.js"></script>
-    <script src="js/modules/InputHandler.js?v=2.0"></script>
-    <script src="js/modules/ProjectIO.js?v=20"></script>
-    <script src="js/modules/ComponentManager.js"></script>
-    <script src="js/modules/WireManager.js"></script>
-    <script src="js/modules/SelectionManager.js"></script>
-    <script src="js/modules/LogicEngine.js"></script>
-    <script src="js/modules/PackageManager.js"></script>
-    <script src="js/modules/TabManager.js"></script>
-    <script src="js/modules/UIManager.js"></script>
-    <script src="js/modules/HistoryManager.js"></script>
-    <script src="js/modules/Oscilloscope.js"></script>
-    <script src="js/modules/TutorialSystem.js"></script>
-    <script src="js/modules/TouchHandler.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/modules/SupabaseClient.js"></script>
-    <script src="js/modules/LibraryManager.js"></script>
-    <script src="js/modules/CircuitValidator.js"></script>
-    <script src="js/modules/CollaborationManager.js"></script>
-    <script src="js/modules/Main.js?v=2.0"></script>
+            if (isReadOnly) {
+                console.log('🔒 Read-only mode active');
 
-    <!-- LibraryManager 초기화 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.LibraryManager) {
-                window.library = new LibraryManager();
-                console.log('LibraryManager initialized');
-            }
-        });
-    </script>
+                // [핵심] body에 클래스를 추가하여 CSS로 강제 제어 (로그인 로직이 덮어쓰지 못하도록)
+                document.body.classList.add('readonly-mode');
 
-    <!-- 읽기 전용 모드 처리 -->
-    <script>
-        // URL 파라미터 확인
-        const urlParams = new URLSearchParams(window.location.search);
-        const isReadOnly = urlParams.get('readonly') === 'true' || urlParams.get('view') === 'true';
-
-        // 전역 읽기 전용 플래그 설정 (다른 모듈에서 체크 가능하도록)
-        window.isReadOnlyMode = isReadOnly;
-
-        if (isReadOnly) {
-            console.log('🔒 Read-only mode active');
-
-            // [핵심] body에 클래스를 추가하여 CSS로 강제 제어 (로그인 로직이 덮어쓰지 못하도록)
-            document.body.classList.add('readonly-mode');
-
-            // 1. CSS로 UI 강제 숨김 (가장 강력한 방어)
-            const style = document.createElement('style');
-            style.textContent = `
+                // 1. CSS로 UI 강제 숨김 (가장 강력한 방어)
+                const style = document.createElement('style');
+                style.textContent = `
                 /* 읽기 모드일 때 무조건 숨겨야 할 요소들 */
                 body.readonly-mode .toolbar-group,
                 body.readonly-mode .icon-btn:not(.home-btn),
@@ -1595,26 +1712,26 @@
                     z-index: 2000;
                 }
             `;
-            document.head.appendChild(style);
+                document.head.appendChild(style);
 
-            // 2. DOMContentLoaded 대기 후 배너 추가 (안전하게)
-            document.addEventListener('DOMContentLoaded', () => {
-                // 기존 JS 숨김 로직 (혹시 모를 대비)
-                const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
-                toolbars.forEach(el => {
-                    const onClick = el.getAttribute('onclick');
-                    if (!onClick || !onClick.includes('goHome')) {
-                        el.style.display = 'none';
-                    }
-                });
+                // 2. DOMContentLoaded 대기 후 배너 추가 (안전하게)
+                document.addEventListener('DOMContentLoaded', () => {
+                    // 기존 JS 숨김 로직 (혹시 모를 대비)
+                    const toolbars = document.querySelectorAll('.toolbar-group, .icon-btn, .toolbar-divider, .btn-collaborate');
+                    toolbars.forEach(el => {
+                        const onClick = el.getAttribute('onclick');
+                        if (!onClick || !onClick.includes('goHome')) {
+                            el.style.display = 'none';
+                        }
+                    });
 
-                const sidebars = document.querySelectorAll('.left-sidebar, .component-panel, #sidebar');
-                sidebars.forEach(el => el.style.display = 'none');
+                    const sidebars = document.querySelectorAll('.left-sidebar, .component-panel, #sidebar');
+                    sidebars.forEach(el => el.style.display = 'none');
 
-                // 읽기 전용 배너 표시
-                const banner = document.createElement('div');
-                banner.id = 'readonly-banner';
-                banner.style.cssText = `
+                    // 읽기 전용 배너 표시
+                    const banner = document.createElement('div');
+                    banner.id = 'readonly-banner';
+                    banner.style.cssText = `
                     width: 100%;
                     height: 40px;
                     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
@@ -1629,65 +1746,65 @@
                     font-family: 'Inter', sans-serif;
                     flex-shrink: 0;
                 `;
-                banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
+                    banner.innerHTML = '<span>👀 <b>읽기 전용 모드</b> - 회로를 수정할 수 없습니다. 클릭하여 모듈 내부를 확인하거나 자유롭게 확대/축소하세요.</span>';
 
-                const wrapper = document.querySelector('.workspace-wrapper');
-                if (wrapper) {
-                    wrapper.insertBefore(banner, wrapper.firstChild);
-                } else {
-                    banner.style.position = 'fixed';
-                    banner.style.top = '50px'; // 헤더 높이에 맞춤
-                    document.body.appendChild(banner);
-                }
+                    const wrapper = document.querySelector('.workspace-wrapper');
+                    if (wrapper) {
+                        wrapper.insertBefore(banner, wrapper.firstChild);
+                    } else {
+                        banner.style.position = 'fixed';
+                        banner.style.top = '50px'; // 헤더 높이에 맞춤
+                        document.body.appendChild(banner);
+                    }
 
-                // 캔버스 편집 차단
-                const canvas = document.querySelector('canvas');
-                if (canvas) {
-                    canvas.style.cursor = 'default';
+                    // 캔버스 편집 차단
+                    const canvas = document.querySelector('canvas');
+                    if (canvas) {
+                        canvas.style.cursor = 'default';
 
-                    // 키보드 차단 (단, 입력 필드에서는 허용)
-                    document.addEventListener('keydown', (e) => {
-                        // 입력 필드에 포커스 있으면 키 입력 허용
-                        const activeTag = document.activeElement?.tagName?.toUpperCase();
-                        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
-                            return; // 댓글 입력 등 허용
-                        }
+                        // 키보드 차단 (단, 입력 필드에서는 허용)
+                        document.addEventListener('keydown', (e) => {
+                            // 입력 필드에 포커스 있으면 키 입력 허용
+                            const activeTag = document.activeElement?.tagName?.toUpperCase();
+                            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
+                                return; // 댓글 입력 등 허용
+                            }
 
-                        const key = e.key.toUpperCase();
-                        const isCtrl = e.ctrlKey || e.metaKey;
+                            const key = e.key.toUpperCase();
+                            const isCtrl = e.ctrlKey || e.metaKey;
 
-                        // [PASS] 시스템 키(F1~F12) 및 새로고침(Ctrl+R) 통과
-                        if (key.startsWith('F') || (isCtrl && key === 'R')) {
-                            return;
-                        }
+                            // [PASS] 시스템 키(F1~F12) 및 새로고침(Ctrl+R) 통과
+                            if (key.startsWith('F') || (isCtrl && key === 'R')) {
+                                return;
+                            }
 
-                        if (key === 'DELETE' || key === 'BACKSPACE') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return;
-                        }
+                            if (key === 'DELETE' || key === 'BACKSPACE') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return;
+                            }
 
-                        if (isCtrl && ['C', 'V', 'X', 'Z', 'Y', 'S'].includes(key)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return;
-                        }
-                    }, true);
-                }
+                            if (isCtrl && ['C', 'V', 'X', 'Z', 'Y', 'S'].includes(key)) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return;
+                            }
+                        }, true);
+                    }
 
-                // === 댓글 패널 추가 (읽기 전용 모드에서만) ===
-                createCommentPanel();
-            });
-        }
+                    // === 댓글 패널 추가 (읽기 전용 모드에서만) ===
+                    createCommentPanel();
+                });
+            }
 
-        // 댓글 패널 생성 함수
-        function createCommentPanel() {
-            // FAB 버튼 (댓글 열기)
-            const fab = document.createElement('button');
-            fab.id = 'comment-fab';
-            fab.innerHTML = '💬';
-            fab.title = '댓글 보기';
-            fab.style.cssText = `
+            // 댓글 패널 생성 함수
+            function createCommentPanel() {
+                // FAB 버튼 (댓글 열기)
+                const fab = document.createElement('button');
+                fab.id = 'comment-fab';
+                fab.innerHTML = '💬';
+                fab.title = '댓글 보기';
+                fab.style.cssText = `
                 position: fixed;
                 bottom: 24px;
                 right: 24px;
@@ -1704,15 +1821,15 @@
                 transition: transform 0.2s, box-shadow 0.2s;
                 pointer-events: auto;
             `;
-            fab.onmouseenter = () => fab.style.transform = 'scale(1.1)';
-            fab.onmouseleave = () => fab.style.transform = 'scale(1)';
-            fab.onclick = toggleCommentPanel;
-            document.body.appendChild(fab);
+                fab.onmouseenter = () => fab.style.transform = 'scale(1.1)';
+                fab.onmouseleave = () => fab.style.transform = 'scale(1)';
+                fab.onclick = toggleCommentPanel;
+                document.body.appendChild(fab);
 
-            // 댓글 패널
-            const panel = document.createElement('div');
-            panel.id = 'comment-panel';
-            panel.style.cssText = `
+                // 댓글 패널
+                const panel = document.createElement('div');
+                panel.id = 'comment-panel';
+                panel.style.cssText = `
                 position: fixed;
                 bottom: 0;
                 right: 0;
@@ -1731,7 +1848,7 @@
                 font-family: 'Inter', sans-serif;
                 pointer-events: auto;
             `;
-            panel.innerHTML = `
+                panel.innerHTML = `
                 <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #fff;">💬 댓글 & 반응</h3>
                     <button onclick="toggleCommentPanel()" style="background: none; border: none; color: #888; font-size: 20px; cursor: pointer;">×</button>
@@ -1755,58 +1872,58 @@
                     </button>
                 </div>
             `;
-            document.body.appendChild(panel);
+                document.body.appendChild(panel);
 
-            // 패널 열릴 때 댓글 로드 + 통계 로드
-            loadSimComments();
-            loadSimStats();
-        }
-
-        let isCommentPanelOpen = false;
-        function toggleCommentPanel() {
-            const panel = document.getElementById('comment-panel');
-            const fab = document.getElementById('comment-fab');
-            isCommentPanelOpen = !isCommentPanelOpen;
-
-            if (isCommentPanelOpen) {
-                panel.style.transform = 'translateX(0)';
-                fab.innerHTML = '✕';
-                fab.style.background = '#333';
+                // 패널 열릴 때 댓글 로드 + 통계 로드
                 loadSimComments();
-            } else {
-                panel.style.transform = 'translateX(100%)';
-                fab.innerHTML = '💬';
-                fab.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            }
-        }
-
-        async function loadSimComments() {
-            const list = document.getElementById('sim-comments-list');
-            if (!list || !window.sb) return;
-
-            const projectId = new URLSearchParams(window.location.search).get('id');
-            if (!projectId) {
-                list.innerHTML = '<div style="color: #666; text-align: center; padding: 40px;">프로젝트 ID를 찾을 수 없습니다.</div>';
-                return;
+                loadSimStats();
             }
 
-            try {
-                const { data: comments, error } = await window.sb
-                    .from('project_comments')
-                    .select('*')
-                    .eq('project_id', projectId)
-                    .order('created_at', { ascending: false });
+            let isCommentPanelOpen = false;
+            function toggleCommentPanel() {
+                const panel = document.getElementById('comment-panel');
+                const fab = document.getElementById('comment-fab');
+                isCommentPanelOpen = !isCommentPanelOpen;
 
-                if (error) throw error;
+                if (isCommentPanelOpen) {
+                    panel.style.transform = 'translateX(0)';
+                    fab.innerHTML = '✕';
+                    fab.style.background = '#333';
+                    loadSimComments();
+                } else {
+                    panel.style.transform = 'translateX(100%)';
+                    fab.innerHTML = '💬';
+                    fab.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }
+            }
 
-                if (!comments || comments.length === 0) {
-                    list.innerHTML = '<div style="color: #666; text-align: center; padding: 40px;">아직 댓글이 없습니다.<br>첫 댓글을 남겨보세요!</div>';
+            async function loadSimComments() {
+                const list = document.getElementById('sim-comments-list');
+                if (!list || !window.sb) return;
+
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                if (!projectId) {
+                    list.innerHTML = '<div style="color: #666; text-align: center; padding: 40px;">프로젝트 ID를 찾을 수 없습니다.</div>';
                     return;
                 }
 
-                list.innerHTML = comments.map(c => {
-                    const date = new Date(c.created_at).toLocaleString();
-                    return `
+                try {
+                    const { data: comments, error } = await window.sb
+                        .from('project_comments')
+                        .select('*')
+                        .eq('project_id', projectId)
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    if (!comments || comments.length === 0) {
+                        list.innerHTML = '<div style="color: #666; text-align: center; padding: 40px;">아직 댓글이 없습니다.<br>첫 댓글을 남겨보세요!</div>';
+                        return;
+                    }
+
+                    list.innerHTML = comments.map(c => {
+                        const date = new Date(c.created_at).toLocaleString();
+                        return `
                         <div style="padding: 12px; background: #1a1a24; border-radius: 8px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                                 <span style="font-size: 12px; font-weight: 500; color: #fff;">${c.user_name || '익명'}</span>
@@ -1815,625 +1932,629 @@
                             <div style="font-size: 13px; color: #aaa; line-height: 1.5;">${c.content}</div>
                         </div>
                     `;
-                }).join('');
-            } catch (e) {
-                console.error('Failed to load comments:', e);
-                list.innerHTML = '<div style="color: #f66; text-align: center; padding: 40px;">댓글을 불러오지 못했습니다.</div>';
-            }
-        }
-
-        async function submitSimComment() {
-            const input = document.getElementById('sim-comment-input');
-            const content = input?.value?.trim();
-            if (!content) return;
-
-            const projectId = new URLSearchParams(window.location.search).get('id');
-            if (!projectId || !window.sb) return;
-
-            try {
-                const { data: { user } } = await window.sb.auth.getUser();
-                if (!user) {
-                    alert('댓글을 작성하려면 로그인이 필요합니다.');
-                    return;
+                    }).join('');
+                } catch (e) {
+                    console.error('Failed to load comments:', e);
+                    list.innerHTML = '<div style="color: #f66; text-align: center; padding: 40px;">댓글을 불러오지 못했습니다.</div>';
                 }
-
-                const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '익명';
-
-                const { error } = await window.sb
-                    .from('project_comments')
-                    .insert({
-                        project_id: projectId,
-                        user_id: user.id,
-                        user_email: user.email,
-                        user_name: userName,
-                        content: content
-                    });
-                if (error) throw error;
-
-                input.value = '';
-                await loadSimComments();
-            } catch (e) {
-                console.error('Failed to submit comment:', e);
-                alert('댓글 작성 실패: ' + e.message);
             }
-        }
 
-        // 프로젝트 통계 로드 (좋아요, 조회수)
-        let simProjectLiked = false;
-        async function loadSimStats() {
-            const projectId = new URLSearchParams(window.location.search).get('id');
-            if (!projectId || !window.sb) return;
+            async function submitSimComment() {
+                const input = document.getElementById('sim-comment-input');
+                const content = input?.value?.trim();
+                if (!content) return;
 
-            try {
-                // 프로젝트 정보 가져오기
-                const { data: project } = await window.sb
-                    .from('projects')
-                    .select('likes, views')
-                    .eq('id', projectId)
-                    .single();
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                if (!projectId || !window.sb) return;
 
-                if (project) {
-                    document.getElementById('sim-like-count').textContent = project.likes || 0;
-                    document.getElementById('sim-view-count').textContent = project.views || 0;
-                }
+                try {
+                    const { data: { user } } = await window.sb.auth.getUser();
+                    if (!user) {
+                        alert('댓글을 작성하려면 로그인이 필요합니다.');
+                        return;
+                    }
 
-                // 내가 좋아요 했는지 확인
-                const { data: { user } } = await window.sb.auth.getUser();
-                if (user) {
-                    const { data: like } = await window.sb
-                        .from('project_likes')
-                        .select('id')
-                        .eq('project_id', projectId)
-                        .eq('user_id', user.id)
-                        .single();
+                    const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '익명';
 
-                    simProjectLiked = !!like;
-                    updateLikeButton();
-                }
-            } catch (e) {
-                console.warn('Failed to load stats:', e);
-            }
-        }
-
-        function updateLikeButton() {
-            const btn = document.getElementById('sim-like-btn');
-            const icon = document.getElementById('sim-like-icon');
-            if (simProjectLiked) {
-                btn.style.background = 'rgba(239, 68, 68, 0.2)';
-                btn.style.borderColor = '#ef4444';
-                icon.textContent = '❤️';
-            } else {
-                btn.style.background = '#1a1a24';
-                btn.style.borderColor = 'rgba(255,255,255,0.1)';
-                icon.textContent = '🤍';
-            }
-        }
-
-        async function toggleSimLike() {
-            const projectId = new URLSearchParams(window.location.search).get('id');
-            if (!projectId || !window.sb) return;
-
-            try {
-                const { data: { user } } = await window.sb.auth.getUser();
-                if (!user) {
-                    alert('좋아요를 누르려면 로그인이 필요합니다.');
-                    return;
-                }
-
-                const countEl = document.getElementById('sim-like-count');
-                let count = parseInt(countEl.textContent) || 0;
-
-                if (simProjectLiked) {
-                    // 좋아요 취소
-                    await window.sb
-                        .from('project_likes')
-                        .delete()
-                        .eq('project_id', projectId)
-                        .eq('user_id', user.id);
-
-                    simProjectLiked = false;
-                    count = Math.max(0, count - 1);
-                } else {
-                    // 좋아요 추가
-                    await window.sb
-                        .from('project_likes')
+                    const { error } = await window.sb
+                        .from('project_comments')
                         .insert({
                             project_id: projectId,
-                            user_id: user.id
+                            user_id: user.id,
+                            user_email: user.email,
+                            user_name: userName,
+                            content: content
                         });
+                    if (error) throw error;
 
-                    simProjectLiked = true;
-                    count++;
-                }
-
-                countEl.textContent = count;
-                updateLikeButton();
-
-                // DB에도 likes 카운트 동기화 (트리거가 없다면 수동)
-                await window.sb
-                    .from('projects')
-                    .update({ likes: count })
-                    .eq('id', projectId);
-
-            } catch (e) {
-                console.error('Failed to toggle like:', e);
-                alert('좋아요 실패: ' + e.message);
-            }
-        }
-    </script>
-
-    <script>
-        async function goHome() {
-            if (window.getCurrentUser) {
-                const user = await window.getCurrentUser();
-                if (user) {
-                    location.href = 'dashboard.html';
-                    return;
+                    input.value = '';
+                    await loadSimComments();
+                } catch (e) {
+                    console.error('Failed to submit comment:', e);
+                    alert('댓글 작성 실패: ' + e.message);
                 }
             }
-            location.href = 'index.html';
-        }
-    </script>
 
-    <!-- ======== Validation Panel ======== -->
-    <div id="validation-panel" class="validation-panel">
-        <div class="validation-header">
-            <h2>회로 검증</h2>
-            <button class="validation-close" onclick="sim.validator?.togglePanel()">×</button>
-        </div>
+            // 프로젝트 통계 로드 (좋아요, 조회수)
+            let simProjectLiked = false;
+            async function loadSimStats() {
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                if (!projectId || !window.sb) return;
 
-        <div class="validation-actions">
-            <button class="validate-btn" onclick="sim.validator?.validateCircuit()">
-                검증 시작
-            </button>
-            <button class="auto-validate-toggle" id="auto-validate-toggle"
-                onclick="sim.validator && toggleAutoValidate()">
-                자동
-            </button>
-        </div>
+                try {
+                    // 프로젝트 정보 가져오기
+                    const { data: project } = await window.sb
+                        .from('projects')
+                        .select('likes, views')
+                        .eq('id', projectId)
+                        .single();
 
-        <div class="validation-stats" id="validation-stats" style="display: none;">
-            <div class="stat-item errors">
-                <span class="stat-value" id="stat-errors">0</span>
-                <span class="stat-label">오류</span>
+                    if (project) {
+                        document.getElementById('sim-like-count').textContent = project.likes || 0;
+                        document.getElementById('sim-view-count').textContent = project.views || 0;
+                    }
+
+                    // 내가 좋아요 했는지 확인
+                    const { data: { user } } = await window.sb.auth.getUser();
+                    if (user) {
+                        const { data: like } = await window.sb
+                            .from('project_likes')
+                            .select('id')
+                            .eq('project_id', projectId)
+                            .eq('user_id', user.id)
+                            .single();
+
+                        simProjectLiked = !!like;
+                        updateLikeButton();
+                    }
+                } catch (e) {
+                    console.warn('Failed to load stats:', e);
+                }
+            }
+
+            function updateLikeButton() {
+                const btn = document.getElementById('sim-like-btn');
+                const icon = document.getElementById('sim-like-icon');
+                if (simProjectLiked) {
+                    btn.style.background = 'rgba(239, 68, 68, 0.2)';
+                    btn.style.borderColor = '#ef4444';
+                    icon.textContent = '❤️';
+                } else {
+                    btn.style.background = '#1a1a24';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                    icon.textContent = '🤍';
+                }
+            }
+
+            async function toggleSimLike() {
+                const projectId = new URLSearchParams(window.location.search).get('id');
+                if (!projectId || !window.sb) return;
+
+                try {
+                    const { data: { user } } = await window.sb.auth.getUser();
+                    if (!user) {
+                        alert('좋아요를 누르려면 로그인이 필요합니다.');
+                        return;
+                    }
+
+                    const countEl = document.getElementById('sim-like-count');
+                    let count = parseInt(countEl.textContent) || 0;
+
+                    if (simProjectLiked) {
+                        // 좋아요 취소
+                        await window.sb
+                            .from('project_likes')
+                            .delete()
+                            .eq('project_id', projectId)
+                            .eq('user_id', user.id);
+
+                        simProjectLiked = false;
+                        count = Math.max(0, count - 1);
+                    } else {
+                        // 좋아요 추가
+                        await window.sb
+                            .from('project_likes')
+                            .insert({
+                                project_id: projectId,
+                                user_id: user.id
+                            });
+
+                        simProjectLiked = true;
+                        count++;
+                    }
+
+                    countEl.textContent = count;
+                    updateLikeButton();
+
+                    // DB에도 likes 카운트 동기화 (트리거가 없다면 수동)
+                    await window.sb
+                        .from('projects')
+                        .update({ likes: count })
+                        .eq('id', projectId);
+
+                } catch (e) {
+                    console.error('Failed to toggle like:', e);
+                    alert('좋아요 실패: ' + e.message);
+                }
+            }
+        </script>
+
+        <script>
+            async function goHome() {
+                if (window.getCurrentUser) {
+                    const user = await window.getCurrentUser();
+                    if (user) {
+                        location.href = 'dashboard.html';
+                        return;
+                    }
+                }
+                location.href = 'index.html';
+            }
+        </script>
+
+        <!-- ======== Validation Panel ======== -->
+        <div id="validation-panel" class="validation-panel">
+            <div class="validation-header">
+                <h2>회로 검증</h2>
+                <button class="validation-close" onclick="sim.validator?.togglePanel()">×</button>
             </div>
-            <div class="stat-item warnings">
-                <span class="stat-value" id="stat-warnings">0</span>
-                <span class="stat-label">경고</span>
-            </div>
-            <div class="stat-item suggestions">
-                <span class="stat-value" id="stat-suggestions">0</span>
-                <span class="stat-label">제안</span>
-            </div>
-        </div>
 
-        <div class="validation-content">
-            <div class="validation-empty">
-                <div class="validation-empty-icon">🔍</div>
-                <div class="validation-empty-text">
-                    '검증 시작' 버튼을 클릭하여<br>
-                    회로 오류를 검사하세요.
+            <div class="validation-actions">
+                <button class="validate-btn" onclick="sim.validator?.validateCircuit()">
+                    검증 시작
+                </button>
+                <button class="auto-validate-toggle" id="auto-validate-toggle"
+                    onclick="sim.validator && toggleAutoValidate()">
+                    자동
+                </button>
+            </div>
+
+            <div class="validation-stats" id="validation-stats" style="display: none;">
+                <div class="stat-item errors">
+                    <span class="stat-value" id="stat-errors">0</span>
+                    <span class="stat-label">오류</span>
+                </div>
+                <div class="stat-item warnings">
+                    <span class="stat-value" id="stat-warnings">0</span>
+                    <span class="stat-label">경고</span>
+                </div>
+                <div class="stat-item suggestions">
+                    <span class="stat-value" id="stat-suggestions">0</span>
+                    <span class="stat-label">제안</span>
+                </div>
+            </div>
+
+            <div class="validation-content">
+                <div class="validation-empty">
+                    <div class="validation-empty-icon">🔍</div>
+                    <div class="validation-empty-text">
+                        '검증 시작' 버튼을 클릭하여<br>
+                        회로 오류를 검사하세요.
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        // 자동 검증 토글
-        function toggleAutoValidate() {
-            const toggle = document.getElementById('auto-validate-toggle');
-            const isActive = toggle.classList.toggle('active');
+        <script>
+            // 자동 검증 토글
+            function toggleAutoValidate() {
+                const toggle = document.getElementById('auto-validate-toggle');
+                const isActive = toggle.classList.toggle('active');
 
-            if (isActive) {
-                // 자동 검증 활성화: 변경사항 감지 시 검증
-                if (window.sim && window.sim.validator) {
-                    window.autoValidateEnabled = true;
+                if (isActive) {
+                    // 자동 검증 활성화: 변경사항 감지 시 검증
+                    if (window.sim && window.sim.validator) {
+                        window.autoValidateEnabled = true;
+                    }
+                } else {
+                    window.autoValidateEnabled = false;
                 }
-            } else {
-                window.autoValidateEnabled = false;
-            }
-        }
-
-        // 통계 업데이트
-        function updateValidationStats(results) {
-            const statsEl = document.getElementById('validation-stats');
-            if (!statsEl) return;
-
-            const errors = results.errors?.length || 0;
-            const warnings = results.warnings?.length || 0;
-            const suggestions = results.suggestions?.length || 0;
-
-            document.getElementById('stat-errors').textContent = errors;
-            document.getElementById('stat-warnings').textContent = warnings;
-            document.getElementById('stat-suggestions').textContent = suggestions;
-
-            if (errors + warnings + suggestions > 0) {
-                statsEl.style.display = 'flex';
-            } else {
-                statsEl.style.display = 'none';
-            }
-        }
-    </script>
-
-    <!-- ======== Collaboration Panel ======== -->
-    <div id="collaboration-panel" class="collaboration-panel hidden">
-        <div class="collab-header">
-            <span>실시간 협업</span>
-            <button class="collab-toggle" onclick="toggleCollaborationPanel()">×</button>
-        </div>
-
-        <div id="collaborators-list" class="no-collaborators">
-            협업 시작 버튼을 클릭하세요
-        </div>
-
-        <div style="padding: 12px;">
-            <button class="btn-invite-collab" onclick="showInviteModal()"
-                style="width: 100%; padding: 10px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; margin-bottom: 8px;">
-                👥 협업자 초대
-            </button>
-            <div id="collab-status"
-                style="font-size: 11px; color: var(--text-tertiary); text-align: center; margin-bottom: 8px;">
-                오프라인
-            </div>
-        </div>
-    </div>
-
-    <!-- Invite Modal -->
-    <div id="invite-modal" class="invite-modal" style="display: none;">
-        <div class="invite-content">
-            <h3>협업자 초대</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
-                이메일로 협업자를 초대하세요
-            </p>
-
-            <input type="email" id="invite-email" class="invite-input" placeholder="user@example.com">
-
-            <div style="margin-bottom: 16px;">
-                <label
-                    style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-secondary);">권한</label>
-                <select id="invite-role"
-                    style="width: 100%; padding: 10px; background: var(--bg-default, #0a0a0a); border: 1px solid var(--border-default, #333); border-radius: 6px; color: var(--text-primary, #fff);">
-                    <option value="editor">편집자 - 회로 수정 가능</option>
-                    <option value="viewer">뷰어 - 읽기만 가능</option>
-                </select>
-            </div>
-
-            <div id="invite-error" style="color: #ef4444; font-size: 12px; margin-bottom: 12px; display: none;"></div>
-
-            <div class="invite-actions">
-                <button class="btn-invite-cancel" onclick="closeInviteModal()">취소</button>
-                <button class="btn-invite-send" onclick="sendInvite()">초대 보내기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Collaboration Status Indicator -->
-    <div id="collaboration-status" class="collaboration-status" style="display: none;">
-        <span id="status-icon">●</span>
-        <span id="status-text">협업 중...</span>
-    </div>
-
-    <script>
-        // 협업 토글
-        async function toggleCollaboration() {
-            if (!window.sim || !window.sim.collaboration) {
-                alert('협업 기능을 초기화하는 중입니다. 잠시 후 다시 시도하세요.');
-                return;
             }
 
-            const btn = document.getElementById('btn-collaborate');
-            const panel = document.getElementById('collaboration-panel');
-            const status = document.getElementById('collaboration-status');
-            const statusText = document.getElementById('collab-status');
+            // 통계 업데이트
+            function updateValidationStats(results) {
+                const statsEl = document.getElementById('validation-stats');
+                if (!statsEl) return;
 
-            if (window.sim.collaboration.isConnected) {
-                // 협업 종료
-                await window.sim.collaboration.stopCollaboration();
-                btn.classList.remove('active');
-                btn.style.background = '';
-                status.style.display = 'none';
-                statusText.textContent = '오프라인';
-                statusText.style.color = 'var(--text-tertiary)';
+                const errors = results.errors?.length || 0;
+                const warnings = results.warnings?.length || 0;
+                const suggestions = results.suggestions?.length || 0;
 
-                if (window.sim.showToast) {
-                    window.sim.showToast('협업이 종료되었습니다', 'info');
+                document.getElementById('stat-errors').textContent = errors;
+                document.getElementById('stat-warnings').textContent = warnings;
+                document.getElementById('stat-suggestions').textContent = suggestions;
+
+                if (errors + warnings + suggestions > 0) {
+                    statsEl.style.display = 'flex';
+                } else {
+                    statsEl.style.display = 'none';
                 }
-            } else {
-                // 협업 시작
-                if (!window.sim.currentProjectId) {
+            }
+        </script>
+
+        <!-- ======== Collaboration Panel ======== -->
+        <div id="collaboration-panel" class="collaboration-panel hidden">
+            <div class="collab-header">
+                <span>실시간 협업</span>
+                <button class="collab-toggle" onclick="toggleCollaborationPanel()">×</button>
+            </div>
+
+            <div id="collaborators-list" class="no-collaborators">
+                협업 시작 버튼을 클릭하세요
+            </div>
+
+            <div style="padding: 12px;">
+                <button class="btn-invite-collab" onclick="showInviteModal()"
+                    style="width: 100%; padding: 10px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; margin-bottom: 8px;">
+                    👥 협업자 초대
+                </button>
+                <div id="collab-status"
+                    style="font-size: 11px; color: var(--text-tertiary); text-align: center; margin-bottom: 8px;">
+                    오프라인
+                </div>
+            </div>
+        </div>
+
+        <!-- Invite Modal -->
+        <div id="invite-modal" class="invite-modal" style="display: none;">
+            <div class="invite-content">
+                <h3>협업자 초대</h3>
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+                    이메일로 협업자를 초대하세요
+                </p>
+
+                <input type="email" id="invite-email" class="invite-input" placeholder="user@example.com">
+
+                <div style="margin-bottom: 16px;">
+                    <label
+                        style="display: block; font-size: 12px; margin-bottom: 8px; color: var(--text-secondary);">권한</label>
+                    <select id="invite-role"
+                        style="width: 100%; padding: 10px; background: var(--bg-default, #0a0a0a); border: 1px solid var(--border-default, #333); border-radius: 6px; color: var(--text-primary, #fff);">
+                        <option value="editor">편집자 - 회로 수정 가능</option>
+                        <option value="viewer">뷰어 - 읽기만 가능</option>
+                    </select>
+                </div>
+
+                <div id="invite-error" style="color: #ef4444; font-size: 12px; margin-bottom: 12px; display: none;">
+                </div>
+
+                <div class="invite-actions">
+                    <button class="btn-invite-cancel" onclick="closeInviteModal()">취소</button>
+                    <button class="btn-invite-send" onclick="sendInvite()">초대 보내기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Status Indicator -->
+        <div id="collaboration-status" class="collaboration-status" style="display: none;">
+            <span id="status-icon">●</span>
+            <span id="status-text">협업 중...</span>
+        </div>
+
+        <script>
+            // 협업 토글
+            async function toggleCollaboration() {
+                if (!window.sim || !window.sim.collaboration) {
+                    alert('협업 기능을 초기화하는 중입니다. 잠시 후 다시 시도하세요.');
+                    return;
+                }
+
+                const btn = document.getElementById('btn-collaborate');
+                const panel = document.getElementById('collaboration-panel');
+                const status = document.getElementById('collaboration-status');
+                const statusText = document.getElementById('collab-status');
+
+                if (window.sim.collaboration.isConnected) {
+                    // 협업 종료
+                    await window.sim.collaboration.stopCollaboration();
+                    btn.classList.remove('active');
+                    btn.style.background = '';
+                    status.style.display = 'none';
+                    statusText.textContent = '오프라인';
+                    statusText.style.color = 'var(--text-tertiary)';
+
+                    if (window.sim.showToast) {
+                        window.sim.showToast('협업이 종료되었습니다', 'info');
+                    }
+                } else {
+                    // 협업 시작
+                    if (!window.sim.currentProjectId) {
+                        alert('프로젝트를 먼저 저장해주세요.');
+                        return;
+                    }
+
+                    try {
+                        await window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
+                        btn.classList.add('active');
+                        btn.style.background = 'var(--accent-green, #22c55e)';
+                        status.style.display = 'flex';
+                        status.classList.add('connected');
+                        statusText.textContent = '온라인';
+                        statusText.style.color = 'var(--accent-green)';
+
+                        // 패널 표시
+                        panel.classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Failed to start collaboration:', error);
+                        alert('협업을 시작할 수 없습니다: ' + error.message);
+                    }
+                }
+            }
+
+            // 협업 패널 토글
+            function toggleCollaborationPanel() {
+                const panel = document.getElementById('collaboration-panel');
+                panel.classList.toggle('hidden');
+            }
+
+            // 초대 모달 열기
+            function showInviteModal() {
+                if (!window.sim || !window.sim.currentProjectId) {
+                    alert('프로젝트를 먼저 저장해주세요.');
+                    return;
+                }
+                document.getElementById('invite-modal').style.display = 'flex';
+                document.getElementById('invite-email').focus();
+            }
+
+            // 초대 모달 닫기
+            function closeInviteModal() {
+                document.getElementById('invite-modal').style.display = 'none';
+                document.getElementById('invite-email').value = '';
+                document.getElementById('invite-role').value = 'editor';
+                document.getElementById('invite-error').style.display = 'none';
+            }
+
+            // 초대 보내기
+            async function sendInvite() {
+                const emailInput = document.getElementById('invite-email');
+                const roleSelect = document.getElementById('invite-role');
+                const errorDiv = document.getElementById('invite-error');
+
+                const email = emailInput.value.trim();
+                const role = roleSelect.value;
+
+                // 유효성 검사
+                if (!email) {
+                    errorDiv.textContent = '이메일을 입력하세요.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    errorDiv.textContent = '올바른 이메일 형식이 아닙니다.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                errorDiv.style.display = 'none';
+
+                try {
+                    if (!window.sim.collaboration) {
+                        throw new Error('협업 기능이 초기화되지 않았습니다.');
+                    }
+
+                    await window.sim.collaboration.inviteCollaborator(
+                        window.sim.currentProjectId,
+                        email,
+                        role
+                    );
+
+                    if (window.sim.showToast) {
+                        window.sim.showToast('✓ 초대를 보냈습니다!', 'success');
+                    }
+
+                    closeInviteModal();
+                } catch (error) {
+                    console.error('Invite error:', error);
+                    errorDiv.textContent = error.message || '초대 실패';
+                    errorDiv.style.display = 'block';
+                }
+            }
+        </script>
+
+        <!-- Publish Settings Modal -->
+        <div id="publish-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+            <div class="modal-window"
+                style="width: 500px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: 12px;">
+                <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: var(--text-primary);">프로젝트 공개
+                    설정
+                </h2>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" id="is-public-checkbox"
+                            style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-size: 15px; color: var(--text-primary);">커뮤니티에 공개</span>
+                    </label>
+                    <small
+                        style="display: block; margin-top: 6px; margin-left: 30px; color: var(--text-secondary); font-size: 12px;">
+                        공개하면 라이브러리 페이지에 표시됩니다
+                    </small>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                        프로젝트 설명
+                    </label>
+                    <textarea id="project-description-input" placeholder="이 회로가 무엇을 하는지 설명하세요..."
+                        style="width: 100%; padding: 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; min-height: 80px;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label
+                        style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
+                        태그 (쉼표로 구분)
+                    </label>
+                    <input type="text" id="project-tags-input" placeholder="예: logic, gates, adder"
+                        style="width: 100%; padding: 10px 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                    <small style="display: block; margin-top: 6px; color: var(--text-secondary); font-size: 12px;">
+                        검색과 필터링에 사용됩니다
+                    </small>
+                </div>
+
+                <div id="publish-error" style="color: #ef4444; font-size: 13px; margin-bottom: 16px; display: none;">
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="closePublishModal()"
+                        style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 14px; font-weight: 500;">
+                        취소
+                    </button>
+                    <button onclick="savePublishSettings()"
+                        style="flex: 1; padding: 12px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                        저장
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 공개 설정 모달 열기
+            async function showPublishModal() {
+                if (!window.sim || !window.sim.currentProjectId) {
                     alert('프로젝트를 먼저 저장해주세요.');
                     return;
                 }
 
+                // 현재 프로젝트 정보 불러오기
                 try {
-                    await window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
-                    btn.classList.add('active');
-                    btn.style.background = 'var(--accent-green, #22c55e)';
-                    status.style.display = 'flex';
-                    status.classList.add('connected');
-                    statusText.textContent = '온라인';
-                    statusText.style.color = 'var(--accent-green)';
+                    const { data: project } = await window.sb
+                        .from('projects')
+                        .select('is_public, description, tags')
+                        .eq('id', window.sim.currentProjectId)
+                        .single();
 
-                    // 패널 표시
-                    panel.classList.remove('hidden');
+                    if (project) {
+                        document.getElementById('is-public-checkbox').checked = project.is_public || false;
+                        document.getElementById('project-description-input').value = project.description || '';
+                        document.getElementById('project-tags-input').value = project.tags ? project.tags.join(', ') : '';
+                    }
                 } catch (error) {
-                    console.error('Failed to start collaboration:', error);
-                    alert('협업을 시작할 수 없습니다: ' + error.message);
-                }
-            }
-        }
-
-        // 협업 패널 토글
-        function toggleCollaborationPanel() {
-            const panel = document.getElementById('collaboration-panel');
-            panel.classList.toggle('hidden');
-        }
-
-        // 초대 모달 열기
-        function showInviteModal() {
-            if (!window.sim || !window.sim.currentProjectId) {
-                alert('프로젝트를 먼저 저장해주세요.');
-                return;
-            }
-            document.getElementById('invite-modal').style.display = 'flex';
-            document.getElementById('invite-email').focus();
-        }
-
-        // 초대 모달 닫기
-        function closeInviteModal() {
-            document.getElementById('invite-modal').style.display = 'none';
-            document.getElementById('invite-email').value = '';
-            document.getElementById('invite-role').value = 'editor';
-            document.getElementById('invite-error').style.display = 'none';
-        }
-
-        // 초대 보내기
-        async function sendInvite() {
-            const emailInput = document.getElementById('invite-email');
-            const roleSelect = document.getElementById('invite-role');
-            const errorDiv = document.getElementById('invite-error');
-
-            const email = emailInput.value.trim();
-            const role = roleSelect.value;
-
-            // 유효성 검사
-            if (!email) {
-                errorDiv.textContent = '이메일을 입력하세요.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                errorDiv.textContent = '올바른 이메일 형식이 아닙니다.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            errorDiv.style.display = 'none';
-
-            try {
-                if (!window.sim.collaboration) {
-                    throw new Error('협업 기능이 초기화되지 않았습니다.');
+                    console.error('Failed to load project settings:', error);
                 }
 
-                await window.sim.collaboration.inviteCollaborator(
-                    window.sim.currentProjectId,
-                    email,
-                    role
-                );
+                document.getElementById('publish-modal').style.display = 'flex';
+            }
 
-                if (window.sim.showToast) {
-                    window.sim.showToast('✓ 초대를 보냈습니다!', 'success');
+            // 공개 설정 모달 닫기
+            function closePublishModal() {
+                document.getElementById('publish-modal').style.display = 'none';
+                document.getElementById('publish-error').style.display = 'none';
+            }
+
+            // 공개 설정 저장
+            async function savePublishSettings() {
+                const isPublic = document.getElementById('is-public-checkbox').checked;
+                const description = document.getElementById('project-description-input').value.trim();
+                const tagsStr = document.getElementById('project-tags-input').value.trim();
+                const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+                const errorDiv = document.getElementById('publish-error');
+
+                if (!window.sim || !window.sim.currentProjectId) {
+                    errorDiv.textContent = '프로젝트 ID를 찾을 수 없습니다.';
+                    errorDiv.style.display = 'block';
+                    return;
                 }
 
-                closeInviteModal();
-            } catch (error) {
-                console.error('Invite error:', error);
-                errorDiv.textContent = error.message || '초대 실패';
-                errorDiv.style.display = 'block';
-            }
-        }
-    </script>
-
-    <!-- Publish Settings Modal -->
-    <div id="publish-modal" class="modal-overlay" style="display: none; z-index: 3000;">
-        <div class="modal-window"
-            style="width: 500px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 32px; border-radius: 12px;">
-            <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: var(--text-primary);">프로젝트 공개 설정
-            </h2>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                    <input type="checkbox" id="is-public-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 15px; color: var(--text-primary);">커뮤니티에 공개</span>
-                </label>
-                <small
-                    style="display: block; margin-top: 6px; margin-left: 30px; color: var(--text-secondary); font-size: 12px;">
-                    공개하면 라이브러리 페이지에 표시됩니다
-                </small>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label
-                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
-                    프로젝트 설명
-                </label>
-                <textarea id="project-description-input" placeholder="이 회로가 무엇을 하는지 설명하세요..."
-                    style="width: 100%; padding: 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 14px; resize: vertical; min-height: 80px;"></textarea>
-            </div>
-
-            <div style="margin-bottom: 24px;">
-                <label
-                    style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary);">
-                    태그 (쉼표로 구분)
-                </label>
-                <input type="text" id="project-tags-input" placeholder="예: logic, gates, adder"
-                    style="width: 100%; padding: 10px 12px; background: var(--bg-default); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
-                <small style="display: block; margin-top: 6px; color: var(--text-secondary); font-size: 12px;">
-                    검색과 필터링에 사용됩니다
-                </small>
-            </div>
-
-            <div id="publish-error" style="color: #ef4444; font-size: 13px; margin-bottom: 16px; display: none;"></div>
-
-            <div style="display: flex; gap: 12px;">
-                <button onclick="closePublishModal()"
-                    style="flex: 1; padding: 12px; background: var(--bg-hover); border: 1px solid var(--border-default); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 14px; font-weight: 500;">
-                    취소
-                </button>
-                <button onclick="savePublishSettings()"
-                    style="flex: 1; padding: 12px; background: var(--accent-blue, #3b82f6); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
-                    저장
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // 공개 설정 모달 열기
-        async function showPublishModal() {
-            if (!window.sim || !window.sim.currentProjectId) {
-                alert('프로젝트를 먼저 저장해주세요.');
-                return;
-            }
-
-            // 현재 프로젝트 정보 불러오기
-            try {
-                const { data: project } = await window.sb
-                    .from('projects')
-                    .select('is_public, description, tags')
-                    .eq('id', window.sim.currentProjectId)
-                    .single();
-
-                if (project) {
-                    document.getElementById('is-public-checkbox').checked = project.is_public || false;
-                    document.getElementById('project-description-input').value = project.description || '';
-                    document.getElementById('project-tags-input').value = project.tags ? project.tags.join(', ') : '';
+                if (!window.library) {
+                    errorDiv.textContent = 'LibraryManager가 초기화되지 않았습니다.';
+                    errorDiv.style.display = 'block';
+                    return;
                 }
-            } catch (error) {
-                console.error('Failed to load project settings:', error);
-            }
 
-            document.getElementById('publish-modal').style.display = 'flex';
-        }
-
-        // 공개 설정 모달 닫기
-        function closePublishModal() {
-            document.getElementById('publish-modal').style.display = 'none';
-            document.getElementById('publish-error').style.display = 'none';
-        }
-
-        // 공개 설정 저장
-        async function savePublishSettings() {
-            const isPublic = document.getElementById('is-public-checkbox').checked;
-            const description = document.getElementById('project-description-input').value.trim();
-            const tagsStr = document.getElementById('project-tags-input').value.trim();
-            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
-            const errorDiv = document.getElementById('publish-error');
-
-            if (!window.sim || !window.sim.currentProjectId) {
-                errorDiv.textContent = '프로젝트 ID를 찾을 수 없습니다.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (!window.library) {
-                errorDiv.textContent = 'LibraryManager가 초기화되지 않았습니다.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            try {
-                if (isPublic) {
-                    await window.library.makeProjectPublic(
-                        window.sim.currentProjectId,
-                        description,
-                        tags
-                    );
-                    if (window.sim.showToast) {
-                        window.sim.showToast('✓ 프로젝트가 공개되었습니다!', 'success');
+                try {
+                    if (isPublic) {
+                        await window.library.makeProjectPublic(
+                            window.sim.currentProjectId,
+                            description,
+                            tags
+                        );
+                        if (window.sim.showToast) {
+                            window.sim.showToast('✓ 프로젝트가 공개되었습니다!', 'success');
+                        } else {
+                            alert('✓ 프로젝트가 공개되었습니다!');
+                        }
                     } else {
-                        alert('✓ 프로젝트가 공개되었습니다!');
+                        await window.library.makeProjectPrivate(window.sim.currentProjectId);
+                        if (window.sim.showToast) {
+                            window.sim.showToast('✓ 프로젝트가 비공개로 전환되었습니다', 'info');
+                        } else {
+                            alert('✓ 프로젝트가 비공개로 전환되었습니다');
+                        }
                     }
-                } else {
-                    await window.library.makeProjectPrivate(window.sim.currentProjectId);
-                    if (window.sim.showToast) {
-                        window.sim.showToast('✓ 프로젝트가 비공개로 전환되었습니다', 'info');
-                    } else {
-                        alert('✓ 프로젝트가 비공개로 전환되었습니다');
-                    }
+                    closePublishModal();
+                } catch (error) {
+                    console.error('Publish error:', error);
+                    errorDiv.textContent = '오류: ' + (error.message || '알 수 없는 오류');
+                    errorDiv.style.display = 'block';
                 }
-                closePublishModal();
-            } catch (error) {
-                console.error('Publish error:', error);
-                errorDiv.textContent = '오류: ' + (error.message || '알 수 없는 오류');
-                errorDiv.style.display = 'block';
             }
-        }
-    </script>
+        </script>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settings-modal" style="display: none; z-index: 3000;">
-        <div class="modal-window"
-            style="width: 400px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 24px; border-radius: 12px;">
-            <div class="modal-header"
-                style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">설정
-                    (Settings)</h2>
-                <button onclick="sim.closeSettings()"
-                    style="background:none; border:none; color:var(--text-secondary); cursor:pointer;">
-                    <svg width="20" height="20">
-                        <use href="#icon-close" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="settings-group" style="margin-bottom: 24px;">
-                <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">언어
-                    (Language)</label>
-                <select id="sim-setting-language" onchange="sim.setLanguage(this.value)"
-                    style="width: 100%; padding: 10px; background: var(--bg-active); border: 1px solid var(--border-default); color: var(--text-primary); border-radius: 6px;">
-                    <option value="ko">한국어</option>
-                    <option value="en">English</option>
-                    <option value="ja">日本語</option>
-                </select>
-            </div>
-
-            <div class="settings-group" style="margin-bottom: 24px;">
-                <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">UI
-                    크기
-                    (Scale)</label>
-                <div style="display:flex; align-items:center; gap: 12px;">
-                    <span style="font-size:12px; color:var(--text-muted);">80%</span>
-                    <input type="range" id="sim-setting-ui-scale" min="0.8" max="1.2" step="0.05" value="1.0"
-                        oninput="sim.setUIScale(parseFloat(this.value))"
-                        style="flex: 1; accent-color: var(--accent-blue);">
-                    <span style="font-size:12px; color:var(--text-muted);">120%</span>
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settings-modal" style="display: none; z-index: 3000;">
+            <div class="modal-window"
+                style="width: 400px; background: var(--bg-surface); border: 1px solid var(--border-default); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 24px; border-radius: 12px;">
+                <div class="modal-header"
+                    style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">설정
+                        (Settings)</h2>
+                    <button onclick="sim.closeSettings()"
+                        style="background:none; border:none; color:var(--text-secondary); cursor:pointer;">
+                        <svg width="20" height="20">
+                            <use href="#icon-close" />
+                        </svg>
+                    </button>
                 </div>
-                <div style="text-align:center; font-size: 12px; color: var(--accent-blue); margin-top: 4px;"
-                    id="ui-scale-value">100%</div>
-            </div>
+
+                <div class="settings-group" style="margin-bottom: 24px;">
+                    <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">언어
+                        (Language)</label>
+                    <select id="sim-setting-language" onchange="sim.setLanguage(this.value)"
+                        style="width: 100%; padding: 10px; background: var(--bg-active); border: 1px solid var(--border-default); color: var(--text-primary); border-radius: 6px;">
+                        <option value="ko">한국어</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語</option>
+                    </select>
+                </div>
+
+                <div class="settings-group" style="margin-bottom: 24px;">
+                    <label style="display:block; color:var(--text-secondary); font-size:12px; margin-bottom: 8px;">UI
+                        크기
+                        (Scale)</label>
+                    <div style="display:flex; align-items:center; gap: 12px;">
+                        <span style="font-size:12px; color:var(--text-muted);">80%</span>
+                        <input type="range" id="sim-setting-ui-scale" min="0.8" max="1.2" step="0.05" value="1.0"
+                            oninput="sim.setUIScale(parseFloat(this.value))"
+                            style="flex: 1; accent-color: var(--accent-blue);">
+                        <span style="font-size:12px; color:var(--text-muted);">120%</span>
+                    </div>
+                    <div style="text-align:center; font-size: 12px; color: var(--accent-blue); margin-top: 4px;"
+                        id="ui-scale-value">100%</div>
+                </div>
 
 
 
-            <div style="text-align: right;">
-                <button onclick="sim.closeSettings()"
-                    style="padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
-                    확인
-                </button>
+                <div style="text-align: right;">
+                    <button onclick="sim.closeSettings()"
+                        style="padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
+                        확인
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    <script>
-        // Apply UI Scale on load
-        (function () {
-            const s = localStorage.getItem('locad_ui_scale');
-            if (s) {
-                document.body.style.zoom = s;
-                // Wait for sim to initialize if needed, or rely on openSettings to sync
-            }
-        })();
-    </script>
+        <script>
+            // Apply UI Scale on load
+            (function () {
+                const s = localStorage.getItem('locad_ui_scale');
+                if (s) {
+                    document.body.style.zoom = s;
+                    // Wait for sim to initialize if needed, or rely on openSettings to sync
+                }
+            })();
+        </script>
 </body>
 
 </html>
