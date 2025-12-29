@@ -464,11 +464,58 @@
         .unban-btn {
             background: var(--accent-green);
         }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-dim);
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .page-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     </style>
 
     <script>
         let currentFilter = 'all';
         let currentPostFilter = 'all';
+
+        // 페이지네이션 상태
+        const ITEMS_PER_PAGE = 10;
+        let feedbackPage = 1;
+        let feedbackTotal = 0;
+        let postsPage = 1;
+        let postsTotal = 0;
+        let usersPage = 1;
+        let usersTotal = 0;
 
         // 섹션 토글 (접기/펼치기)
         function toggleSection(sectionName) {
@@ -487,6 +534,7 @@
         // 게시글 카테고리 필터
         function setPostFilter(category) {
             currentPostFilter = category;
+            postsPage = 1; // 필터 변경 시 1페이지로 리셋
             document.querySelectorAll('.post-filter').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -520,6 +568,7 @@
 
         function setFilter(filter) {
             currentFilter = filter;
+            feedbackPage = 1; // 필터 변경 시 1페이지로 리셋
             document.querySelectorAll('.filter-tab').forEach(tab => {
                 tab.classList.remove('active');
                 if (tab.onclick.toString().includes(`'${filter}'`)) tab.classList.add('active');
@@ -578,11 +627,23 @@
 
         async function loadFeedback() {
             try {
+                // 먼저 총 개수 조회
+                let countQuery = window.sb.from('feedback').select('*', { count: 'exact', head: true });
+                if (currentFilter !== 'all') {
+                    countQuery = countQuery.eq('status', currentFilter);
+                }
+                const { count } = await countQuery;
+                feedbackTotal = count || 0;
+
+                // 페이지네이션된 데이터 조회
+                const from = (feedbackPage - 1) * ITEMS_PER_PAGE;
+                const to = from + ITEMS_PER_PAGE - 1;
+
                 let query = window.sb
                     .from('feedback')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(50);
+                    .range(from, to);
 
                 if (currentFilter !== 'all') {
                     query = query.eq('status', currentFilter);
@@ -599,11 +660,51 @@
                     return;
                 }
 
-                container.innerHTML = data.map(item => createFeedbackCard(item)).join('');
+                container.innerHTML = data.map(item => createFeedbackCard(item)).join('') +
+                    renderPagination('feedback', feedbackPage, feedbackTotal);
             } catch (error) {
                 console.error('Failed to load feedback:', error);
                 document.getElementById('feedback-list').innerHTML =
                     '<div class="empty-state">피드백을 불러오지 못했습니다.</div>';
+            }
+        }
+
+        function renderPagination(type, currentPage, total) {
+            const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+            if (totalPages <= 1) return '';
+
+            let html = '<div class="pagination">';
+
+            // 이전 버튼
+            html += `<button class="page-btn" onclick="goToPage('${type}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>◀</button>`;
+
+            // 페이지 번호들
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage('${type}', ${i})">${i}</button>`;
+            }
+
+            // 다음 버튼
+            html += `<button class="page-btn" onclick="goToPage('${type}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>▶</button>`;
+
+            html += `<span style="margin-left: 12px; color: var(--text-dim); font-size: 12px;">(${total}개)</span>`;
+            html += '</div>';
+
+            return html;
+        }
+
+        function goToPage(type, page) {
+            if (type === 'feedback') {
+                feedbackPage = page;
+                loadFeedback();
+            } else if (type === 'posts') {
+                postsPage = page;
+                loadPosts();
+            } else if (type === 'users') {
+                usersPage = page;
+                loadUsers();
             }
         }
 
@@ -725,11 +826,23 @@
         // ===== 게시글 관리 =====
         async function loadPosts() {
             try {
+                // 먼저 총 개수 조회
+                let countQuery = window.sb.from('posts').select('*', { count: 'exact', head: true });
+                if (currentPostFilter !== 'all') {
+                    countQuery = countQuery.eq('category', currentPostFilter);
+                }
+                const { count } = await countQuery;
+                postsTotal = count || 0;
+
+                // 페이지네이션된 데이터 조회
+                const from = (postsPage - 1) * ITEMS_PER_PAGE;
+                const to = from + ITEMS_PER_PAGE - 1;
+
                 let query = window.sb
                     .from('posts')
                     .select('*')
                     .order('created_at', { ascending: false })
-                    .limit(50);
+                    .range(from, to);
 
                 // 카테고리 필터 적용
                 if (currentPostFilter !== 'all') {
@@ -767,7 +880,7 @@
                             <button class="delete-btn" onclick="deletePost('${post.id}')">🗑️ 삭제</button>
                         </div>
                     </div>
-                `).join('');
+                `).join('') + renderPagination('posts', postsPage, postsTotal);
             } catch (error) {
                 console.error('Load posts error:', error);
                 document.getElementById('posts-list').innerHTML = '<div class="empty-state">게시글 로드 실패</div>';
