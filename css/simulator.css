@@ -4346,9 +4346,10 @@ div.component[data-type="NOT"] {
    [HOTFIX] Component Style Overrides
    ============================================ */
 
-/* Remove Background Box from Switch & Clock */
+/* Remove Background Box from Switch, Clock & LED */
 .component[data-type="SWITCH"],
-.component[data-type="CLOCK"] {
+.component[data-type="CLOCK"],
+.component[data-type="LED"] {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
