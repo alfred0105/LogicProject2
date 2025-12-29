@@ -4346,18 +4346,27 @@ div.component[data-type="NOT"] {
    [HOTFIX] Component Style Overrides
    ============================================ */
 
-/* Remove Background Box from Switch, Clock & LED (All States including ON/Hover) */
+/* Remove Background Box & Container Glow from Switch, Clock & LED (All States) */
 .component[data-type="SWITCH"],
 .component[data-type="CLOCK"],
 .component[data-type="LED"],
+.component[data-type="LED"]:hover,
+.component[data-type="LED"]:active,
+.component[data-type="LED"].selected,
 .component[data-type="LED"][data-value="1"],
+.component[data-type="SWITCH"]:hover,
+.component[data-type="SWITCH"]:active,
+.component[data-type="SWITCH"].selected,
 .component[data-type="SWITCH"][data-value="1"],
+.component[data-type="CLOCK"]:hover,
+.component[data-type="CLOCK"]:active,
+.component[data-type="CLOCK"].selected,
 .component[data-type="CLOCK"][data-value="1"] {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
     filter: none !important;
-    /* 컨테이너 레벨 글로우(네모 박스) 제거 */
+    /* 컨테이너 레벨 글로우(네모 박스) 완전 제거 */
 }
 
 /* CLOCK - Neon Style Enhancement */
