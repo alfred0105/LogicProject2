@@ -691,6 +691,36 @@
             font-size: 24px;
             flex-shrink: 0;
         }
+
+        /* Main Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-dim);
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-sub);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .nav-tab.active {
+            background: var(--accent-primary);
+            color: white;
+        }
     </style>
 </head>
 
@@ -708,15 +738,19 @@
                 </svg>
                 <span>LoCAD</span>
             </div>
+
+            <!-- Main Navigation Tabs -->
+            <div class="nav-tabs">
+                <a href="#projects-section" class="nav-tab active" onclick="showSection('projects')">🔌 프로젝트</a>
+                <a href="#posts" class="nav-tab" onclick="showSection('community')">💬 커뮤니티</a>
+            </div>
+
             <div class="nav-links">
-                <a href="#trending" class="nav-link">인기</a>
-                <a href="#latest" class="nav-link">최신</a>
-                <a href="#categories" class="nav-link">카테고리</a>
-                <a href="library.html" class="nav-link">전체보기</a>
-                <a href="javascript:void(0)" onclick="showFeedbackModal()" class="nav-link">💬 피드백</a>
+                <a href="library.html" class="nav-link">🗂️ 라이브러리</a>
+                <a href="javascript:void(0)" onclick="showFeedbackModal()" class="nav-link">📨 피드백</a>
 
                 <a href="login.html" class="nav-link" id="nav-login">로그인</a>
-                <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">📊 대시보드</a>
+                <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display: none;">🏠 내 작업실</a>
                 <a href="admin.html" class="nav-link" id="nav-admin"
                     style="display: none; color: var(--accent-orange);">⚙️ 관리자</a>
                 <a href="create-post.html" class="nav-link" id="nav-create-post"
@@ -750,68 +784,73 @@
         </div>
     </div>
 
-    <!-- Trending Section -->
-    <section id="trending">
-        <div class="section-header">
-            <div>
-                <h2 class="section-title">🔥 인기 프로젝트</h2>
-                <p class="section-subtitle">지금 가장 인기있는 논리 회로</p>
+    <!-- Projects Section Container -->
+    <div id="projects-section">
+        <!-- Trending Section -->
+        <section id="trending">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🔥 인기 프로젝트</h2>
+                    <p class="section-subtitle">지금 가장 인기있는 논리 회로</p>
+                </div>
+                <a href="library.html?sort=trending" class="view-all">전체보기 →</a>
             </div>
-            <a href="library.html?sort=trending" class="view-all">전체보기 →</a>
-        </div>
-        <div class="grid" id="trending-grid">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>프로젝트를 불러오는 중...</p>
+            <div class="grid" id="trending-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>프로젝트를 불러오는 중...</p>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Latest Section -->
-    <section id="latest">
-        <div class="section-header">
-            <div>
-                <h2 class="section-title">🆕 최신 프로젝트</h2>
-                <p class="section-subtitle">방금 막 공유된 회로들</p>
+        <!-- Latest Section -->
+        <section id="latest">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">🆕 최신 프로젝트</h2>
+                    <p class="section-subtitle">방금 막 공유된 회로들</p>
+                </div>
+                <a href="library.html?sort=latest" class="view-all">전체보기 →</a>
             </div>
-            <a href="library.html?sort=latest" class="view-all">전체보기 →</a>
-        </div>
-        <div class="grid" id="latest-grid">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>프로젝트를 불러오는 중...</p>
+            <div class="grid" id="latest-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div> <!-- End projects-section -->
 
-    <!-- Community Posts Section -->
-    <section id="posts">
-        <div class="section-header">
-            <div>
-                <h2 class="section-title">📢 커뮤니티</h2>
-                <p class="section-subtitle">다양한 주제로 소통해보세요</p>
+    <!-- Community Section Container -->
+    <div id="community-section" style="display: none;">
+        <!-- Community Posts Section -->
+        <section id="posts">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">📢 커뮤니티</h2>
+                    <p class="section-subtitle">다양한 주제로 소통해보세요</p>
+                </div>
+                <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
+                    style="color: var(--accent-purple);">✍️ 글쓰기 →</a>
             </div>
-            <a href="javascript:void(0)" onclick="location.href='create-post.html'" class="view-all"
-                style="color: var(--accent-purple);">✍️ 글쓰기 →</a>
-        </div>
 
-        <!-- Posts Filter Tabs -->
-        <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 20px;">
-            <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 글</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('showcase')">🎨 쇼케이스</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('question')">❓ 질문</button>
-            <button class="posts-filter-tab" onclick="setPostsTab('tutorial')">📚 튜토리얼</button>
-        </div>
-
-        <!-- List View Container -->
-        <div class="community-list" id="posts-list">
-            <div class="loading" style="padding: 40px;">
-                <div class="spinner"></div>
-                <p>게시글을 불러오는 중...</p>
+            <!-- Posts Filter Tabs -->
+            <div class="posts-filter-tabs" id="posts-filter-container" style="margin-bottom: 20px;">
+                <button class="posts-filter-tab active" onclick="setPostsTab('all')">📋 전체</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('my')" id="my-posts-tab">📝 내 글</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('showcase')">🎨 쇼케이스</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('question')">❓ 질문</button>
+                <button class="posts-filter-tab" onclick="setPostsTab('tutorial')">📚 튜토리얼</button>
             </div>
-        </div>
-    </section>
+
+            <!-- List View Container -->
+            <div class="community-list" id="posts-list">
+                <div class="loading" style="padding: 40px;">
+                    <div class="spinner"></div>
+                    <p>게시글을 불러오는 중...</p>
+                </div>
+            </div>
+        </section>
+    </div> <!-- End community-section -->
 
     <!-- Footer -->
     <footer>
@@ -888,6 +927,26 @@
 
             await loadAllSections();
         });
+
+        // 프로젝트/커뮤니티 섹션 전환
+        function showSection(section) {
+            const projectsSection = document.getElementById('projects-section');
+            const communitySection = document.getElementById('community-section');
+            const navTabs = document.querySelectorAll('.nav-tab');
+
+            navTabs.forEach(tab => tab.classList.remove('active'));
+
+            if (section === 'projects') {
+                projectsSection.style.display = 'block';
+                communitySection.style.display = 'none';
+                navTabs[0].classList.add('active');
+            } else {
+                projectsSection.style.display = 'none';
+                communitySection.style.display = 'block';
+                navTabs[1].classList.add('active');
+                loadCommunityPosts(); // 커뮤니티 탭 클릭 시 게시글 새로고침
+            }
+        }
 
         function setPostsTab(tab) {
             // 내 게시글 탭 클릭 시 로그인 체크
