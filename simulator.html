@@ -4,6 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- 모바일 기기 자동 리디렉션 (가장 먼저 실행) -->
+    <script>
+        (function () {
+            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile && !window.location.pathname.includes('mobile_simulator')) {
+                window.location.replace('mobile_simulator.html' + window.location.search);
+            }
+        })();
+    </script>
+
     <title>Logic Sim</title>
     <meta name="description" content="교육용 디지털 논리 회로 시뮬레이터">
     <!-- [보안] 모든 호스팅(Netlify, GitHub Pages 등)에서 eval() 허용 -->
