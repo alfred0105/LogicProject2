@@ -150,12 +150,16 @@ Object.assign(CircuitSimulator.prototype, {
                         value: c.getAttribute('data-value'),
                         label: c.querySelector('.comp-label')?.innerText
                     })),
-                    wires: comp.internals.wires.map(w => ({
-                        fromCompId: w.from.parentElement?.id,
-                        fromPinClass: w.from.classList?.[1],
-                        toCompId: w.to.parentElement?.id,
-                        toPinClass: w.to.classList?.[1]
-                    }))
+                    wires: comp.internals.wires.map(w => {
+                        const isFromJoint = !w.from.closest || (window.VirtualJoint && w.from instanceof window.VirtualJoint);
+                        const isToJoint = !w.to.closest || (window.VirtualJoint && w.to instanceof window.VirtualJoint);
+                        return {
+                            fromCompId: isFromJoint ? w.from.id : w.from.parentElement?.id,
+                            fromPinClass: isFromJoint ? 'virtual-joint' : w.from.classList?.[1],
+                            toCompId: isToJoint ? w.to.id : w.to.parentElement?.id,
+                            toPinClass: isToJoint ? 'virtual-joint' : w.to.classList?.[1]
+                        };
+                    })
                 };
             }
             return data;
