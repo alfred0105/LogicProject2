@@ -430,6 +430,15 @@ Object.assign(CircuitSimulator.prototype, {
         );
         wiresToRemove.forEach(wire => this.removeWire(wire));
 
+        // [드래그 상태 정리] 삭제되는 컴포넌트가 드래그 중이면 정리
+        if (this.dragTarget === el) {
+            this.dragTarget = null;
+            this.resetDragState?.();
+        }
+
+        // [선택 상태 정리] 선택된 컴포넌트 배열에서도 제거
+        this.selectedComponents = this.selectedComponents.filter(c => c !== el);
+
         // DOM에서 제거
         el.parentNode.removeChild(el);
 

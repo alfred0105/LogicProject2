@@ -120,6 +120,12 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     onMouseDown(e) {
+        // [터치-마우스 중복 방지] 터치 디바이스에서 ghost click 방지
+        // 최근 300ms 이내에 터치 이벤트가 있었으면 마우스 이벤트 무시
+        if (this.lastTouchTime && Date.now() - this.lastTouchTime < 300) {
+            return;
+        }
+
         // [FIX] UI 요소(입력 필드, 버튼 등) 클릭 시에는 기본 동작 허용
         if (e.target.closest('input, textarea, button, select, [contenteditable], #comment-panel, .modal-overlay')) {
             return; // 댓글 입력 등 UI 인터랙션 허용

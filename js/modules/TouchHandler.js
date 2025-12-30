@@ -94,10 +94,39 @@ Object.assign(CircuitSimulator.prototype, {
             this.touchState.lastY = touch.clientY;
             this.touchState.touchStartTime = Date.now();
             this.touchState.touchTarget = target;
+            this.touchState.isLongPress = false;  // 롱 프레스 플래그 초기화
 
             // 컴포넌트 또는 핀 터치 확인
             const component = target?.closest('.component');
             const pin = target?.closest('.pin');
+
+            // [롱 프레스 감지] 컴포넌트에서 500ms 이상 누르면 컨텍스트 메뉴
+            if (component && !pin) {
+                this.touchState.longPressTimer = setTimeout(() => {
+                    this.touchState.isLongPress = true;
+
+                    // 드래그 취소
+                    this.touchState.isDragging = false;
+                    if (this.dragTarget) {
+                        this.dragTarget.classList.remove('dragging');
+                        this.dragTarget = null;
+                    }
+
+                    // 컴포넌트 선택 및 컨텍스트 메뉴 표시
+                    if (!this.selectedComponents.includes(component)) {
+                        this.clearSelection();
+                    }
+                    this.selectComponent(component, true);
+
+                    // 햅틱 피드백 (지원하는 경우)
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+
+                    // 컨텍스트 메뉴 표시
+                    this.showContextMenu(touch.clientX, touch.clientY);
+                }, 500);
+            }
 
             if (pin) {
                 // 핀 터치 - 와이어 연결 시작
@@ -174,6 +203,12 @@ Object.assign(CircuitSimulator.prototype, {
         // 컴포넌트 드래그
         if (this.touchState.isDragging && this.dragTarget) {
             e.preventDefault();
+
+            // [롱 프레스 취소] 드래그 시작 시 롱 프레스 타이머 중지
+            if (this.touchState.longPressTimer) {
+                clearTimeout(this.touchState.longPressTimer);
+                this.touchState.longPressTimer = null;
+            }
 
             const wsRect = this.workspace.parentElement.getBoundingClientRect();
             const scale = this.scale || 1;
@@ -255,7 +290,8 @@ Object.assign(CircuitSimulator.prototype, {
         }
 
         // 짧은 탭 (300ms 미만) - 클릭으로 처리
-        if (touchDuration < 300 && !this.touchState.isPanning && !this.touchState.isPinching) {
+        // [롱 프레스 충돌 방지] 롱 프레스 감지된 경우 클릭 이벤트 무시
+        if (touchDuration < 300 && !this.touchState.isPanning && !this.touchState.isPinching && !this.touchState.isLongPress) {
             const component = target?.closest('.component');
             const pin = target?.closest('.pin');
 

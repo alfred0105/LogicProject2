@@ -530,6 +530,14 @@ Object.assign(CircuitSimulator.prototype, {
             this.components.push(el);
         }
 
+        // [FIX] 패키지 추가 시 바로 내부 회로 빌드 (깊은 복사로 독립 인스턴스 생성)
+        if (pkg.circuit && this.buildUserPackageInternals) {
+            this.buildUserPackageInternals(el);
+        } else if (pkg.circuit) {
+            // buildUserPackageInternals가 아직 로드 안 됐을 경우 직접 빌드
+            this.buildInternals?.(el, JSON.parse(JSON.stringify(pkg.circuit)));
+        }
+
         this.saveState();
         return el;
     },
@@ -616,8 +624,8 @@ Object.assign(CircuitSimulator.prototype, {
             el.id = parentComp.id + '_' + part.id;
             el.setAttribute('data-type', part.type);
             el.setAttribute('data-value', '0');
-            el.style.left = part.x + 'px';
-            el.style.top = part.y + 'px';
+            el.style.left = (part.x || 0) + 'px';
+            el.style.top = (part.y || 0) + 'px';
 
             const label = document.createElement('div');
             label.classList.add('comp-label');
@@ -625,16 +633,35 @@ Object.assign(CircuitSimulator.prototype, {
             el.appendChild(label);
 
             const type = part.type;
-            if (type === 'TRANSISTOR' || type === 'PMOS') {
+
+            // [핵심 수정] 모든 게이트 타입에 대해 핀 추가
+            if (['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR'].includes(type)) {
+                this.addPin(el, 'in-1', 'input in-1');
+                this.addPin(el, 'in-2', 'input in-2');
+                this.addPin(el, 'out', 'output out');
+            } else if (type === 'NOT') {
+                this.addPin(el, 'in-1', 'input in-1');
+                this.addPin(el, 'out', 'output out');
+            } else if (type === 'TRANSISTOR' || type === 'PMOS') {
                 this.addPin(el, 'base', 'input base');
                 this.addPin(el, 'col', 'input col');
                 this.addPin(el, 'emit', 'output emit');
-            } else if (type === 'VCC' || type === 'GND' || type === 'PORT_IN') {
-                if (type === 'VCC') el.setAttribute('data-value', '1');
-                if (type === 'GND') el.setAttribute('data-value', '0');
+            } else if (type === 'VCC') {
+                el.setAttribute('data-value', '1');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'GND') {
+                el.setAttribute('data-value', '0');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'PORT_IN') {
                 this.addPin(el, 'out', 'output center');
             } else if (type === 'PORT_OUT') {
                 this.addPin(el, 'in', 'input center');
+            } else if (type === 'SWITCH') {
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'LED') {
+                this.addPin(el, 'in', 'input center');
+            } else if (type === 'JOINT') {
+                this.addPin(el, 'p1', 'joint-pin');
             }
 
             if (part.id) idMap[part.id] = el;
@@ -647,23 +674,34 @@ Object.assign(CircuitSimulator.prototype, {
             if (w.fromPin && w.toPin) {
                 fromId = w.from; fromPinCls = w.fromPin;
                 toId = w.to; toPinCls = w.toPin;
-            } else {
+            } else if (w.from && typeof w.from === 'string' && w.from.includes('.')) {
                 [fromId, fromPinCls] = w.from.split('.');
                 [toId, toPinCls] = w.to.split('.');
+            } else {
+                return; // 알 수 없는 형식
             }
 
             const fromComp = idMap[fromId];
             const toComp = idMap[toId];
 
             if (fromComp && toComp) {
-                const fromPin = fromComp.querySelector('.' + fromPinCls);
-                const toPin = toComp.querySelector('.' + toPinCls);
+                // 핀 찾기 (여러 방식 시도)
+                let fromPin = fromComp.querySelector(`.${fromPinCls}`);
+                if (!fromPin) fromPin = fromComp.querySelector('.output, .out, .emit');
+
+                let toPin = toComp.querySelector(`.${toPinCls}`);
+                if (!toPin) toPin = toComp.querySelector('.input, .in-1, .in');
+
                 if (fromPin && toPin) {
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     parentComp.internals.wires.push({ from: fromPin, to: toPin, line: line });
+                } else {
+                    console.warn('[buildInternals] Pin not found:', fromId, fromPinCls, '->', toId, toPinCls);
                 }
             }
         });
+
+        console.log(`[buildInternals] Built for ${parentComp.id}: ${parentComp.internals.components.length} components, ${parentComp.internals.wires.length} wires`);
     },
 
     // 컴포넌트 내부로 진입 (보기 전용)
@@ -678,20 +716,30 @@ Object.assign(CircuitSimulator.prototype, {
             comp.internals = { components: [], wires: [] };
         }
 
-        // 1. Save Current State (Main Scope)
+        // 1. Save Current State (Main Scope) - 깊은 복사가 아닌 배열 참조 백업
+        // [중요] 배열 자체를 새로 생성해서 참조를 끊어야 함
         this.scopeStack.push({
-            components: this.components,
-            wires: this.wires,
+            components: [...this.components],  // 배열 복사
+            wires: [...this.wires],            // 배열 복사
             scopeComp: this.currentScopeComp,
             panX: this.panX,
             panY: this.panY,
-            scale: this.scale
+            scale: this.scale,
+            workspace: this.workspace,
+            wireLayer: this.wireLayer
         });
 
         // 2. Switch Context to Internal Editor (View-Only Mode)
         this.internalModal.style.display = 'flex';
-        this.workspace = this.internalWorkspace;
-        this.wireLayer = this.internalWireLayer;
+
+        // [FIX] 메인 워크스페이스는 유지하고, 내부 표시만 별도 처리
+        // 내부 편집기 요소 정리
+        if (this.internalWorkspace) {
+            this.internalWorkspace.innerHTML = '';
+        }
+        if (this.internalWireLayer) {
+            this.internalWireLayer.innerHTML = '';
+        }
 
         const compType = comp.getAttribute('data-type');
         if (this.internalTitle) {
@@ -699,25 +747,29 @@ Object.assign(CircuitSimulator.prototype, {
         }
 
         this.currentScopeComp = comp;
-        this.components = comp.internals.components;
-        this.wires = comp.internals.wires;
 
-        // 3. Render Internals (Clone for view-only to prevent accidental edits)
-        if (this.workspace) {
-            this.components.forEach(c => {
-                c.style.pointerEvents = 'none';
-                this.workspace.appendChild(c);
+        // [FIX] 내부 컴포넌트를 **클론**해서 표시 (원본 수정 방지)
+        // 시뮬레이션용 원본 internals는 건드리지 않음
+        if (this.internalWorkspace && comp.internals.components) {
+            comp.internals.components.forEach(c => {
+                const clone = c.cloneNode(true);
+                clone.style.pointerEvents = 'none';  // 읽기 전용
+                clone.id = 'view_' + c.id;  // ID 충돌 방지
+                this.internalWorkspace.appendChild(clone);
             });
         }
-        if (this.wireLayer) {
-            this.wires.forEach(w => this.wireLayer.appendChild(w.line));
+        if (this.internalWireLayer && comp.internals.wires) {
+            comp.internals.wires.forEach(w => {
+                if (w.line) {
+                    const clone = w.line.cloneNode(true);
+                    this.internalWireLayer.appendChild(clone);
+                }
+            });
         }
 
-        // 4. Reset View for Editor
-        this.panX = 0;
-        this.panY = 0;
-        this.scale = 1.0;
-        this.updateTransform();
+        // 3. 내부 편집기 뷰 리셋 (메인 회로는 그대로 유지)
+        // [중요] 메인의 this.components, this.wires는 변경하지 않음!
+        // this.panX, this.panY, this.scale도 메인 회로용으로 그대로 유지
 
         // Hide Main Selection Box if active
         if (this.selectionBox) this.selectionBox.style.display = 'none';
@@ -727,39 +779,31 @@ Object.assign(CircuitSimulator.prototype, {
     exitComponent() {
         if (this.scopeStack.length === 0) return;
 
-        // 1. Detach Internals (Save to memory object)
-        this.components.forEach(c => c.remove());
-        this.wires.forEach(w => w.line.remove());
+        // 1. 내부 편집기 정리 (클론된 요소들 제거)
+        if (this.internalWorkspace) {
+            this.internalWorkspace.innerHTML = '';
+        }
+        if (this.internalWireLayer) {
+            this.internalWireLayer.innerHTML = '';
+        }
 
         // 2. Restore Parent State
         const savedState = this.scopeStack.pop();
 
+        // [FIX] 컴포넌트와 와이어 배열 복원
         this.components = savedState.components;
         this.wires = savedState.wires;
+        this.workspace = savedState.workspace;
+        this.wireLayer = savedState.wireLayer;
 
-        // 3. Restore Context
+        // 3. 모달 닫기
         if (this.internalModal) this.internalModal.style.display = 'none';
-        this.workspace = this.mainWorkspace;
-        this.wireLayer = this.mainWireLayer;
 
+        // 4. 뷰 상태 복원
         this.panX = savedState.panX;
         this.panY = savedState.panY;
         this.scale = savedState.scale;
-
-        // Restore `currentScopeComp`
         this.currentScopeComp = savedState.scopeComp;
-
-        // Re-append components and wires to the main workspace/wireLayer
-        if (this.workspace) {
-            this.components.forEach(comp => {
-                this.workspace.appendChild(comp);
-            });
-        }
-        if (this.wireLayer) {
-            this.wires.forEach(wire => {
-                this.wireLayer.appendChild(wire.line);
-            });
-        }
 
         this.updateTransform();
 

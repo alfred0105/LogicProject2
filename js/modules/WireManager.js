@@ -155,6 +155,35 @@ Object.assign(CircuitSimulator.prototype, {
             this.cancelWiring();
             return;
         }
+
+        // [보안] Output-Output 연결 방지 (Short Circuit 방지)
+        const startIsOutput = this.startPin.classList.contains('output') ||
+            this.startPin.classList.contains('emit') ||
+            this.startPin.classList.contains('out');
+        const endIsOutput = endPin.classList.contains('output') ||
+            endPin.classList.contains('emit') ||
+            endPin.classList.contains('out');
+
+        // Expert 모드가 아닐 때만 Output-Output 연결 차단
+        if (!this.expertMode && startIsOutput && endIsOutput) {
+            this.showToast('출력 핀끼리는 연결할 수 없습니다. (Short Circuit 위험)', 'warning');
+            this.cancelWiring();
+            return;
+        }
+
+        // Input-Input 연결도 일반적으로 무의미하므로 경고 (하지만 허용)
+        const startIsInput = this.startPin.classList.contains('input') ||
+            this.startPin.classList.contains('in-1') ||
+            this.startPin.classList.contains('in-2');
+        const endIsInput = endPin.classList.contains('input') ||
+            endPin.classList.contains('in-1') ||
+            endPin.classList.contains('in-2');
+
+        if (startIsInput && endIsInput) {
+            // 경고만 표시하고 연결은 허용 (사용자의 의도일 수 있음)
+            console.warn('입력 핀끼리 연결됨 - 신호 전달이 제한될 수 있습니다.');
+        }
+
         // 연결 생성
         const wire = this.createWire(this.startPin, endPin);
 

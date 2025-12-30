@@ -34,12 +34,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ===== 새 기능 초기화 =====
+
+    // 미니맵 초기화
+    if (window.sim.initMinimap) {
+        setTimeout(() => {
+            window.sim.initMinimap();
+        }, 500);
+    }
+
+    // 타이밍 분석기 초기화
+    if (window.sim.initTimingAnalyzer) {
+        window.sim.initTimingAnalyzer();
+    }
+
+    // 퍼즐 시스템 초기화
+    if (window.sim.initPuzzleSystem) {
+        window.sim.initPuzzleSystem();
+    }
+
     // 메인 루프 실행
     function animate() {
         if (window.sim) {
             window.sim.loop();
             if (window.sim.oscilloscope) {
                 window.sim.oscilloscope.draw();
+            }
+
+            // 고급 컴포넌트 업데이트
+            if (window.sim.updateAdvancedComponents) {
+                window.sim.updateAdvancedComponents();
+            }
+
+            // 미니맵 업데이트 (5프레임마다)
+            if (window.sim.updateMinimap && window.sim._minimapCounter === undefined) {
+                window.sim._minimapCounter = 0;
+            }
+            if (window.sim._minimapCounter !== undefined) {
+                window.sim._minimapCounter++;
+                if (window.sim._minimapCounter >= 10) {
+                    window.sim._minimapCounter = 0;
+                    if (window.sim.updateMinimap) {
+                        window.sim.updateMinimap();
+                    }
+                }
             }
 
             // 자동 검증 모드인 경우
@@ -70,3 +108,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1500); // 로딩 애니메이션이 자연스럽게 완료되도록 지연
 });
+

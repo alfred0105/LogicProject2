@@ -113,8 +113,11 @@ class CircuitSimulator {
         // [5] 이벤트 리스너 등록
         this.initEvents();
 
-        // 1초마다 Clock 작동 (펄스 신호) - Clock component specific tick
-        setInterval(() => this.clockTick(), 1000);
+        // [수정] Delta Time 기반 Clock 시스템 (모니터 주사율 독립적)
+        // setInterval 대신 누적 시간 방식으로 변경
+        this.clockAccumulator = 0;  // 클럭 누적 시간 (ms)
+        this.clockInterval = 1000;   // 클럭 간격 (ms) - 1초
+        this.lastFrameTime = performance.now();  // 마지막 프레임 시간
 
         // [6] 오실로스코프 및 렌더 루프
         this.oscilloscope = new Oscilloscope(this);
@@ -132,12 +135,30 @@ class CircuitSimulator {
         // 루프 정의가 없을 경우 대비 안전 장치
         if (!this.oscilloscope) return;
 
+        // [Delta Time 시뮬레이션] 모니터 주사율과 무관하게 일정한 시뮬레이션 속도 유지
+        const now = performance.now();
+        const deltaTime = now - this.lastFrameTime;
+        this.lastFrameTime = now;
+
+        // Clock 업데이트 (누적 시간 기반)
+        if (this.isRunning !== false) {
+            this.clockAccumulator += deltaTime;
+
+            // 클럭 간격마다 tick 실행 (여러 번 누적된 경우 모두 처리)
+            while (this.clockAccumulator >= this.clockInterval) {
+                this.doClockTick();
+                this.clockAccumulator -= this.clockInterval;
+            }
+        }
+
+        // 오실로스코프 업데이트 (10fps 제한 유지)
         const dt = timestamp - this.lastTime;
-        if (dt > 100) { // Limit oscilloscope update rate (~10fps is enough for simple graph)
+        if (dt > 100) {
             this.oscilloscope.update();
             this.oscilloscope.draw();
             this.lastTime = timestamp;
         }
+
         requestAnimationFrame((t) => this.loop(t));
     }
 

@@ -142,6 +142,236 @@ Object.assign(CircuitSimulator.prototype, {
         });
     },
 
+    /**
+     * 사용자 정의 패키지의 내부 회로를 동적으로 빌드
+     * 각 패키지 인스턴스가 독립적인 내부 상태를 가지도록 딥 클론 사용
+     */
+    buildUserPackageInternals(comp) {
+        const pkgIndex = comp.getAttribute('data-package-id');
+        if (pkgIndex === null || pkgIndex === undefined) return;
+
+        const pkg = this.userPackages?.[parseInt(pkgIndex)];
+        if (!pkg || !pkg.circuit) {
+            console.warn('[buildUserPackageInternals] Package not found:', pkgIndex);
+            return;
+        }
+
+        // [중요] 깊은 복사로 독립 인스턴스 생성 (공유 버그 방지)
+        const circuitData = JSON.parse(JSON.stringify(pkg.circuit));
+
+        comp.internals = { components: [], wires: [] };
+        const idMap = {};
+
+        // 내부 컴포넌트 생성
+        circuitData.components.forEach(part => {
+            const el = document.createElement('div');
+            el.classList.add('component');
+            // 고유 ID 생성 (부모 컴포넌트 ID + 내부 ID)
+            el.id = comp.id + '_internal_' + part.id + '_' + Math.random().toString(36).substr(2, 5);
+            el.setAttribute('data-type', part.type);
+            el.setAttribute('data-value', part.value || '0');
+            el.style.left = (part.x || 0) + 'px';
+            el.style.top = (part.y || 0) + 'px';
+
+            const label = document.createElement('div');
+            label.classList.add('comp-label');
+            label.innerText = part.label || part.type;
+            el.appendChild(label);
+
+            // 타입별 핀 추가
+            const type = part.type;
+            if (['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR'].includes(type)) {
+                this.addPin(el, 'in-1', 'input in-1');
+                this.addPin(el, 'in-2', 'input in-2');
+                this.addPin(el, 'out', 'output out');
+            } else if (type === 'NOT') {
+                this.addPin(el, 'in-1', 'input in-1');
+                this.addPin(el, 'out', 'output out');
+            } else if (type === 'TRANSISTOR' || type === 'PMOS') {
+                this.addPin(el, 'base', 'input base');
+                this.addPin(el, 'col', 'input col');
+                this.addPin(el, 'emit', 'output emit');
+            } else if (type === 'VCC') {
+                el.setAttribute('data-value', '1');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'GND') {
+                el.setAttribute('data-value', '0');
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'PORT_IN') {
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'PORT_OUT') {
+                this.addPin(el, 'in', 'input center');
+            } else if (type === 'SWITCH') {
+                this.addPin(el, 'out', 'output center');
+            } else if (type === 'LED') {
+                this.addPin(el, 'in', 'input center');
+            } else if (type === 'JOINT') {
+                this.addPin(el, 'p1', 'joint-pin');
+            }
+
+            idMap[part.id] = el;
+            comp.internals.components.push(el);
+        });
+
+        // 내부 와이어 생성
+        circuitData.wires.forEach(w => {
+            let fromId, fromPinCls, toId, toPinCls;
+
+            // 다양한 와이어 데이터 형식 지원
+            if (w.from && w.fromPin) {
+                fromId = w.from;
+                fromPinCls = w.fromPin;
+                toId = w.to;
+                toPinCls = w.toPin;
+            } else if (w.fromId && w.fromPin) {
+                fromId = w.fromId;
+                fromPinCls = w.fromPin;
+                toId = w.toId;
+                toPinCls = w.toPin;
+            } else {
+                return; // 알 수 없는 형식
+            }
+
+            const fromComp = idMap[fromId];
+            const toComp = idMap[toId];
+
+            if (fromComp && toComp) {
+                // 핀 찾기 (여러 방식 시도)
+                let fromPin = fromComp.querySelector(`.${fromPinCls}`);
+                if (!fromPin) fromPin = fromComp.querySelector('.output, .out, .emit');
+
+                let toPin = toComp.querySelector(`.${toPinCls}`);
+                if (!toPin) toPin = toComp.querySelector('.input, .in, .in-1');
+
+                if (fromPin && toPin) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    comp.internals.wires.push({ from: fromPin, to: toPin, line: line });
+                }
+            }
+        });
+
+        console.log(`[Package] Built internals for ${comp.id}: ${comp.internals.components.length} components, ${comp.internals.wires.length} wires`);
+    },
+
+    /**
+     * 표준 패키지(HALF_ADDER, FULL_ADDER 등)의 내부 회로 빌드
+     * PackageManager.addPackage에 정의된 회로 스키마를 사용
+     */
+    buildStandardPackageInternals(comp, type) {
+        // 표준 패키지 정의 (PackageManager.addPackage의 pkgDefs와 동일)
+        const pkgDefs = {
+            'HALF_ADDER': {
+                components: [
+                    { id: 'xor1', type: 'XOR', x: 60, y: 20, label: 'XOR' },
+                    { id: 'and1', type: 'AND', x: 60, y: 80, label: 'AND' },
+                    { id: 'in_a', type: 'PORT_IN', x: 10, y: 30, label: 'A' },
+                    { id: 'in_b', type: 'PORT_IN', x: 10, y: 70, label: 'B' },
+                    { id: 'out_s', type: 'PORT_OUT', x: 140, y: 30, label: 'S' },
+                    { id: 'out_c', type: 'PORT_OUT', x: 140, y: 90, label: 'C' }
+                ],
+                wires: [
+                    { from: 'in_a', fromPin: 'out', to: 'xor1', toPin: 'in-1' },
+                    { from: 'in_b', fromPin: 'out', to: 'xor1', toPin: 'in-2' },
+                    { from: 'in_a', fromPin: 'out', to: 'and1', toPin: 'in-1' },
+                    { from: 'in_b', fromPin: 'out', to: 'and1', toPin: 'in-2' },
+                    { from: 'xor1', fromPin: 'out', to: 'out_s', toPin: 'in' },
+                    { from: 'and1', fromPin: 'out', to: 'out_c', toPin: 'in' }
+                ]
+            },
+            'FULL_ADDER': {
+                components: [
+                    { id: 'xor1', type: 'XOR', x: 50, y: 20, label: 'XOR1' },
+                    { id: 'xor2', type: 'XOR', x: 120, y: 30, label: 'XOR2' },
+                    { id: 'and1', type: 'AND', x: 50, y: 80, label: 'AND1' },
+                    { id: 'and2', type: 'AND', x: 120, y: 100, label: 'AND2' },
+                    { id: 'or1', type: 'OR', x: 190, y: 90, label: 'OR' },
+                    { id: 'in_a', type: 'PORT_IN', x: 10, y: 20, label: 'A' },
+                    { id: 'in_b', type: 'PORT_IN', x: 10, y: 60, label: 'B' },
+                    { id: 'in_cin', type: 'PORT_IN', x: 10, y: 100, label: 'Cin' },
+                    { id: 'out_s', type: 'PORT_OUT', x: 200, y: 30, label: 'S' },
+                    { id: 'out_cout', type: 'PORT_OUT', x: 260, y: 90, label: 'Cout' }
+                ],
+                wires: [
+                    { from: 'in_a', fromPin: 'out', to: 'xor1', toPin: 'in-1' },
+                    { from: 'in_b', fromPin: 'out', to: 'xor1', toPin: 'in-2' },
+                    { from: 'xor1', fromPin: 'out', to: 'xor2', toPin: 'in-1' },
+                    { from: 'in_cin', fromPin: 'out', to: 'xor2', toPin: 'in-2' },
+                    { from: 'in_a', fromPin: 'out', to: 'and1', toPin: 'in-1' },
+                    { from: 'in_b', fromPin: 'out', to: 'and1', toPin: 'in-2' },
+                    { from: 'xor1', fromPin: 'out', to: 'and2', toPin: 'in-1' },
+                    { from: 'in_cin', fromPin: 'out', to: 'and2', toPin: 'in-2' },
+                    { from: 'and1', fromPin: 'out', to: 'or1', toPin: 'in-1' },
+                    { from: 'and2', fromPin: 'out', to: 'or1', toPin: 'in-2' },
+                    { from: 'xor2', fromPin: 'out', to: 'out_s', toPin: 'in' },
+                    { from: 'or1', fromPin: 'out', to: 'out_cout', toPin: 'in' }
+                ]
+            },
+            'SR_LATCH': {
+                components: [
+                    { id: 'nor1', type: 'NOR', x: 60, y: 20, label: 'NOR1' },
+                    { id: 'nor2', type: 'NOR', x: 60, y: 80, label: 'NOR2' },
+                    { id: 'in_s', type: 'PORT_IN', x: 10, y: 20, label: 'S' },
+                    { id: 'in_r', type: 'PORT_IN', x: 10, y: 80, label: 'R' },
+                    { id: 'out_q', type: 'PORT_OUT', x: 140, y: 20, label: 'Q' },
+                    { id: 'out_qn', type: 'PORT_OUT', x: 140, y: 80, label: 'Q̅' }
+                ],
+                wires: [
+                    { from: 'in_s', fromPin: 'out', to: 'nor1', toPin: 'in-1' },
+                    { from: 'nor2', fromPin: 'out', to: 'nor1', toPin: 'in-2' },
+                    { from: 'in_r', fromPin: 'out', to: 'nor2', toPin: 'in-2' },
+                    { from: 'nor1', fromPin: 'out', to: 'nor2', toPin: 'in-1' },
+                    { from: 'nor1', fromPin: 'out', to: 'out_q', toPin: 'in' },
+                    { from: 'nor2', fromPin: 'out', to: 'out_qn', toPin: 'in' }
+                ]
+            },
+            'D_FLIPFLOP': {
+                components: [
+                    { id: 'nand1', type: 'NAND', x: 40, y: 20, label: 'NAND1' },
+                    { id: 'nand2', type: 'NAND', x: 40, y: 80, label: 'NAND2' },
+                    { id: 'nand3', type: 'NAND', x: 100, y: 20, label: 'NAND3' },
+                    { id: 'nand4', type: 'NAND', x: 100, y: 80, label: 'NAND4' },
+                    { id: 'nand5', type: 'NAND', x: 160, y: 30, label: 'NAND5' },
+                    { id: 'nand6', type: 'NAND', x: 160, y: 70, label: 'NAND6' },
+                    { id: 'not1', type: 'NOT', x: 10, y: 80, label: 'NOT' },
+                    { id: 'in_d', type: 'PORT_IN', x: 5, y: 20, label: 'D' },
+                    { id: 'in_clk', type: 'PORT_IN', x: 5, y: 50, label: 'CLK' },
+                    { id: 'out_q', type: 'PORT_OUT', x: 220, y: 30, label: 'Q' },
+                    { id: 'out_qn', type: 'PORT_OUT', x: 220, y: 70, label: 'Q̅' }
+                ],
+                wires: [
+                    { from: 'in_d', fromPin: 'out', to: 'nand1', toPin: 'in-1' },
+                    { from: 'in_d', fromPin: 'out', to: 'not1', toPin: 'in-1' },
+                    { from: 'in_clk', fromPin: 'out', to: 'nand1', toPin: 'in-2' },
+                    { from: 'in_clk', fromPin: 'out', to: 'nand2', toPin: 'in-1' },
+                    { from: 'not1', fromPin: 'out', to: 'nand2', toPin: 'in-2' },
+                    { from: 'nand1', fromPin: 'out', to: 'nand3', toPin: 'in-1' },
+                    { from: 'nand4', fromPin: 'out', to: 'nand3', toPin: 'in-2' },
+                    { from: 'nand3', fromPin: 'out', to: 'nand4', toPin: 'in-1' },
+                    { from: 'nand2', fromPin: 'out', to: 'nand4', toPin: 'in-2' },
+                    { from: 'nand3', fromPin: 'out', to: 'nand5', toPin: 'in-1' },
+                    { from: 'nand6', fromPin: 'out', to: 'nand5', toPin: 'in-2' },
+                    { from: 'nand5', fromPin: 'out', to: 'nand6', toPin: 'in-1' },
+                    { from: 'nand4', fromPin: 'out', to: 'nand6', toPin: 'in-2' },
+                    { from: 'nand5', fromPin: 'out', to: 'out_q', toPin: 'in' },
+                    { from: 'nand6', fromPin: 'out', to: 'out_qn', toPin: 'in' }
+                ]
+            }
+        };
+
+        const circuit = pkgDefs[type];
+        if (!circuit) {
+            console.warn('[buildStandardPackageInternals] Unknown package type:', type);
+            return;
+        }
+
+        // buildInternals 호출하여 내부 회로 생성
+        if (this.buildInternals) {
+            this.buildInternals(comp, JSON.parse(JSON.stringify(circuit)));
+        }
+
+        console.log(`[Standard Package] Built internals for ${type}: ${comp.internals?.components?.length || 0} components`);
+    },
+
     updateCircuit() {
         // 최적화된 엔진이 있으면 우선 사용 (PerformanceOptimizer.js)
         if (typeof this.updateCircuitOptimized === 'function') {
@@ -180,23 +410,39 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     evaluateComposite(comp) {
-        if (!comp.internals) return;
+        if (!comp.internals || !comp.internals.components) return;
 
         // [Bridge Input] External Pin -> Internal PORT_IN
+        // 핀 인덱스 기반 매핑 (in-1, in-2...) 우선, 없으면 Y 좌표 정렬
         const extInPins = Array.from(comp.querySelectorAll('.pin.input'));
         const intPortIns = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_IN');
 
-        // Sort by Y position (Top to Bottom)
-        extInPins.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
-        intPortIns.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        // 핀 인덱스 추출 함수
+        const getInputIndex = (pin) => {
+            const classes = Array.from(pin.classList);
+            const match = classes.find(c => /^in-(\d+)$/.test(c));
+            return match ? parseInt(match.match(/^in-(\d+)$/)[1]) : 999;
+        };
 
+        // 인덱스 기반 정렬 (인덱스가 없으면 Y 좌표로 정렬)
+        extInPins.sort((a, b) => {
+            const idxA = getInputIndex(a);
+            const idxB = getInputIndex(b);
+            if (idxA !== 999 || idxB !== 999) return idxA - idxB;
+            return parseFloat(a.style.top || '0') - parseFloat(b.style.top || '0');
+        });
+
+        // 내부 PORT_IN은 라벨 기반 또는 Y 좌표 정렬
+        intPortIns.sort((a, b) => parseFloat(a.style.top || '0') - parseFloat(b.style.top || '0'));
+
+        // 외부 입력 신호 -> 내부 PORT_IN 전달
         for (let i = 0; i < Math.min(extInPins.length, intPortIns.length); i++) {
             const signal = extInPins[i].getAttribute('data-signal') === '1';
             intPortIns[i].setAttribute('data-value', signal ? '1' : '0');
         }
 
-        // [Simulate Internals]
-        for (let i = 0; i < 10; i++) {
+        // [Simulate Internals] 내부 회로 시뮬레이션 (반복하여 안정화)
+        for (let i = 0; i < 15; i++) {  // 10 -> 15로 증가 (복잡한 회로 대응)
             this.propagateList(comp.internals.components, comp.internals.wires);
             this.propagate(comp.internals.wires);
         }
@@ -205,9 +451,24 @@ Object.assign(CircuitSimulator.prototype, {
         const extOutPins = Array.from(comp.querySelectorAll('.pin.output'));
         const intPortOuts = comp.internals.components.filter(c => c.getAttribute('data-type') === 'PORT_OUT');
 
-        extOutPins.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
-        intPortOuts.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        // 출력 핀 인덱스 추출 함수
+        const getOutputIndex = (pin) => {
+            const classes = Array.from(pin.classList);
+            const match = classes.find(c => /^out-(\d+)$/.test(c));
+            return match ? parseInt(match.match(/^out-(\d+)$/)[1]) : 999;
+        };
 
+        // 인덱스 기반 정렬
+        extOutPins.sort((a, b) => {
+            const idxA = getOutputIndex(a);
+            const idxB = getOutputIndex(b);
+            if (idxA !== 999 || idxB !== 999) return idxA - idxB;
+            return parseFloat(a.style.top || '0') - parseFloat(b.style.top || '0');
+        });
+
+        intPortOuts.sort((a, b) => parseFloat(a.style.top || '0') - parseFloat(b.style.top || '0'));
+
+        // 내부 PORT_OUT 결과 -> 외부 출력 핀으로 전파
         for (let i = 0; i < Math.min(extOutPins.length, intPortOuts.length); i++) {
             const inPin = intPortOuts[i].querySelector('.pin.input');
             const val = inPin?.getAttribute('data-signal') === '1';
@@ -217,11 +478,30 @@ Object.assign(CircuitSimulator.prototype, {
 
     propagateList(components, wires = this.wires) {
         let changed = false;
+
+        // 표준 패키지 타입 목록
+        const standardPackageTypes = ['HALF_ADDER', 'FULL_ADDER', 'SR_LATCH', 'D_FLIPFLOP'];
+
         components.forEach(comp => {
             const type = comp.getAttribute('data-type');
 
             // [FIX] Detect Package (Standard or Custom) and simulate internals
-            if (type === 'PACKAGE' || comp.classList.contains('package-comp')) {
+            const isPackage = type === 'PACKAGE' ||
+                comp.classList.contains('package-comp') ||
+                standardPackageTypes.includes(type);
+
+            if (isPackage) {
+                // 내부 회로가 없거나 비어 있으면 다시 빌드
+                if (!comp.internals || !comp.internals.components || comp.internals.components.length === 0) {
+                    // 사용자 패키지인 경우
+                    if (type === 'PACKAGE' && comp.getAttribute('data-package-id') !== null) {
+                        this.buildUserPackageInternals(comp);
+                    }
+                    // 표준 패키지인 경우 - buildInternals 호출
+                    else if (standardPackageTypes.includes(type) && this.buildStandardPackageInternals) {
+                        this.buildStandardPackageInternals(comp, type);
+                    }
+                }
                 this.evaluateComposite(comp);
                 return;
             }

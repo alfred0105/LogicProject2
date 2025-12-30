@@ -14,6 +14,8 @@
     <script src="js/modules/PostManager.js"></script>
     <!-- Simple Markdown Parser (Bonus) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify for XSS Prevention -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <style>
         :root {
@@ -477,10 +479,16 @@
             document.getElementById('post-views').textContent = post.views || 0;
             document.getElementById('like-count').textContent = post.likes || 0;
 
-            // Render Markdown
-            if (window.marked) {
-                document.getElementById('post-content').innerHTML = marked.parse(post.content);
+            // Render Markdown (XSS-safe)
+            if (window.renderSafeMarkdown) {
+                document.getElementById('post-content').innerHTML = window.renderSafeMarkdown(post.content);
+            } else if (window.marked) {
+                // Fallback: marked + sanitize
+                const rawHtml = marked.parse(post.content);
+                document.getElementById('post-content').innerHTML = window.sanitizeHtml ?
+                    window.sanitizeHtml(rawHtml) : rawHtml;
             } else {
+                // 최종 Fallback: 텍스트만 표시
                 document.getElementById('post-content').textContent = post.content;
             }
 
@@ -597,12 +605,21 @@
             comments.forEach(comment => {
                 const div = document.createElement('div');
                 div.className = 'comment-item';
+
+                // XSS 방지: 사용자 이름과 댓글 내용을 이스케이프
+                const safeName = window.escapeHtml ?
+                    window.escapeHtml(comment.user_name || '익명') :
+                    (comment.user_name || '익명');
+                const safeContent = window.escapeHtml ?
+                    window.escapeHtml(comment.content) :
+                    comment.content;
+
                 div.innerHTML = `
                     <div class="comment-meta">
-                        <span class="comment-author">${comment.user_name || '익명'}</span>
+                        <span class="comment-author">${safeName}</span>
                         <span>${new Date(comment.created_at).toLocaleString()}</span>
                     </div>
-                    <div class="comment-content">${comment.content}</div>
+                    <div class="comment-content">${safeContent}</div>
                 `;
                 list.appendChild(div);
             });

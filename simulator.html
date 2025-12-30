@@ -902,6 +902,70 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Advanced Components -->
+                <section class="section" id="section-advanced">
+                    <div class="section-header" onclick="sim.toggleSection('section-advanced')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            🔧 고급 부품
+                        </span>
+                        <span class="section-count">3</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn" style="background: linear-gradient(135deg, #1a1a2e, #16213e);"
+                                onclick="sim.add7SegmentDisplay && sim.add7SegmentDisplay()"
+                                onmouseenter="sim.showTooltip('7-Segment Display', '4비트 BCD 입력을 받아 0~F 숫자를 표시합니다.'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon" style="font-size: 24px; color: #ef4444;">8.</div>
+                                <span class="name">7-Seg</span>
+                            </button>
+                            <button class="comp-btn" style="background: linear-gradient(135deg, #4a0080, #2d0050);"
+                                onclick="sim.add4BitCounter && sim.add4BitCounter()"
+                                onmouseenter="sim.showTooltip('4-Bit Counter', 'CLK 상승 엣지에서 0~15를 순환합니다.'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon" style="font-size: 18px; color: #00ff88;">⏱️</div>
+                                <span class="name">카운터</span>
+                            </button>
+                            <button class="comp-btn" style="background: linear-gradient(135deg, #2c3e50, #1a252f);"
+                                onclick="sim.add4x4Keypad && sim.add4x4Keypad()"
+                                onmouseenter="sim.showTooltip('4x4 Keypad', '0~F 키를 제공하는 16키 입력장치'); sim.positionTooltip(event)"
+                                onmouseleave="sim.hideTooltip()">
+                                <div class="icon" style="font-size: 18px;">⌨️</div>
+                                <span class="name">키패드</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tools & Analysis -->
+                <section class="section" id="section-tools">
+                    <div class="section-header" onclick="sim.toggleSection('section-tools')">
+                        <span class="section-title">
+                            <svg class="section-arrow">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                            📊 분석 도구
+                        </span>
+                    </div>
+                    <div class="section-content">
+                        <div class="comp-grid">
+                            <button class="comp-btn" style="background: linear-gradient(135deg, #0ea5e9, #0369a1);"
+                                onclick="sim.showTimingPanel && sim.showTimingPanel()" title="타이밍 다이어그램">
+                                <div class="icon" style="font-size: 18px;">📈</div>
+                                <span class="name">타이밍</span>
+                            </button>
+                            <button class="comp-btn" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);"
+                                onclick="sim.showPuzzlePanel && sim.showPuzzlePanel()" title="퍼즐 모드">
+                                <div class="icon" style="font-size: 18px;">🧩</div>
+                                <span class="name">퍼즐</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </aside>
 
@@ -1199,6 +1263,11 @@
             ↕️ 상하 반전
         </div>
         <div class="ctx-sep"></div>
+        <!-- 타이밍 추적 -->
+        <div class="ctx-item"
+            onclick="if(sim.selectedComponents.length === 1 && sim.addComponentToTiming) sim.addComponentToTiming(sim.selectedComponents[0])">
+            📈 타이밍 추적
+        </div>
         <div class="ctx-item danger" onclick="sim.deleteSelected()">
             <svg>
                 <use href="#icon-trash" />
@@ -2597,7 +2666,12 @@
             });
         </script>
 
+        <!-- 고급 기능 모듈 -->
+        <script src="js/modules/AdvancedComponents.js"></script>
+        <script src="js/modules/Minimap.js"></script>
+        <script src="js/modules/TimingAnalyzer.js"></script>
+        <script src="js/modules/PuzzleSystem.js"></script>
+
 </body>
 
 </html>
-```

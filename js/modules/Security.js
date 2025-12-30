@@ -259,6 +259,82 @@
         return div.innerHTML;
     };
 
+    /**
+     * XSS-safe HTML 소독 (화이트리스트 기반)
+     * DOMPurify 라이브러리가 로드되어 있으면 사용, 아니면 자체 구현
+     * @param {string} dirty - 위험할 수 있는 HTML 문자열
+     * @param {object} options - 추가 옵션
+     * @returns {string} 안전한 HTML 문자열
+     */
+    window.sanitizeHtml = function (dirty, options = {}) {
+        if (!dirty) return '';
+
+        // DOMPurify가 로드되어 있으면 사용
+        if (typeof DOMPurify !== 'undefined') {
+            return DOMPurify.sanitize(dirty, {
+                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'ul', 'ol', 'li',
+                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre',
+                    'span', 'div', 'img', 'hr'],
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'id', 'target', 'rel'],
+                ALLOW_DATA_ATTR: false,
+                ADD_ATTR: ['target'],
+                FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input', 'object', 'embed'],
+                FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+                ...options
+            });
+        }
+
+        // DOMPurify 없을 때 Fallback: 자체 구현 소독기
+        const doc = new DOMParser().parseFromString(dirty, 'text/html');
+
+        // 위험한 태그 제거
+        const dangerousTags = ['script', 'style', 'iframe', 'form', 'input', 'object', 'embed', 'link', 'meta'];
+        dangerousTags.forEach(tag => {
+            doc.querySelectorAll(tag).forEach(el => el.remove());
+        });
+
+        // 위험한 속성 제거
+        const dangerousAttrs = ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur',
+            'onmouseout', 'onkeydown', 'onkeyup', 'onsubmit', 'onchange'];
+        doc.querySelectorAll('*').forEach(el => {
+            dangerousAttrs.forEach(attr => el.removeAttribute(attr));
+
+            // javascript: URL 제거
+            if (el.hasAttribute('href') && el.getAttribute('href').toLowerCase().startsWith('javascript:')) {
+                el.removeAttribute('href');
+            }
+            if (el.hasAttribute('src') && el.getAttribute('src').toLowerCase().startsWith('javascript:')) {
+                el.removeAttribute('src');
+            }
+            // data: URL 이미지 외 제거 (XSS 위험)
+            if (el.hasAttribute('src') && el.getAttribute('src').toLowerCase().startsWith('data:')
+                && !el.getAttribute('src').toLowerCase().startsWith('data:image/')) {
+                el.removeAttribute('src');
+            }
+        });
+
+        return doc.body.innerHTML;
+    };
+
+    /**
+     * 마크다운을 안전한 HTML로 변환
+     * marked.js와 함께 사용할 때 XSS 방지
+     * @param {string} markdown - 마크다운 문자열
+     * @returns {string} 안전한 HTML 문자열
+     */
+    window.renderSafeMarkdown = function (markdown) {
+        if (!markdown) return '';
+
+        // marked.js가 있으면 사용
+        if (typeof marked !== 'undefined') {
+            const rawHtml = marked.parse(markdown);
+            return window.sanitizeHtml(rawHtml);
+        }
+
+        // marked.js 없으면 일반 텍스트로 표시
+        return window.escapeHtml(markdown);
+    };
+
     // ===== 보안 유틸리티 =====
 
     /**
