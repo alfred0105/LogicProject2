@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ⚡ WireManager 3.0: High-Performance EDA Wiring System (Refactored)
  * 
  * [Design Principles]
@@ -17,7 +17,7 @@ class VirtualJoint {
         this.y = y;
         this.manager = manager;
         this.id = 'vj_' + Math.random().toString(36).substr(2, 9);
-        this.connectedWires = []; 
+        this.connectedWires = [];
 
         // SVG Element (Rendering Only)
         // User said "No DOM overhead", but we need *something* to see.
@@ -27,13 +27,13 @@ class VirtualJoint {
         this.element.setAttribute('cx', x);
         this.element.setAttribute('cy', y);
         this.element.classList.add('virtual-joint');
-        
+
         // Style (Inline for performance, or use CSS class)
         this.element.style.fill = 'var(--accent-color, #22d3ee)';
         this.element.style.stroke = 'var(--bg-primary, #1e293b)';
         this.element.style.strokeWidth = '2px';
         this.element.style.cursor = 'move';
-        
+
         // Event Binding (Directly on SVG for browser-native hit testing)
         // This is more efficient than manual coordinate calculation in JS for every mousemove.
         this.element.onmousedown = (e) => this.onMouseDown(e);
@@ -42,10 +42,10 @@ class VirtualJoint {
     onMouseDown(e) {
         const sim = window.sim;
         if (!sim || sim.mode === 'pan' || e.button !== 0) return;
-        
+
         e.stopPropagation();
         e.preventDefault();
-        
+
         // Start Dragging Logic or Wiring Logic
         // If shift/ctrl pressed -> Wiring? Or Drag?
         // Let's assume Drag for Joints normally.
@@ -78,14 +78,14 @@ class VirtualJoint {
 
                 // Update connected wires (Fast Orthogonal for drag responsiveness)
                 // We defer A* to mouseup to prevent lag
-                sim.redrawWiresConnectedTo(this, true); 
+                sim.redrawWiresConnectedTo(this, true);
             }
         };
 
         const onUp = () => {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            
+
             if (isDragging) {
                 // Finalize position with A* routing
                 sim.redrawWiresConnectedTo(this, false);
@@ -99,12 +99,12 @@ class VirtualJoint {
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
     }
-    
+
     // Compatibility interface for WireManager
     getBoundingClientRect() {
         return this.element.getBoundingClientRect();
     }
-    
+
     // No parent element (it's not part of a component)
     get parentElement() { return null; }
 }
@@ -129,9 +129,9 @@ const SmartRouter = {
 
         // Optimization: Direct Line Check
         if (this.isDirectPathCool(sx, sy, ex, ey, obstacles)) {
-            return [{x: sx, y: sy}, {x: ex, y: ey}];
+            return [{ x: sx, y: sy }, { x: ex, y: ey }];
         }
-        
+
         // Optimization: Simple L-Shape or Z-Shape Check
         // (Skipped for brevity, jumping to A* if simple fails)
 
@@ -139,14 +139,14 @@ const SmartRouter = {
         // Using simple array for simplicity in this implementation, can optimize later.
         const openList = [];
         const closedSet = new Set();
-        
+
         // Heuristic (Manhattan)
         const h = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
         openList.push({
             x: sx, y: sy,
-            g: 0, 
-            f: h({x:sx, y:sy}, {x:ex, y:ey}),
+            g: 0,
+            f: h({ x: sx, y: sy }, { x: ex, y: ey }),
             parent: null,
             dir: null
         });
@@ -181,26 +181,26 @@ const SmartRouter = {
 
             // Neighbors (Up, Down, Left, Right)
             const neighbors = [
-                {x: current.x, y: current.y - 10, dir: 'up'},
-                {x: current.x, y: current.y + 10, dir: 'down'},
-                {x: current.x - 10, y: current.y, dir: 'left'},
-                {x: current.x + 10, y: current.y, dir: 'right'}
+                { x: current.x, y: current.y - 10, dir: 'up' },
+                { x: current.x, y: current.y + 10, dir: 'down' },
+                { x: current.x - 10, y: current.y, dir: 'left' },
+                { x: current.x + 10, y: current.y, dir: 'right' }
             ];
 
             for (const n of neighbors) {
                 // Out of bounds check
                 if (n.x < minX || n.x > maxX || n.y < minY || n.y > maxY) continue;
-                
+
                 // Obstacle check
                 if (this.isColliding(n.x, n.y, obstacles)) continue;
-                
+
                 // Closed set check
                 if (closedSet.has(`${n.x},${n.y}`)) continue;
 
                 // Costs
                 const turnCost = (current.dir && current.dir !== n.dir) ? 5 : 0; // Minimize turns
                 const g = current.g + 10 + turnCost;
-                const f = g + h(n, {x:ex, y:ey});
+                const f = g + h(n, { x: ex, y: ey });
 
                 // Check if already in openList with lower cost
                 const existing = openList.find(node => node.x === n.x && node.y === n.y);
@@ -228,7 +228,7 @@ const SmartRouter = {
             const path = [];
             let temp = bestNode;
             while (temp) {
-                path.push({x: temp.x, y: temp.y});
+                path.push({ x: temp.x, y: temp.y });
                 temp = temp.parent;
             }
             // Add Start Node exactly (sometimes rounding issues)
@@ -255,12 +255,12 @@ const SmartRouter = {
     isDirectPathCool(x1, y1, x2, y2, obstacles) {
         // If x1==x2 or y1==y2, check if any obstacle intersects the segment
         if (x1 !== x2 && y1 !== y2) return false; // Not orthogonal
-        
+
         const minX = Math.min(x1, x2);
         const maxX = Math.max(x1, x2);
         const minY = Math.min(y1, y2);
         const maxY = Math.max(y1, y2);
-        
+
         const margin = 5;
         for (const obs of obstacles) {
             // Check intersection (AABB)
@@ -279,9 +279,9 @@ const SmartRouter = {
         for (let i = 1; i < points.length - 1; i++) {
             const prev = simplified[simplified.length - 1];
             const curr = points[i];
-            const next = points[i+1];
+            const next = points[i + 1];
             // Check collinearity
-            if ((prev.x === curr.x && curr.x === next.x) || 
+            if ((prev.x === curr.x && curr.x === next.x) ||
                 (prev.y === curr.y && curr.y === next.y)) {
                 continue; // Skip middle point
             }
@@ -335,7 +335,7 @@ Object.assign(CircuitSimulator.prototype, {
     beginWiring(node) {
         this.isWiring = true;
         this.startNode = node;
-        
+
         // Create Visual Guide (Temp Wire)
         const svgNS = "http://www.w3.org/2000/svg";
         this.tempWire = document.createElementNS(svgNS, 'path');
@@ -344,7 +344,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.tempWire.style.strokeWidth = '2px';
         this.tempWire.style.fill = 'none';
         this.tempWire.style.pointerEvents = 'none'; // Click-through
-        
+
         // Opacity pulse animation (optional aesthetic)
         // this.tempWire.classList.add('animate-pulse');
 
@@ -373,7 +373,7 @@ Object.assign(CircuitSimulator.prototype, {
 
         // Draw Temp Wire (Orthogonal)
         const startPos = this.getNodePosition(this.startNode);
-        
+
         // Simple Manhatten for preview (L-shape)
         // A* is too heavy for mousemove
         let d = `M ${startPos.x} ${startPos.y}`;
@@ -383,11 +383,11 @@ Object.assign(CircuitSimulator.prototype, {
         if (Math.abs(startPos.x - targetX) < 1 || Math.abs(startPos.y - targetY) < 1) {
             d = `M ${startPos.x} ${startPos.y} L ${targetX} ${targetY}`;
         } else {
-             // Z-shape snapping
+            // Z-shape snapping
             const snapMidX = Math.round(midX / 10) * 10;
-             d += ` L ${snapMidX} ${startPos.y} L ${snapMidX} ${targetY} L ${targetX} ${targetY}`;
+            d += ` L ${snapMidX} ${startPos.y} L ${snapMidX} ${targetY} L ${targetX} ${targetY}`;
         }
-        
+
         this.tempWire.setAttribute('d', d);
     },
 
@@ -395,10 +395,10 @@ Object.assign(CircuitSimulator.prototype, {
         // Validate
         if (!this.startNode || !endNode) return;
         if (this.startNode === endNode) return;
-        
+
         // Create Wire
         this.createWire(this.startNode, endNode);
-        
+
         // Reset
         this.cancelWiring();
     },
@@ -418,8 +418,8 @@ Object.assign(CircuitSimulator.prototype, {
 
     createWire(from, to, options = {}) {
         // Data Structure
-        const wire = { 
-            from: from, 
+        const wire = {
+            from: from,
             to: to,
             id: 'w_' + Math.random().toString(36).substr(2, 9)
         };
@@ -444,7 +444,7 @@ Object.assign(CircuitSimulator.prototype, {
 
     renderWire(wire) {
         const svgNS = "http://www.w3.org/2000/svg";
-        
+
         // A. Visible Line (2px)
         const line = document.createElementNS(svgNS, 'path');
         line.classList.add('wire-line');
@@ -466,7 +466,7 @@ Object.assign(CircuitSimulator.prototype, {
 
         // Events on Hitbox
         hitbox.addEventListener('click', (e) => {
-            if (this.mode === 'delete' || e.button === 2) { 
+            if (this.mode === 'delete' || e.button === 2) {
                 // Context menu or delete mode handled by context menu generally
             } else {
                 // Determine split point?
@@ -474,7 +474,7 @@ Object.assign(CircuitSimulator.prototype, {
                 else this.splitWireAt(wire, e);
             }
         });
-        
+
         hitbox.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             this.removeWire(wire);
@@ -493,20 +493,20 @@ Object.assign(CircuitSimulator.prototype, {
 
     removeWire(wire) {
         if (!wire) return;
-        
+
         // 1. Visual Cleanup
         if (wire.line) wire.line.remove();
         if (wire.hitbox) wire.hitbox.remove();
-        
+
         // 2. Data Cleanup
         this.wires = this.wires.filter(w => w !== wire);
-        
+
         // 3. Netlist Cleanup
         if (this.netManager) {
             this.netManager.onWireRemoved(wire);
         }
     },
-    
+
     // Select wire helper
     selectWire(wire) {
         // Optional: Highlight wire
@@ -520,7 +520,7 @@ Object.assign(CircuitSimulator.prototype, {
     updateWirePath(wire) {
         const start = this.getNodePosition(wire.from);
         const end = this.getNodePosition(wire.to);
-        
+
         // Collect Obstacles (Components)
         const obstacles = [];
         document.querySelectorAll('.component').forEach(el => {
@@ -534,10 +534,17 @@ Object.assign(CircuitSimulator.prototype, {
 
         // Pathfinding
         const path = SmartRouter.findPath(start, end, obstacles);
-        
+
         // Apply to SVG
         if (path) {
             const d = SmartRouter.toPathString(path);
+            wire.line.setAttribute('d', d);
+            wire.hitbox.setAttribute('d', d);
+        } else {
+            // [Fallback] Pure simple Z-shape if routing fails
+            const midX = (start.x + end.x) / 2;
+            const snapMidX = Math.round(midX / 10) * 10;
+            const d = `M ${start.x} ${start.y} L ${snapMidX} ${start.y} L ${snapMidX} ${end.y} L ${end.x} ${end.y}`;
             wire.line.setAttribute('d', d);
             wire.hitbox.setAttribute('d', d);
         }
@@ -559,20 +566,41 @@ Object.assign(CircuitSimulator.prototype, {
         }
     },
 
+    /**
+     * [Compatibility] Global mouse up handler for wiring.
+     * Called by InputHandler when mouse is released during wiring.
+     * Finds the nearest pin/joint and connects, or cancels if none found.
+     */
+    handleGlobalWireUp(e) {
+        if (!this.isWiring) return;
+
+        // Try to find a snap target at current mouse position
+        const mousePos = this.getMousePosition(e);
+        const snapTarget = this.findSnapTarget(mousePos.x, mousePos.y);
+
+        if (snapTarget && snapTarget !== this.startNode) {
+            // Found a valid target - finish wiring
+            this.finishWiring(snapTarget);
+        } else {
+            // No valid target - cancel wiring
+            this.cancelWiring();
+        }
+    },
+
     redrawWiresConnectedTo(node, fastMode = false) {
         if (!this.wires) return;
         this.wires.forEach(w => {
             if (w.from === node || w.to === node) {
-                 if (fastMode) {
-                     // Simple L-shape for performance
-                     const s = this.getNodePosition(w.from);
-                     const e = this.getNodePosition(w.to);
-                     const d = `M ${s.x} ${s.y} L ${e.x} ${s.y} L ${e.x} ${e.y}`;
-                     w.line.setAttribute('d', d);
-                     w.hitbox.setAttribute('d', d);
-                 } else {
-                     this.updateWirePath(w);
-                 }
+                if (fastMode) {
+                    // Simple L-shape for performance
+                    const s = this.getNodePosition(w.from);
+                    const e = this.getNodePosition(w.to);
+                    const d = `M ${s.x} ${s.y} L ${e.x} ${s.y} L ${e.x} ${e.y}`;
+                    w.line.setAttribute('d', d);
+                    w.hitbox.setAttribute('d', d);
+                } else {
+                    this.updateWirePath(w);
+                }
             }
         });
     },
@@ -591,7 +619,7 @@ Object.assign(CircuitSimulator.prototype, {
         // Split wire
         const { from, to } = wire;
         this.removeWire(wire);
-        
+
         this.createWire(from, joint);
         this.createWire(joint, to);
     },
@@ -608,19 +636,19 @@ Object.assign(CircuitSimulator.prototype, {
     getCenter(element) {
         const rect = element.getBoundingClientRect();
         const wsRect = this.workspace.getBoundingClientRect(); // Cached?
-        const scale = this.scale || 1; 
-        
+        const scale = this.scale || 1;
+
         // Relative to Workspace (0,0)
         return {
             x: (rect.left + rect.width / 2 - wsRect.left) / scale,
             y: (rect.top + rect.height / 2 - wsRect.top) / scale
         };
     },
-    
+
     getRelativeRect(element) {
         const rect = element.getBoundingClientRect();
         const wsRect = this.workspace.getBoundingClientRect();
-        const scale = this.scale || 1; 
+        const scale = this.scale || 1;
         return {
             left: (rect.left - wsRect.left) / scale,
             top: (rect.top - wsRect.top) / scale,
@@ -628,7 +656,7 @@ Object.assign(CircuitSimulator.prototype, {
             bottom: (rect.bottom - wsRect.top) / scale
         };
     },
-    
+
     getMousePosition(e) {
         const wsRect = this.workspace.getBoundingClientRect();
         const scale = this.scale || 1;

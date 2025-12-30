@@ -103,6 +103,16 @@
     transform: translateZ(0);
     transform-origin: 0 0;
     /* 미니맵 연동 좌표 계산 단순화 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    /* SVG 배경은 클릭 통과, 내부 path는 pointer-events: auto/stroke로 제어 */
+    z-index: 1;
+    /* 부품 뒤에 위치 (부품은 z-index가 더 높아야 함) */
 }
 
 /* 컴포넌트는 드래그 시에만 will-change 적용 (JS에서 동적 처리) */
