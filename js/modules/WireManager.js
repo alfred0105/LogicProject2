@@ -366,6 +366,12 @@ Object.assign(CircuitSimulator.prototype, {
      */
     removeWire(wire) {
         if (!wire) return;
+
+        // [Wire Avoidance] 경로 셀 해제
+        if (wire._pathPoints) {
+            SmartRouter.unregisterPath(wire._pathPoints);
+        }
+
         wire.line.remove();
         wire.hitbox.remove();
 
@@ -542,9 +548,42 @@ window.VirtualJoint = VirtualJoint;
 /**
  * 🧠 Smart Router (A* Pathfinding Implementation)
  * 컴포넌트 회피 및 최적 경로 탐색 (With Lead-out)
- */
 const SmartRouter = {
     gridSize: 10, // 10px 격자
+    usedCells: new Set(), // 사용된 그리드 셀 추적
+    
+    // 셀 키 생성
+    cellKey(x, y) {
+        const gx = Math.round(x / this.gridSize) * this.gridSize;
+        const gy = Math.round(y / this.gridSize) * this.gridSize;
+        return `${gx},${gy}`;
+    },
+    
+    // 경로를 사용된 셀로 등록
+    registerPath(pathPoints) {
+        if (!pathPoints) return;
+        for (const pt of pathPoints) {
+            this.usedCells.add(this.cellKey(pt.x, pt.y));
+        }
+    },
+    
+    // 셀 사용 해제 (와이어 삭제 시)
+    unregisterPath(pathPoints) {
+        if (!pathPoints) return;
+        for (const pt of pathPoints) {
+            this.usedCells.delete(this.cellKey(pt.x, pt.y));
+        }
+    },
+    
+    // 셀이 사용 중인지 확인
+    isCellUsed(x, y) {
+        return this.usedCells.has(this.cellKey(x, y));
+    },
+    
+    // 전체 초기화
+    clearUsedCells() {
+        this.usedCells.clear();
+    },
 
     findPath(start, end, obstacles, startDir = null, endDir = null) {
         // [Feature] Smart Lead-out: 핀 방향으로 20px 직진
@@ -695,7 +734,9 @@ const SmartRouter = {
                 if (this.isColliding(n.x, n.y, obstacles)) continue;
 
                 const turnPenalty = (current.dir && current.dir !== n.dir) ? 5 : 0;
-                const gScore = current.g + 10 + turnPenalty;
+                // [Wire Avoidance] 이미 사용된 셀이면 비용 증가 (완전 차단 X)
+                const overlapPenalty = this.isCellUsed(n.x, n.y) ? 50 : 0;
+                const gScore = current.g + 10 + turnPenalty + overlapPenalty;
 
                 const neighborKey = `${n.x},${n.y}`;
                 if (closedSet.has(neighborKey)) continue;
@@ -765,32 +806,32 @@ const SmartRouter = {
     /**
      * 경로 데이터를 SVG D 문자열로 변환
      */
-    toPathString(path) {
-        if (!path || path.length === 0) return '';
+toPathString(path) {
+    if (!path || path.length === 0) return '';
 
-        // 경로 단순화: 일직선상의 중간 점 제거
-        const simplified = [path[0]];
-        for (let i = 1; i < path.length - 1; i++) {
-            const prev = simplified[simplified.length - 1];
-            const curr = path[i];
-            const next = path[i + 1];
+    // 경로 단순화: 일직선상의 중간 점 제거
+    const simplified = [path[0]];
+    for (let i = 1; i < path.length - 1; i++) {
+        const prev = simplified[simplified.length - 1];
+        const curr = path[i];
+        const next = path[i + 1];
 
-            // 세 점이 일직선이면 중간 점 스킵
-            const sameX = prev.x === curr.x && curr.x === next.x;
-            const sameY = prev.y === curr.y && curr.y === next.y;
-            if (!sameX && !sameY) {
-                simplified.push(curr);
-            }
+        // 세 점이 일직선이면 중간 점 스킵
+        const sameX = prev.x === curr.x && curr.x === next.x;
+        const sameY = prev.y === curr.y && curr.y === next.y;
+        if (!sameX && !sameY) {
+            simplified.push(curr);
         }
-        if (path.length > 1) simplified.push(path[path.length - 1]);
-
-        // SVG 경로 생성
-        let d = `M ${simplified[0].x} ${simplified[0].y}`;
-        for (let i = 1; i < simplified.length; i++) {
-            d += ` L ${simplified[i].x} ${simplified[i].y}`;
-        }
-        return d;
     }
+    if (path.length > 1) simplified.push(path[path.length - 1]);
+
+    // SVG 경로 생성
+    let d = `M ${simplified[0].x} ${simplified[0].y}`;
+    for (let i = 1; i < simplified.length; i++) {
+        d += ` L ${simplified[i].x} ${simplified[i].y}`;
+    }
+    return d;
+}
 };
 
 // WireManager 확장에 Router 통합
@@ -902,6 +943,10 @@ Object.assign(CircuitSimulator.prototype, {
             const d = SmartRouter.toPathString(pathPoints);
             wire.line.setAttribute('d', d);
             wire.hitbox.setAttribute('d', d);
+
+            // [Wire Avoidance] 경로를 사용된 셀로 등록
+            SmartRouter.registerPath(pathPoints);
+            wire._pathPoints = pathPoints; // 나중에 삭제 시 사용
         } else {
             // 경로 못 찾으면 기본 라우팅 Fallback
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
