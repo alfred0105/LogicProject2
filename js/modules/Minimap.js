@@ -79,7 +79,7 @@ Object.assign(CircuitSimulator.prototype, {
         style.textContent = `
             #minimap-container {
                 position: fixed;
-                bottom: 90px;
+                bottom: 75px;
                 right: 20px;
                 width: 200px;
                 background: var(--bg-surface, #0a0a0a);
