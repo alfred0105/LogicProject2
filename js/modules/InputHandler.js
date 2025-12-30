@@ -38,7 +38,17 @@ Object.assign(CircuitSimulator.prototype, {
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // 클릭 시 모든 컨텍스트 메뉴 닫기
+        // [UI] 컨텍스트 메뉴 닫기 (강제 캡쳐링)
+        // 다른 요소에서 이벤트를 막아도(stopPropagation) 메뉴가 닫히도록 함
+        window.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
+                if (typeof this.hideAllContextMenus === 'function') {
+                    this.hideAllContextMenus();
+                }
+            }
+        }, { capture: true });
+
+        // 클릭 시 모든 컨텍스트 메뉴 닫기 (백업)
         window.addEventListener('click', (e) => {
             // 컨텍스트 메뉴 자체를 클릭한 경우는 제외
             if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
