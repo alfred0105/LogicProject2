@@ -550,26 +550,27 @@ window.VirtualJoint = VirtualJoint;
 const SmartRouter = {
     gridSize: 10, // 그리드 크기 (px)
 
-    findPath(start, end, obstacles) {
-        // [Feature] Lead-out: 임시 비활성화 (핀 방향 미고려 문제)
-        const leadDist = 0;
+    findPath(start, end, obstacles, startDir = null, endDir = null) {
+        // [Feature] Smart Lead-out: 핀 방향으로 20px 직진
+        const leadDist = 20;
 
-        const getSafeLead = (pt) => {
-            const dirs = [
-                { dx: -leadDist, dy: 0 }, { dx: leadDist, dy: 0 },
-                { dx: 0, dy: -leadDist }, { dx: 0, dy: leadDist }
-            ];
-            for (const d of dirs) {
-                const tx = pt.x + d.dx;
-                const ty = pt.y + d.dy;
-                // 장애물 충돌 없고, 맵 범위 내인지 확인
-                if (!this.isColliding(tx, ty, obstacles)) return { x: tx, y: ty };
-            }
-            return { x: pt.x, y: pt.y };
+        // 방향에 따른 Lead 포인트 계산
+        const getDirectionalLead = (pt, dir) => {
+            if (!dir || leadDist === 0) return { x: pt.x, y: pt.y };
+
+            const offsets = {
+                'left': { dx: -leadDist, dy: 0 },
+                'right': { dx: leadDist, dy: 0 },
+                'up': { dx: 0, dy: -leadDist },
+                'down': { dx: 0, dy: leadDist }
+            };
+
+            const offset = offsets[dir] || { dx: 0, dy: 0 };
+            return { x: pt.x + offset.dx, y: pt.y + offset.dy };
         };
 
-        const sLead = getSafeLead(start);
-        const eLead = getSafeLead(end);
+        const sLead = getDirectionalLead(start, startDir);
+        const eLead = getDirectionalLead(end, endDir);
 
         const sNode = this.toGrid(sLead.x, sLead.y);
         const eNode = this.toGrid(eLead.x, eLead.y);
@@ -716,6 +717,39 @@ Object.assign(CircuitSimulator.prototype, {
             return;
         }
 
+        // [Smart Lead-out] 핀 방향 계산
+        const getPinDirection = (node) => {
+            // VirtualJoint는 방향 없음
+            if (!node || !node.closest) return null;
+
+            const comp = node.closest('.component');
+            if (!comp) return null;
+
+            const pinRect = node.getBoundingClientRect();
+            const compRect = comp.getBoundingClientRect();
+            const wsRect = this.workspace.getBoundingClientRect();
+            const scale = this.scale || 1;
+
+            // 핀 중심과 컴포넌트 중심 (월드 좌표)
+            const pinX = (pinRect.left + pinRect.width / 2 - wsRect.left) / scale;
+            const pinY = (pinRect.top + pinRect.height / 2 - wsRect.top) / scale;
+            const compX = (compRect.left + compRect.width / 2 - wsRect.left) / scale;
+            const compY = (compRect.top + compRect.height / 2 - wsRect.top) / scale;
+
+            const dx = pinX - compX;
+            const dy = pinY - compY;
+
+            // 더 큰 축 방향 선택
+            if (Math.abs(dx) > Math.abs(dy)) {
+                return dx > 0 ? 'right' : 'left';
+            } else {
+                return dy > 0 ? 'down' : 'up';
+            }
+        };
+
+        const startDir = getPinDirection(wire.from);
+        const endDir = getPinDirection(wire.to);
+
         // 장애물 수집 (캐싱 가능)
         const obstacles = [];
         document.querySelectorAll('.component').forEach(comp => {
@@ -723,9 +757,6 @@ Object.assign(CircuitSimulator.prototype, {
             const fromDOM = (wire.from && wire.from.nodeType) ? wire.from : null;
             const toDOM = (wire.to && wire.to.nodeType) ? wire.to : null;
             const isConnected = (fromDOM && comp.contains(fromDOM)) || (toDOM && comp.contains(toDOM));
-
-            // JOINT, VCC, GND 등 작은 건 무시? -> 아니오, 다 피하는 게 좋음
-            // 단, 컴포넌트 내부 핀 근처는 허용해야 함.
 
             if (!isConnected) {
                 const rect = comp.getBoundingClientRect();
@@ -741,8 +772,8 @@ Object.assign(CircuitSimulator.prototype, {
             }
         });
 
-        // A* 실행
-        const pathPoints = SmartRouter.findPath(start, end, obstacles);
+        // A* 실행 (핀 방향 전달)
+        const pathPoints = SmartRouter.findPath(start, end, obstacles, startDir, endDir);
 
         if (pathPoints) {
             const d = SmartRouter.toPathString(pathPoints);
