@@ -62,9 +62,18 @@ Object.assign(CircuitSimulator.prototype, {
                 if (e.relatedTarget && this.contextMenu.contains(e.relatedTarget)) {
                     return;
                 }
-                // 약간의 지연을 주어 클릭 이벤트 처리가 완료될 시간을 줌
-                setTimeout(() => this.hideContextMenu(), 50);
-            }, true); // Use capture to handle blur early if needed, or bubble. Blur doesn't bubble, but capture works.
+                // Blur 발생 시 메뉴 닫기 (클릭 처리 시간을 위해 약간 지연)
+                setTimeout(() => this.hideContextMenu(), 100);
+            }, true);
+
+            // [중요] 메뉴 내부 클릭 시 포커스를 잃지 않도록 방지
+            // (div 등 포커스 불가능한 요소를 클릭해도 메뉴가 계속 포커스를 유지하게 함)
+            this.contextMenu.addEventListener('mousedown', (e) => {
+                // 입력 필드 등이 아닌 경우에만 포커스 유지
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
         }
 
         // LED Color Options Visibility

@@ -1676,9 +1676,27 @@ Object.assign(CircuitSimulator.prototype, {
         // 표시 애니메이션
         requestAnimationFrame(() => {
             menu.classList.add('visible');
+
+            // [재설계] Focus-Blur 시스템 적용 (SelectionManager와 동일)
+            menu.setAttribute('tabindex', '-1');
+            menu.style.outline = 'none';
+            menu.focus();
+
+            // 포커스 해제(Blur) 시 메뉴 닫기 및 제거
+            const blurHandler = (e) => {
+                // 메뉴 내부 클릭 시 닫지 않음
+                if (e.relatedTarget && menu.contains(e.relatedTarget)) return;
+
+                // 메뉴 닫기
+                this.hideContextMenu(); // setTimeout 불필요 (mousedown 방지로 포커스 유지됨)
+            };
+            menu.addEventListener('blur', blurHandler, true);
+
+            // [안전장치] 메뉴 내부 클릭 시 포커스 유지
+            menu.onmousedown = (e) => e.preventDefault();
         });
 
-        // [Refactor] 외부 클릭 감지는 InputHandler에서 전역적으로 처리하므로 개별 리스너 제거
+        // [Refactor] 외부 클릭 감지는 Focus-Blur 시스템으로 대체됨
     },
 
     /**
