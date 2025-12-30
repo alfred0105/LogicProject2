@@ -131,6 +131,11 @@ Object.assign(CircuitSimulator.prototype, {
             return; // 댓글 입력 등 UI 인터랙션 허용
         }
 
+        // [UI] 컨텍스트 메뉴 외부 클릭 시 메뉴 닫기 (즉각 반응)
+        if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
+            if (this.hideAllContextMenus) this.hideAllContextMenus();
+        }
+
         // 모듈 편집 모드 감지 (DOM 기반 포함)
         const isModuleMode = (this.currentTab && this.currentTab.startsWith('module')) || (e.target.closest && !!e.target.closest('#module-canvas'));
 
