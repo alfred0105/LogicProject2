@@ -74,8 +74,7 @@ Object.assign(CircuitSimulator.prototype, {
 
         // 기존 핸들러 제거 (안전장치)
         if (this._ctxMenuHandler) {
-            document.removeEventListener('mousedown', this._ctxMenuHandler, true); // true for capture
-            this._ctxMenuHandler = null;
+            this._removeCtxMenuListeners();
         }
 
         // 새 핸들러 정의
@@ -91,8 +90,19 @@ Object.assign(CircuitSimulator.prototype, {
         // 캡처링 단계에서 이벤트 등록 (capture: true)
         // setTimeout을 사용하여 현재 클릭 이벤트(메뉴 여는 클릭)가 즉시 닫기 로직을 트리거하지 않도록 함
         setTimeout(() => {
-            document.addEventListener('mousedown', this._ctxMenuHandler, true);
+            window.addEventListener('mousedown', this._ctxMenuHandler, true);
+            window.addEventListener('pointerdown', this._ctxMenuHandler, true);
+            window.addEventListener('touchstart', this._ctxMenuHandler, true);
         }, 50);
+    },
+
+    _removeCtxMenuListeners() {
+        if (this._ctxMenuHandler) {
+            window.removeEventListener('mousedown', this._ctxMenuHandler, true);
+            window.removeEventListener('pointerdown', this._ctxMenuHandler, true);
+            window.removeEventListener('touchstart', this._ctxMenuHandler, true);
+            this._ctxMenuHandler = null;
+        }
     },
 
     hideContextMenu() {
@@ -100,16 +110,14 @@ Object.assign(CircuitSimulator.prototype, {
             this.contextMenu = document.getElementById('context-menu');
         }
         if (this.contextMenu) {
-            this.contextMenu.style.display = 'none';
+            // 강제로 숨김 처리 (!important 적용)
+            this.contextMenu.style.setProperty('display', 'none', 'important');
         }
 
         // 핸들러 정리 (메모리 누수 방지)
-        if (this._ctxMenuHandler) {
-            document.removeEventListener('mousedown', this._ctxMenuHandler, true);
-            this._ctxMenuHandler = null;
-        }
+        this._removeCtxMenuListeners();
 
-        // 오버레이 제거 (이전 코드의 잔재가 있다면 삭제)
+        // 오버레이 제거 (혹시 남아있다면)
         const overlay = document.getElementById('context-menu-overlay');
         if (overlay) overlay.remove();
 
