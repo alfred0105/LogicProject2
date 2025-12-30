@@ -50,6 +50,23 @@ Object.assign(CircuitSimulator.prototype, {
         }
         if (!this.contextMenu) return;
 
+        // [재설계] Focus-Blur 시스템 도입
+        // 1. 메뉴를 포커스 가능한 요소로 만듦 (tabindex="-1")
+        if (!this.contextMenu.hasAttribute('tabindex')) {
+            this.contextMenu.setAttribute('tabindex', '-1');
+            this.contextMenu.style.outline = 'none'; // 포커스 테두리 제거
+
+            // 2. 포커스 해제(Blur) 시 닫기 핸들러 등록 (영구 등록)
+            this.contextMenu.addEventListener('blur', (e) => {
+                // 새로운 포커스 대상이 메뉴 내부라면 닫지 않음
+                if (e.relatedTarget && this.contextMenu.contains(e.relatedTarget)) {
+                    return;
+                }
+                // 약간의 지연을 주어 클릭 이벤트 처리가 완료될 시간을 줌
+                setTimeout(() => this.hideContextMenu(), 50);
+            }, true); // Use capture to handle blur early if needed, or bubble. Blur doesn't bubble, but capture works.
+        }
+
         // LED Color Options Visibility
         const hasLED = this.selectedComponents.some(comp =>
             comp.getAttribute('data-type') === 'LED'
@@ -68,7 +85,16 @@ Object.assign(CircuitSimulator.prototype, {
         } else {
             this.contextMenu.style.left = x + 'px';
         }
+
+        // 3. 메뉴에 강제로 포커스를 줌 (이것이 핵심)
+        // requestAnimationFrame을 사용하여 display:block 처리가 브라우저에 반영된 후 포커스
+        requestAnimationFrame(() => {
+            this.contextMenu.focus();
+        });
     },
+
+    // 이전 리스너 제거 함수는 더 이상 필요 없지만 호환성을 위해 빈 함수로 유지하거나 삭제
+    _removeCtxMenuListeners() { },
 
     hideContextMenu() {
         if (!this.contextMenu) {

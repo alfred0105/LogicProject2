@@ -38,32 +38,8 @@ Object.assign(CircuitSimulator.prototype, {
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // [구조 개선] 영구적인 메뉴 닫기 감지기 (Single Source of Truth)
-        // 캡처링(capture: true)을 사용하여 모든 클릭 이벤트를 최우선으로 감지
-        const closeMenuHandler = (e) => {
-            // 메뉴 내부 클릭은 무시
-            if (e.target.closest('#context-menu') || e.target.closest('.context-menu')) {
-                return;
-            }
-            // 그 외 모든 클릭 시 메뉴 닫기 시도
-            if (typeof this.hideAllContextMenus === 'function') {
-                this.hideAllContextMenus();
-            } else {
-                // 안전장치: 메서드가 없어도 수동으로 닫기
-                const menu = document.getElementById('context-menu');
-                if (menu) menu.style.display = 'none';
-                const dynamicMenu = document.getElementById('component-context-menu');
-                if (dynamicMenu) {
-                    dynamicMenu.classList.remove('visible');
-                    setTimeout(() => dynamicMenu.remove(), 100);
-                }
-            }
-        };
-
-        // 모든 종류의 터치/클릭 이벤트에 대해 캡처링 리스너 등록
-        window.addEventListener('mousedown', closeMenuHandler, true);
-        window.addEventListener('pointerdown', closeMenuHandler, true);
-        window.addEventListener('touchstart', closeMenuHandler, true);
+        // [재설계] 기존의 복잡한 리스너 방식 폐기.
+        // 메뉴 닫기 처리는 이제 Focus-Blur 시스템(SelectionManager)이 전담합니다.
     },
 
     // [PERFORMANCE] 분리된 위치 표시 업데이트 함수
