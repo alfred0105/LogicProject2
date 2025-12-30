@@ -1,5 +1,5 @@
-﻿/**
- * ??WireManager 3.0: High-Performance EDA Wiring System
+/**
+ * ⚡ WireManager 3.0: High-Performance EDA Wiring System
  * 
  * [Key Features]
  * 1. Netlist Integration: Connects directly with NetManager for O(1) simulation.
@@ -9,30 +9,30 @@
  */
 
 // === Virtual Joint Class ===
-// 媛踰쇱슫 議곗씤??媛앹껜 (DOM ?붿냼媛 ?꾨떂)
+// 가벼운 조인트 객체 (DOM 요소가 아님)
 class VirtualJoint {
     constructor(x, y, manager) {
         this.x = x;
         this.y = y;
         this.manager = manager;
         this.id = 'vj_' + Math.random().toString(36).substr(2, 9);
-        this.connectedWires = []; // ?곌껐????댁뼱??
+        this.connectedWires = []; // 연결된 와이어들
 
-        // SVG Element (?뚮뜑留곸슜)
+        // SVG Element (렌더링용)
         this.element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        this.element.setAttribute('r', '4'); // 諛섏?由?4px
+        this.element.setAttribute('r', '4'); // 반지름 4px
         this.element.setAttribute('cx', x);
         this.element.setAttribute('cy', y);
         this.element.classList.add('virtual-joint');
 
-        // ?ㅽ???(CSS濡?類??섎룄 ?덉?留??뺤떎???곸슜???꾪빐)
+        // 스타일 (CSS로 뺄 수도 있지만 확실한 적용을 위해)
         this.element.style.fill = '#22d3ee'; // Cyan
         this.element.style.stroke = '#fff';
         this.element.style.strokeWidth = '2px';
         this.element.style.cursor = 'move';
         this.element.style.pointerEvents = 'all';
 
-        // ?대깽??
+        // 이벤트
         this.element.onmousedown = (e) => this.onMouseDown(e);
     }
 
@@ -71,9 +71,9 @@ class VirtualJoint {
                 this.element.setAttribute('cy', gy);
             }
             // Smart Routing (Fast Mode) for responsiveness
-            // redrawWires ?대??먯꽌 isDragging ?깆쓣 泥댄겕?섎?濡?
-            // ?ш린?쒕뒗 媛뺤젣濡?isDragging???됰궡?닿굅??吏곸젒 updateSmartPath ?몄텧???섏쓬
-            // ?섏?留?redrawWires()媛 媛???덉쟾.
+            // redrawWires 내부에서 isDragging 등을 체크하므로
+            // 여기서는 강제로 isDragging을 흉내내거나 직접 updateSmartPath 호출이 나음
+            // 하지만 redrawWires()가 가장 안전.
             sim.isDragging = true;
             sim.redrawWires();
             sim.isDragging = false;
@@ -97,7 +97,7 @@ class VirtualJoint {
         document.addEventListener('mouseup', onUp);
     }
 
-    // ? ?명꽣?섏씠???명솚 (getPinCenter ?깆뿉???ъ슜)
+    // 핀 인터페이스 호환 (getPinCenter 등에서 사용)
     getBoundingClientRect() {
         return null;
     }
@@ -116,19 +116,19 @@ class VirtualJoint {
     }
 
     get parentElement() {
-        return null; // LogicEngine?먯꽌 泥댄겕 ???덉쟾?섍쾶 泥섎━
+        return null; // LogicEngine에서 체크 시 안전하게 처리
     }
 }
 
 // === Main WireManager Implementation ===
 Object.assign(CircuitSimulator.prototype, {
 
-    // 珥덇린 ?곹깭 (Main.js ?깆뿉???몄텧 ?꾩슂 ?녾쾶 Lazy Init 媛?ν븯吏留?紐낆떆???좎뼵)
+    // 초기 상태 (Main.js 등에서 호출 필요 없게 Lazy Init 가능하지만 명시적 선언)
     // this.virtualJoints = []; 
     // this.wires = []; 
 
     /**
-     * [Event] ?/議곗씤?몄뿉??留덉슦???ㅼ슫 (諛곗꽑 ?쒖옉)
+     * [Event] 핀/조인트에서 마우스 다운 (배선 시작)
      */
     handlePinDown(e, startNode) {
         if (window.isReadOnlyMode) return;
@@ -137,32 +137,32 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (this.mode !== 'edit' && this.mode !== 'wire') return;
 
-        // ?대? 諛곗꽑 以묒씠硫??곌껐 ?꾨즺 ?쒕룄
+        // 이미 배선 중이면 연결 완료 시도
         if (this.isWiring && this.startNode) {
             if (this.startNode !== startNode) {
                 this.tryFinishWiring(startNode);
             } else {
-                this.cancelWiring(); // 媛숈? ? ?대┃ = 痍⑥냼
+                this.cancelWiring(); // 같은 핀 클릭 = 취소
             }
             return;
         }
 
-        // ??諛곗꽑 ?쒖옉
+        // 새 배선 시작
         this.startWiring(startNode);
     },
 
     /**
-     * 諛곗꽑 紐⑤뱶 吏꾩엯
+     * 배선 모드 진입
      */
     startWiring(node) {
         this.isWiring = true;
         this.startNode = node;
         this.snappedNode = null;
 
-        // ?몃뱶 ?쒖꽦???쒖떆 (???寃쎌슦留?
+        // 노드 활성화 표시 (핀인 경우만)
         if (node.classList) node.classList.add('active');
 
-        // ?꾩떆 ??댁뼱 (Visual Guide)
+        // 임시 와이어 (Visual Guide)
         this.tempWire = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         this.tempWire.setAttribute('fill', 'none');
         this.tempWire.style.stroke = 'var(--accent-secondary, #3498db)';
@@ -172,30 +172,30 @@ Object.assign(CircuitSimulator.prototype, {
 
         this.wireLayer.appendChild(this.tempWire);
 
-        // ?쒖옉???낅뜲?댄듃
+        // 시작점 업데이트
         const pos = this.getNodePosition(node);
         this.updateOrthogonalPath(this.tempWire, pos.x, pos.y, pos.x, pos.y);
     },
 
     /**
-     * [Event] 留덉슦???대룞 (??댁뼱 ?꾨━酉?
+     * [Event] 마우스 이동 (와이어 프리뷰)
      */
     handleWireMove(e) {
         if (!this.isWiring || !this.startNode || !this.tempWire) return;
 
-        // 醫뚰몴 怨꾩궛
+        // 좌표 계산
         const pos = this.getMousePosition(e);
         const mouseX = pos.x;
         const mouseY = pos.y;
 
-        // ?ㅻ깄 ?寃?李얘린 (Pin or VirtualJoint)
+        // 스냅 타겟 찾기 (Pin or VirtualJoint)
         this.findSnapTarget(mouseX, mouseY);
 
         const startPos = this.getNodePosition(this.startNode);
         let targetX = mouseX;
         let targetY = mouseY;
 
-        // ?ㅻ깄 
+        // 스냅 
         if (this.snappedNode) {
             const snapPos = this.getNodePosition(this.snappedNode);
             targetX = snapPos.x;
@@ -206,20 +206,20 @@ Object.assign(CircuitSimulator.prototype, {
             this.tempWire.style.stroke = 'var(--accent-secondary, #3498db)';
             this.tempWire.style.strokeWidth = '2px';
 
-            // ?덇났????洹몃━???ㅻ깄 (Grid Snap) - 10px ?⑥쐞
+            // 허공일 때 그리드 스냅 (Grid Snap) - 10px 단위
             // targetX = Math.round(targetX / 10) * 10;
             // targetY = Math.round(targetY / 10) * 10;
-            // (?ъ슜?먭? ?먰븯?⑥쓬)
+            // (사용자가 원하셨음)
             targetX = Math.round(mouseX / 10) * 10;
             targetY = Math.round(mouseY / 10) * 10;
         }
 
-        // 吏곴컖 寃쎈줈 ?낅뜲?댄듃
+        // 직각 경로 업데이트
         this.updateOrthogonalPath(this.tempWire, startPos.x, startPos.y, targetX, targetY);
     },
 
     /**
-     * [Event] 諛곗꽑 醫낅즺 ?쒕룄
+     * [Event] 배선 종료 시도
      */
     tryFinishWiring(endNode) {
         if (!this.startNode || !endNode || this.startNode === endNode) {
@@ -227,37 +227,37 @@ Object.assign(CircuitSimulator.prototype, {
             return;
         }
 
-        // ?좏슚??寃??(媛숈? 而댄룷?뚰듃, 異쒕젰-異쒕젰 ??
+        // 유효성 검사 (같은 컴포넌트, 출력-출력 등)
         if (!this.validateConnection(this.startNode, endNode)) {
             this.cancelWiring();
             return;
         }
 
-        // ??댁뼱 ?앹꽦
+        // 와이어 생성
         this.createWire(this.startNode, endNode);
         this.cancelWiring();
     },
 
     /**
-     * ?곌껐 ?좏슚??寃??
+     * 연결 유효성 검사
      */
     validateConnection(nodeA, nodeB) {
-        // VirtualJoint???쒖빟 ?놁쓬
+        // VirtualJoint는 제약 없음
         const isJointA = nodeA instanceof VirtualJoint;
         const isJointB = nodeB instanceof VirtualJoint;
         if (isJointA || isJointB) return true;
 
-        // Pin - Pin ??寃쎌슦
+        // Pin - Pin 인 경우
         if (nodeA.parentElement === nodeB.parentElement) {
-            this.showToast('媛숈? 而댄룷?뚰듃 ?대? ?곌껐 遺덇?', 'warning');
+            this.showToast('같은 컴포넌트 내부 연결 불가', 'warning');
             return false;
         }
 
-        // Output - Output 諛⑹?
+        // Output - Output 방지
         const isOutA = this.isOutputPin(nodeA);
         const isOutB = this.isOutputPin(nodeB);
         if (!this.expertMode && isOutA && isOutB) {
-            this.showToast('異쒕젰-異쒕젰 異⑸룎 ?꾪뿕', 'warning');
+            this.showToast('출력-출력 충돌 위험', 'warning');
             return false;
         }
         return true;
@@ -268,7 +268,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * 諛곗꽑 痍⑥냼
+     * 배선 취소
      */
     cancelWiring() {
         if (this.tempWire) {
@@ -282,7 +282,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.snappedNode = null;
         this.isWiring = false;
 
-        // ?ㅻ깄 ?섏씠?쇱씠???쒓굅
+        // 스냅 하이라이트 제거
         document.querySelectorAll('.pin.snap-target').forEach(p => p.classList.remove('snap-target'));
         if (this.virtualJoints) {
             this.virtualJoints.forEach(vj => vj.element.classList.remove('snap-target'));
@@ -290,12 +290,12 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Core] ??댁뼱 ?앹꽦
+     * [Core] 와이어 생성
      */
     createWire(fromNode, toNode, options = {}) {
         const { skipSave = false, skipRedraw = false } = options;
 
-        // 以묐났 泥댄겕
+        // 중복 체크
         const exist = this.wires.find(w =>
             (w.from === fromNode && w.to === toNode) ||
             (w.from === toNode && w.to === fromNode)
@@ -306,16 +306,16 @@ Object.assign(CircuitSimulator.prototype, {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         line.classList.add('wire-line');
         line.style.stroke = '#22d3ee';
-        line.style.strokeWidth = '2px'; // ?뉕퀬 ?몃젴?섍쾶
+        line.style.strokeWidth = '2px'; // 얇고 세련되게
         line.style.fill = 'none';
         line.style.strokeLinecap = 'round';
         line.style.strokeLinejoin = 'round';
-        line.style.pointerEvents = 'none'; // ?대┃ 遺덇?
+        line.style.pointerEvents = 'none'; // 클릭 불가
 
         // 2. Invisible Hitbox (15px)
         const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         hitbox.classList.add('wire-hitbox');
-        hitbox.classList.add('wire-path'); // ?명솚??
+        hitbox.classList.add('wire-path'); // 호환성
         hitbox.style.stroke = 'transparent';
         hitbox.style.strokeWidth = '15px';
         hitbox.style.fill = 'none';
@@ -326,7 +326,7 @@ Object.assign(CircuitSimulator.prototype, {
         hitbox.onmousedown = (e) => {
             if (this.mode === 'pan' || e.button === 1) return;
             e.stopPropagation();
-            // 醫뚰겢由? 議곗씤???앹꽦
+            // 좌클릭: 조인트 생성
             if (e.button === 0) {
                 this.splitWireWithJoint(newWire, e);
             }
@@ -334,8 +334,8 @@ Object.assign(CircuitSimulator.prototype, {
 
         hitbox.oncontextmenu = (e) => {
             e.preventDefault();
-            // ?고겢由? ??젣 (ContextMenuManager媛 ??뼱???섎룄 ?덉쓬)
-            // ?ш린??媛꾨떒 ??젣 濡쒖쭅
+            // 우클릭: 삭제 (ContextMenuManager가 덮어쓸 수도 있음)
+            // 여기선 간단 삭제 로직
             this.removeWire(newWire);
             if (this.netManager) this.netManager.onWireRemoved(newWire);
         };
@@ -346,13 +346,13 @@ Object.assign(CircuitSimulator.prototype, {
         const newWire = { from: fromNode, to: toNode, line, hitbox };
         this.wires.push(newWire);
 
-        // NetManager ?깅줉
+        // NetManager 등록
         if (this.netManager) {
             this.netManager.onWireCreated(newWire);
         }
 
         // [Smart Route] Initial Calculation (with obstacle avoidance)
-        // redrawWires?먯꽌 ?ㅼ떆 洹몃┫ ?섎룄 ?덉?留?珥덇린 怨꾩궛 以묒슂
+        // redrawWires에서 다시 그릴 수도 있지만 초기 계산 중요
         this.updateSmartPath(newWire, false);
 
         if (!skipRedraw) this.redrawWires();
@@ -362,12 +362,12 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Core] ??댁뼱 ?쒓굅
+     * [Core] 와이어 제거
      */
     removeWire(wire) {
         if (!wire) return;
 
-        // [Wire Avoidance] 寃쎈줈 ? ?댁젣
+        // [Wire Avoidance] 경로 셀 해제
         if (wire._pathPoints) {
             SmartRouter.unregisterPath(wire._pathPoints);
         }
@@ -378,18 +378,18 @@ Object.assign(CircuitSimulator.prototype, {
         const idx = this.wires.indexOf(wire);
         if (idx !== -1) this.wires.splice(idx, 1);
 
-        // NetManager ?낅뜲?댄듃
+        // NetManager 업데이트
         if (this.netManager) this.netManager.onWireRemoved(wire);
 
-        // ?곌껐??議곗씤?멸? 怨좊┰?섎㈃ ?쒓굅? (Optional)
-        // ?쇰떒 ?좎?.
+        // 연결된 조인트가 고립되면 제거? (Optional)
+        // 일단 유지.
     },
 
     /**
-     * [Routing] 吏곴컖 寃쎈줈 怨꾩궛 (Smart Manhattan)
+     * [Routing] 직각 경로 계산 (Smart Manhattan)
      */
     updateOrthogonalPath(pathElement, x1, y1, x2, y2) {
-        // 10px Grid Snap for clean lines (?쒖옉/?앹젏 ?쒖쇅??以묎컙?먮쭔)
+        // 10px Grid Snap for clean lines (시작/끝점 제외한 중간점만)
         const grid = 10;
         const snap = (v) => Math.round(v / grid) * grid;
 
@@ -397,12 +397,12 @@ Object.assign(CircuitSimulator.prototype, {
         const dx = x2 - x1;
         const dy = y2 - y1;
 
-        // 吏곸꽑
+        // 직선
         if (Math.abs(dx) < 1 || Math.abs(dy) < 1) {
             d = `M ${x1} ${y1} L ${x2} ${y2}`;
         }
         else {
-            // Z-Shape: 以묎컙 爰얠엫?먯쓣 洹몃━?쒖뿉 ?ㅻ깄
+            // Z-Shape: 중간 꺾임점을 그리드에 스냅
             const midX = snap((x1 + x2) / 2);
             d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
         }
@@ -410,28 +410,28 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Feature] ??댁뼱 以묎컙??議곗씤???쎌엯
+     * [Feature] 와이어 중간에 조인트 삽입
      */
     splitWireWithJoint(wire, event) {
         const mousePos = this.getMousePosition(event);
-        // 洹몃━???ㅻ깄
+        // 그리드 스냅
         const jx = Math.round(mousePos.x / 10) * 10;
         const jy = Math.round(mousePos.y / 10) * 10;
 
-        // 媛??議곗씤???앹꽦
+        // 가상 조인트 생성
         const joint = new VirtualJoint(jx, jy, this);
         if (!this.virtualJoints) this.virtualJoints = [];
         this.virtualJoints.push(joint);
         this.wireLayer.appendChild(joint.element);
 
-        // [Feature] 議곗씤??利됱떆 ?쒕옒洹?(?꾩튂 ?섏젙 ?⑹씠??
+        // [Feature] 조인트 즉시 드래그 (위치 수정 용이성)
         if (joint.startDrag) joint.startDrag(event);
 
-        // 湲곗〈 ??댁뼱 ?쒓굅
+        // 기존 와이어 제거
         const { from, to } = wire;
         this.removeWire(wire);
 
-        // ????댁뼱 2媛??앹꽦
+        // 새 와이어 2개 생성
         this.createWire(from, joint, { skipSave: true });
         this.createWire(joint, to, { skipSave: true });
 
@@ -439,7 +439,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Helper] ?몃뱶(? ?먮뒗 議곗씤?? ?꾩튂 援ы븯湲?
+     * [Helper] 노드(핀 또는 조인트) 위치 구하기
      */
     getNodePosition(node) {
         // 1. Virtual Joint
@@ -448,7 +448,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
         // 2. DOM Pin
         const rect = node.getBoundingClientRect();
-        // Workspace scale ??낫??
+        // Workspace scale 역보정
         const wsRect = this.workspace.getBoundingClientRect();
         const scale = this.scale || 1;
 
@@ -459,7 +459,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Helper] 留덉슦???붾뱶 醫뚰몴
+     * [Helper] 마우스 월드 좌표
      */
     getMousePosition(e) {
         const wsRect = this.workspace.getBoundingClientRect();
@@ -471,7 +471,7 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
-     * [Helper] ?ㅻ깄 ?寃?李얘린 (Pin + VirtualJoint)
+     * [Helper] 스냅 타겟 찾기 (Pin + VirtualJoint)
      */
     findSnapTarget(x, y) {
         const threshold = 15;
@@ -496,7 +496,7 @@ Object.assign(CircuitSimulator.prototype, {
         if (this.virtualJoints) {
             for (const vj of this.virtualJoints) {
                 if (vj === this.startNode) continue;
-                // 嫄곕━ 泥댄겕 (vj.x, vj.y???대? ?붾뱶 醫뚰몴)
+                // 거리 체크 (vj.x, vj.y는 이미 월드 좌표)
                 if (Math.hypot(vj.x - x, vj.y - y) < threshold) {
                     this.snappedNode = vj;
                     vj.element.classList.add('snap-target');
@@ -506,16 +506,16 @@ Object.assign(CircuitSimulator.prototype, {
         }
     },
 
-    // 湲濡쒕쾶 留덉슦????
+    // 글로벌 마우스 업
     handleGlobalWireUp(e) {
         if (!this.isWiring) return;
         if (this.snappedNode) {
             this.tryFinishWiring(this.snappedNode);
         }
-        // ?대┃-?대┃ 紐⑤뱶??寃쎌슦 ?덇났 ?대┃? 臾댁떆 (怨꾩냽 諛곗꽑)
+        // 클릭-클릭 모드인 경우 허공 클릭은 무시 (계속 배선)
     },
 
-    // 由щ뱶濡쒖슦
+    // 리드로우
     redrawWires() {
         if (!this.workspace) return;
 
@@ -523,7 +523,7 @@ Object.assign(CircuitSimulator.prototype, {
         const isFastMode = this.isWiring || this.mode === 'pan' || !!this.isDragging;
 
         this.wires.forEach(w => {
-            // ?좏슚??泥댄겕 (DOM Pin???щ씪議뚯쑝硫??쒓굅)
+            // 유효성 체크 (DOM Pin이 사라졌으면 제거)
             const fromValid = (w.from instanceof window.VirtualJoint) || document.contains(w.from);
             const toValid = (w.to instanceof window.VirtualJoint) || document.contains(w.to);
 
@@ -546,20 +546,20 @@ Object.assign(CircuitSimulator.prototype, {
 window.VirtualJoint = VirtualJoint;
 
 /**
- * ?쭬 Smart Router (A* Pathfinding Implementation)
- * 而댄룷?뚰듃 ?뚰뵾 諛?理쒖쟻 寃쎈줈 ?먯깋 (With Lead-out)
+ * 🧠 Smart Router (A* Pathfinding Implementation)
+ * 컴포넌트 회피 및 최적 경로 탐색 (With Lead-out)
 const SmartRouter = {
-    gridSize: 10, // 10px 寃⑹옄
-    usedCells: new Set(), // ?ъ슜??洹몃━??? 異붿쟻
+    gridSize: 10, // 10px 격자
+    usedCells: new Set(), // 사용된 그리드 셀 추적
     
-    // ? ???앹꽦
+    // 셀 키 생성
     cellKey(x, y) {
         const gx = Math.round(x / this.gridSize) * this.gridSize;
         const gy = Math.round(y / this.gridSize) * this.gridSize;
         return `${gx},${gy}`;
     },
     
-    // 寃쎈줈瑜??ъ슜???濡??깅줉
+    // 경로를 사용된 셀로 등록
     registerPath(pathPoints) {
         if (!pathPoints) return;
         for (const pt of pathPoints) {
@@ -567,7 +567,7 @@ const SmartRouter = {
         }
     },
     
-    // ? ?ъ슜 ?댁젣 (??댁뼱 ??젣 ??
+    // 셀 사용 해제 (와이어 삭제 시)
     unregisterPath(pathPoints) {
         if (!pathPoints) return;
         for (const pt of pathPoints) {
@@ -575,33 +575,33 @@ const SmartRouter = {
         }
     },
     
-    // ????ъ슜 以묒씤吏 ?뺤씤
+    // 셀이 사용 중인지 확인
     isCellUsed(x, y) {
         return this.usedCells.has(this.cellKey(x, y));
     },
     
-    // ?꾩껜 珥덇린??
+    // 전체 초기화
     clearUsedCells() {
         this.usedCells.clear();
     },
 
     findPath(start, end, obstacles, startDir = null, endDir = null) {
-        // [Feature] Smart Lead-out: ? 諛⑺뼢?쇰줈 20px 吏곸쭊
+        // [Feature] Smart Lead-out: 핀 방향으로 20px 직진
         const leadDist = 20;
 
-        // 諛⑺뼢???곕Ⅸ Lead ?ъ씤??怨꾩궛
+        // 방향에 따른 Lead 포인트 계산
         const getDirectionalLead = (pt, dir, target) => {
             if (!dir || leadDist === 0) return { x: pt.x, y: pt.y };
 
-            // ?ㅻ쭏???ㅽ궢: Lead-out 諛⑺뼢??紐⑹쟻吏? 諛섎?硫??ㅽ궢
+            // 스마트 스킵: Lead-out 방향이 목적지와 반대면 스킵
             const dx = target.x - pt.x;
             const dy = target.y - pt.y;
 
-            // ?섑룊 ?곌껐(y 鍮꾩듂)?몃뜲 ????Lead-out?대㈃ ?ㅽ궢
+            // 수평 연결(y 비슷)인데 상/하 Lead-out이면 스킵
             if (Math.abs(dy) < 30 && (dir === 'up' || dir === 'down')) {
                 return { x: pt.x, y: pt.y };
             }
-            // ?섏쭅 ?곌껐(x 鍮꾩듂)?몃뜲 醫???Lead-out?대㈃ ?ㅽ궢
+            // 수직 연결(x 비슷)인데 좌/우 Lead-out이면 스킵
             if (Math.abs(dx) < 30 && (dir === 'left' || dir === 'right')) {
                 return { x: pt.x, y: pt.y };
             }
@@ -620,15 +620,15 @@ const SmartRouter = {
         const sLead = getDirectionalLead(start, startDir, end);
         const eLead = getDirectionalLead(end, endDir, start);
 
-        // [Fast Path] 媛꾨떒??寃쎈줈 泥댄겕: 吏곸꽑 ?먮뒗 ?⑥닚 吏곴컖
+        // [Fast Path] 간단한 경로 체크: 직선 또는 단순 직각
         const trySimplePath = () => {
             const grid = this.gridSize;
             const snap = (v) => Math.round(v / grid) * grid;
 
-            // 嫄곗쓽 ?섑룊??寃쎌슦
+            // 거의 수평인 경우
             if (Math.abs(start.y - end.y) < 20) {
                 const midY = snap((start.y + end.y) / 2);
-                // 吏곸꽑 寃쎈줈媛 ?μ븷臾쇱뿉 ??嫄몃━?붿? 泥댄겕
+                // 직선 경로가 장애물에 안 걸리는지 체크
                 const blocked = obstacles.some(obs =>
                     midY >= obs.top && midY <= obs.bottom &&
                     Math.min(start.x, end.x) < obs.right && Math.max(start.x, end.x) > obs.left
@@ -641,7 +641,7 @@ const SmartRouter = {
                 }
             }
 
-            // 嫄곗쓽 ?섏쭅??寃쎌슦
+            // 거의 수직인 경우
             if (Math.abs(start.x - end.x) < 20) {
                 const midX = snap((start.x + end.x) / 2);
                 const blocked = obstacles.some(obs =>
@@ -656,15 +656,15 @@ const SmartRouter = {
                 }
             }
 
-            // Z-Shape 寃쎈줈 ?쒕룄 (以묎컙?먯꽌 爰얘린)
+            // Z-Shape 경로 시도 (중간에서 꺾기)
             const midX = snap((start.x + end.x) / 2);
             const zBlocked = obstacles.some(obs => {
-                // ?섑룊??泥댄겕
+                // 수평선 체크
                 const hLine1 = start.y >= obs.top && start.y <= obs.bottom &&
                     Math.min(start.x, midX) < obs.right && Math.max(start.x, midX) > obs.left;
                 const hLine2 = end.y >= obs.top && end.y <= obs.bottom &&
                     Math.min(midX, end.x) < obs.right && Math.max(midX, end.x) > obs.left;
-                // ?섏쭅??泥댄겕
+                // 수직선 체크
                 const vLine = midX >= obs.left && midX <= obs.right &&
                     Math.min(start.y, end.y) < obs.bottom && Math.max(start.y, end.y) > obs.top;
                 return hLine1 || hLine2 || vLine;
@@ -679,7 +679,7 @@ const SmartRouter = {
                 ];
             }
 
-            return null; // A* ?꾩슂
+            return null; // A* 필요
         };
 
         const simplePath = trySimplePath();
@@ -719,6 +719,67 @@ const SmartRouter = {
             closedSet.add(key);
 
             if (Math.abs(current.x - eNode.x) < 5 && Math.abs(current.y - eNode.y) < 5) {
+                return this.reconstructPath(current, start, end, sLead, eLead);
+            }
+
+            const neighbors = [
+                { x: current.x, y: current.y - this.gridSize, dir: 'up' },
+                { x: current.x, y: current.y + this.gridSize, dir: 'down' },
+                { x: current.x - this.gridSize, y: current.y, dir: 'left' },
+                { x: current.x + this.gridSize, y: current.y, dir: 'right' }
+            ];
+
+            for (const n of neighbors) {
+                if (n.x < bounds.minX || n.x > bounds.maxX || n.y < bounds.minY || n.y > bounds.maxY) continue;
+                if (this.isColliding(n.x, n.y, obstacles)) continue;
+
+                const turnPenalty = (current.dir && current.dir !== n.dir) ? 5 : 0;
+                // [Wire Avoidance] 이미 사용된 셀이면 비용 증가 (완전 차단 X)
+                const overlapPenalty = this.isCellUsed(n.x, n.y) ? 50 : 0;
+                const gScore = current.g + 10 + turnPenalty + overlapPenalty;
+
+                const neighborKey = `${n.x},${n.y}`;
+                if (closedSet.has(neighborKey)) continue;
+
+                const existing = openSet.find(o => o.x === n.x && o.y === n.y);
+                if (!existing || gScore < existing.g) {
+                    if (!existing) {
+                        openSet.push({
+                            x: n.x, y: n.y,
+                            g: gScore, h: this.heuristic(n, eNode),
+                            parent: current, dir: n.dir
+                        });
+                    } else {
+                        existing.g = gScore; existing.parent = current; existing.dir = n.dir;
+                    }
+                }
+            }
+        }
+        return null; // Fallback
+    },
+
+    toGrid(x, y) {
+        return {
+            x: Math.round(x / this.gridSize) * this.gridSize,
+            y: Math.round(y / this.gridSize) * this.gridSize
+        };
+    },
+
+    heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    },
+
+    isColliding(x, y, obstacles) {
+        const margin = 5;
+        for (const obs of obstacles) {
+            if (x >= obs.left - margin && x <= obs.right + margin &&
+                y >= obs.top - margin && y <= obs.bottom + margin) {
+                return true;
+            }
+        }
+        return false;
+    },
+
     reconstructPath(node, startReal, endReal, startLead, endLead) {
         const grid = this.gridSize;
         const snap = (v) => Math.round(v / grid) * grid;
@@ -731,7 +792,9 @@ const SmartRouter = {
         }
         path.reverse();
 
+        // Lead 포인트도 그리드에 스냅
         path.unshift({ x: snap(startLead.x), y: snap(startLead.y) });
+        // 실제 핀 위치는 스냅하지 않음 (정확한 연결 유지)
         path.unshift({ x: startReal.x, y: startReal.y });
 
         path.push({ x: snap(endLead.x), y: snap(endLead.y) });
@@ -741,40 +804,42 @@ const SmartRouter = {
     },
 
     /**
-     * 寃쎈줈 ?곗씠?곕? SVG D 臾몄옄?대줈 蹂??
+     * 경로 데이터를 SVG D 문자열로 변환
      */
-    toPathString(path) {
-        if (!path || path.length === 0) return '';
+toPathString(path) {
+    if (!path || path.length === 0) return '';
 
-        const simplified = [path[0]];
-        for (let i = 1; i < path.length - 1; i++) {
-            const prev = simplified[simplified.length - 1];
-            const curr = path[i];
-            const next = path[i + 1];
+    // 경로 단순화: 일직선상의 중간 점 제거
+    const simplified = [path[0]];
+    for (let i = 1; i < path.length - 1; i++) {
+        const prev = simplified[simplified.length - 1];
+        const curr = path[i];
+        const next = path[i + 1];
 
-            const sameX = prev.x === curr.x && curr.x === next.x;
-            const sameY = prev.y === curr.y && curr.y === next.y;
-
-            if (!sameX && !sameY) {
-                simplified.push(curr);
-            }
+        // 세 점이 일직선이면 중간 점 스킵
+        const sameX = prev.x === curr.x && curr.x === next.x;
+        const sameY = prev.y === curr.y && curr.y === next.y;
+        if (!sameX && !sameY) {
+            simplified.push(curr);
         }
-        simplified.push(path[path.length - 1]);
-
-        let d = `M ${simplified[0].x} ${simplified[0].y}`;
-        for (let i = 1; i < simplified.length; i++) {
-            d += ` L ${simplified[i].x} ${simplified[i].y}`;
-        }
-        return d;
     }
+    if (path.length > 1) simplified.push(path[path.length - 1]);
+
+    // SVG 경로 생성
+    let d = `M ${simplified[0].x} ${simplified[0].y}`;
+    for (let i = 1; i < simplified.length; i++) {
+        d += ` L ${simplified[i].x} ${simplified[i].y}`;
+    }
+    return d;
+}
 };
 
-// WireManager ?뺤옣??Router ?듯빀
+// WireManager 확장에 Router 통합
 Object.assign(CircuitSimulator.prototype, {
-    // ... (湲곗〈 硫붿꽌?쒕뱾 以??쇰? ?ㅻ쾭?쇱씠???먮뒗 異붽?) ...
+    // ... (기존 메서드들 중 일부 오버라이드 또는 추가) ...
 
     /**
-     * [Routing] ?ㅻ쭏??寃쎈줈 怨꾩궛 (異⑸룎 ?뚰뵾)
+     * [Routing] 스마트 경로 계산 (충돌 회피)
      */
     updateSmartPath(wire, skipObstacles = false) {
         if (!wire || !wire.from || !wire.to) return;
@@ -782,16 +847,16 @@ Object.assign(CircuitSimulator.prototype, {
         const start = this.getNodePosition(wire.from);
         const end = this.getNodePosition(wire.to);
 
-        // ?쒕옒洹?以묒씠嫄곕굹 ?듭뀡??爰쇱졇?덉쑝硫?湲곕낯 吏곴컖 ?쇱슦??(鍮좊쫫)
+        // 드래그 중이거나 옵션이 꺼져있으면 기본 직각 라우팅 (빠름)
         if (this.isWiring || skipObstacles) {
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
             this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
             return;
         }
 
-        // [Smart Lead-out] ? 諛⑺뼢 怨꾩궛
+        // [Smart Lead-out] 핀 방향 계산
         const getPinDirection = (node) => {
-            // VirtualJoint??諛⑺뼢 ?놁쓬
+            // VirtualJoint는 방향 없음
             if (!node || !node.closest) return null;
 
             const comp = node.closest('.component');
@@ -802,7 +867,7 @@ Object.assign(CircuitSimulator.prototype, {
             const wsRect = this.workspace.getBoundingClientRect();
             const scale = this.scale || 1;
 
-            // ? 以묒떖怨?而댄룷?뚰듃 以묒떖 (?붾뱶 醫뚰몴)
+            // 핀 중심과 컴포넌트 중심 (월드 좌표)
             const pinX = (pinRect.left + pinRect.width / 2 - wsRect.left) / scale;
             const pinY = (pinRect.top + pinRect.height / 2 - wsRect.top) / scale;
             const compX = (compRect.left + compRect.width / 2 - wsRect.left) / scale;
@@ -811,7 +876,7 @@ Object.assign(CircuitSimulator.prototype, {
             const dx = pinX - compX;
             const dy = pinY - compY;
 
-            // ????異?諛⑺뼢 ?좏깮
+            // 더 큰 축 방향 선택
             if (Math.abs(dx) > Math.abs(dy)) {
                 return dx > 0 ? 'right' : 'left';
             } else {
@@ -822,7 +887,7 @@ Object.assign(CircuitSimulator.prototype, {
         const startDir = getPinDirection(wire.from);
         const endDir = getPinDirection(wire.to);
 
-        // ?μ븷臾??섏쭛 (罹먯떛 媛??
+        // 장애물 수집 (캐싱 가능)
         const obstacles = [];
         document.querySelectorAll('.component').forEach(comp => {
             // [Fix] Node check for VirtualJoint compatibility
@@ -844,8 +909,8 @@ Object.assign(CircuitSimulator.prototype, {
             }
         });
 
-        // [Wire Avoidance] 鍮꾪솢?깊솕 - ?덈Т 怨듦꺽?곸쑝濡??묐룞?섏뿬 寃쎈줈媛 蹂듭옟?댁쭚
-        // TODO: ???ㅻ쭏?명븳 ?뚭퀬由ъ쬁?쇰줈 媛쒖꽑 ?꾩슂
+        // [Wire Avoidance] 비활성화 - 너무 공격적으로 작동하여 경로가 복잡해짐
+        // TODO: 더 스마트한 알고리즘으로 개선 필요
         /*
         const wireMargin = 8;
         this.wires.forEach(otherWire => {
@@ -871,7 +936,7 @@ Object.assign(CircuitSimulator.prototype, {
         });
         */
 
-        // A* ?ㅽ뻾 (? 諛⑺뼢 ?꾨떖)
+        // A* 실행 (핀 방향 전달)
         const pathPoints = SmartRouter.findPath(start, end, obstacles, startDir, endDir);
 
         if (pathPoints) {
@@ -879,73 +944,13 @@ Object.assign(CircuitSimulator.prototype, {
             wire.line.setAttribute('d', d);
             wire.hitbox.setAttribute('d', d);
 
-            // [Wire Avoidance] 寃쎈줈瑜??ъ슜???濡??깅줉
+            // [Wire Avoidance] 경로를 사용된 셀로 등록
             SmartRouter.registerPath(pathPoints);
-            wire._pathPoints = pathPoints; // ?섏쨷????젣 ???ъ슜
+            wire._pathPoints = pathPoints; // 나중에 삭제 시 사용
         } else {
-            // 寃쎈줈 紐?李얠쑝硫?湲곕낯 ?쇱슦??Fallback
+            // 경로 못 찾으면 기본 라우팅 Fallback
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
             this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
         }
-    },
-
-    // [Fix] ?꾨씫???명꽣?숈뀡 ?몃뱾??蹂듦뎄
-    handlePinDown(e, pin) {
-        if (e.button !== 0) return;
-        // Inverter/Gateway??input pin???대? ?곌껐???좎씠 ?덈떎硫??쒓굅 (1:1 ?곌껐)
-        if (pin.classList.contains('input-pin')) {
-            const existingWire = this.wires.find(w => w.to === pin);
-            if (existingWire) this.removeWire(existingWire);
-        }
-        this.startWiring(pin);
-        e.stopPropagation();
-    },
-
-    startWiring(pin) {
-        this.isWiring = true;
-        this.startPin = pin;
-        this.startNode = pin;
-
-        const svgNS = "http://www.w3.org/2000/svg";
-        this.tempWire = document.createElementNS(svgNS, 'path');
-        this.tempWire.setAttribute('class', 'wire-temp');
-        this.tempWire.setAttribute('stroke', '#60a5fa');
-        this.tempWire.setAttribute('stroke-width', '2');
-        this.tempWire.setAttribute('fill', 'none');
-        this.tempWire.setAttribute('d', '');
-        this.tempWire.style.pointerEvents = 'none';
-
-        if (this.wireLayer) this.wireLayer.appendChild(this.tempWire);
-
-        // ?대깽??諛붿씤??
-        this._wiringMoveHandler = (e) => this.handleWireMove(e);
-        this._wiringUpHandler = (e) => {
-            /* 罹붾쾭??鍮?怨??대┃ ??痍⑥냼??handleCanvasClick ?깆뿉??泥섎━?? 
-               ?ш린?쒕뒗 ?덉쟾?μ튂濡쒕쭔 ??*/
-        };
-
-        // 二쇱쓽: InputHandler媛 ?대? mousemove瑜?泥섎━?섏뿬 handleWireMove瑜??몄텧?댁＜誘濡?
-        // 蹂꾨낫??由ъ뒪?덈? 遺숈씠吏 ?딆븘???섏?留? ?덉쟾???꾪빐 硫붿꽌?쒕뒗 議댁옱?댁빞 ??
-    },
-
-    handleWireMove(e) {
-        if (!this.isWiring || !this.startNode || !this.tempWire) return;
-        const pos = this.getMousePosition(e);
-        const startPos = this.getNodePosition(this.startNode);
-        this.updateOrthogonalPath(this.tempWire, startPos.x, startPos.y, pos.x, pos.y);
-    },
-
-    stopWiring() {
-        this.isWiring = false;
-        this.startPin = null;
-        this.startNode = null;
-        if (this.tempWire) {
-            this.tempWire.remove();
-            this.tempWire = null;
-        }
-    },
-
-    cancelWiring() {
-        this.stopWiring();
     }
 });
