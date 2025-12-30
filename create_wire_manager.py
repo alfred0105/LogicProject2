@@ -863,6 +863,13 @@ Object.assign(CircuitSimulator.prototype, {
             this.tempWire = null;
         }
         this._unbindWiringEvents();
+    },
+
+    /**
+     * [Alias] 와이어링 취소 (호환성)
+     */
+    cancelWiring() {
+        this.stopWiring();
     }
 });
 """
