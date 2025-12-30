@@ -952,5 +952,65 @@ Object.assign(CircuitSimulator.prototype, {
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
             this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
         }
+    },
+
+    // [Fix] 누락된 인터랙션 핸들러 복구
+    handlePinDown(e, pin) {
+        if (e.button !== 0) return;
+        // Inverter/Gateway의 input pin에 이미 연결된 선이 있다면 제거 (1:1 연결)
+        if (pin.classList.contains('input-pin')) {
+            const existingWire = this.wires.find(w => w.to === pin);
+            if (existingWire) this.removeWire(existingWire);
+        }
+        this.startWiring(pin);
+        e.stopPropagation();
+    },
+
+    startWiring(pin) {
+        this.isWiring = true;
+        this.startPin = pin;
+        this.startNode = pin;
+
+        const svgNS = "http://www.w3.org/2000/svg";
+        this.tempWire = document.createElementNS(svgNS, 'path');
+        this.tempWire.setAttribute('class', 'wire-temp');
+        this.tempWire.setAttribute('stroke', '#60a5fa');
+        this.tempWire.setAttribute('stroke-width', '2');
+        this.tempWire.setAttribute('fill', 'none');
+        this.tempWire.setAttribute('d', '');
+        this.tempWire.style.pointerEvents = 'none';
+
+        if (this.wireLayer) this.wireLayer.appendChild(this.tempWire);
+
+        // 이벤트 바인딩
+        this._wiringMoveHandler = (e) => this.handleWireMove(e);
+        this._wiringUpHandler = (e) => {
+            /* 캔버스 빈 곳 클릭 시 취소는 handleCanvasClick 등에서 처리됨. 
+               여기서는 안전장치로만 둠 */
+        };
+
+        // 주의: InputHandler가 이미 mousemove를 처리하여 handleWireMove를 호출해주므로
+        // 별보의 리스너를 붙이지 않아도 되지만, 안전을 위해 메서드는 존재해야 함.
+    },
+
+    handleWireMove(e) {
+        if (!this.isWiring || !this.startNode || !this.tempWire) return;
+        const pos = this.getMousePosition(e);
+        const startPos = this.getNodePosition(this.startNode);
+        this.updateOrthogonalPath(this.tempWire, startPos.x, startPos.y, pos.x, pos.y);
+    },
+
+    stopWiring() {
+        this.isWiring = false;
+        this.startPin = null;
+        this.startNode = null;
+        if (this.tempWire) {
+            this.tempWire.remove();
+            this.tempWire = null;
+        }
+    },
+
+    cancelWiring() {
+        this.stopWiring();
     }
 });
