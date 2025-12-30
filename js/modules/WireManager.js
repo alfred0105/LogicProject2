@@ -868,27 +868,23 @@ Object.assign(CircuitSimulator.prototype, {
             }
         });
 
-        // [Wire Avoidance] 기존 와이어들도 장애물로 추가
-        const wireMargin = 8; // 와이어 주변 여유 공간
+        // [Wire Avoidance] 비활성화 - 너무 공격적으로 작동하여 경로가 복잡해짐
+        // TODO: 더 스마트한 알고리즘으로 개선 필요
+        /*
+        const wireMargin = 8;
         this.wires.forEach(otherWire => {
-            if (otherWire === wire) return; // 자기 자신 제외
-
+            if (otherWire === wire) return;
             const pathStr = otherWire.line?.getAttribute('d');
             if (!pathStr) return;
-
-            // SVG 경로에서 점들 추출 (M x y L x y L x y ...)
             const points = [];
             const regex = /([ML])\s*([\d.-]+)\s+([\d.-]+)/g;
             let match;
             while ((match = regex.exec(pathStr)) !== null) {
                 points.push({ x: parseFloat(match[2]), y: parseFloat(match[3]) });
             }
-
-            // 각 선분을 작은 장애물로 변환
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
                 const p2 = points[i + 1];
-
                 obstacles.push({
                     left: Math.min(p1.x, p2.x) - wireMargin,
                     right: Math.max(p1.x, p2.x) + wireMargin,
@@ -897,6 +893,7 @@ Object.assign(CircuitSimulator.prototype, {
                 });
             }
         });
+        */
 
         // A* 실행 (핀 방향 전달)
         const pathPoints = SmartRouter.findPath(start, end, obstacles, startDir, endDir);
