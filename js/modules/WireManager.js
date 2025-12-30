@@ -288,6 +288,10 @@ Object.assign(CircuitSimulator.prototype, {
             this.netManager.onWireCreated(newWire);
         }
 
+        // [Smart Route] Initial Calculation (with obstacle avoidance)
+        // redrawWires에서 다시 그릴 수도 있지만 초기 계산 중요
+        this.updateSmartPath(newWire, false);
+
         if (!skipRedraw) this.redrawWires();
         if (!skipSave) this.saveState();
 
@@ -446,36 +450,248 @@ Object.assign(CircuitSimulator.prototype, {
     // 리드로우
     redrawWires() {
         if (!this.workspace) return;
-        // Wires
+
+        // Fast Mode Check: Wiring, Panning, or Dragging
+        const isFastMode = this.isWiring || this.mode === 'pan' || !!this.isDragging;
+
         this.wires.forEach(w => {
             // 유효성 체크 (DOM Pin이 사라졌으면 제거)
-            const fromValid = (w.from instanceof VirtualJoint) || document.contains(w.from);
-            const toValid = (w.to instanceof VirtualJoint) || document.contains(w.to);
+            const fromValid = (w.from instanceof window.VirtualJoint) || document.contains(w.from);
+            const toValid = (w.to instanceof window.VirtualJoint) || document.contains(w.to);
 
             if (!fromValid || !toValid) {
-                // Cleanup invalid wire (defer splice)
                 w.toBeRemoved = true;
                 return;
             }
 
-            const p1 = this.getNodePosition(w.from);
-            const p2 = this.getNodePosition(w.to);
-
-            // Visual Updates (Signal Colors)
-            // (생략 - LogicEngine에서 처리됨. 여기선 좌표만)
-
-            this.updateOrthogonalPath(w.line, p1.x, p1.y, p2.x, p2.y);
-            this.updateOrthogonalPath(w.hitbox, p1.x, p1.y, p2.x, p2.y);
+            // [MOD] Smart Routing Call
+            this.updateSmartPath(w, isFastMode);
         });
 
         // Cleanup Loop
         const invalidWires = this.wires.filter(w => w.toBeRemoved);
         invalidWires.forEach(w => this.removeWire(w));
-
-        // Joints (렌더링은 되어있으므로 위치만? 조인트는 움직이지 않음)
-        // 만약 조인트 이동 기능을 넣는다면 여기서 업데이트
     }
 });
 
 // Expose VirtualJoint for ProjectIO
 window.VirtualJoint = VirtualJoint;
+
+/**
+ * 🧠 Smart Router (A* Pathfinding Implementation)
+ * 컴포넌트 회피 및 최적 경로 탐색
+ */
+const SmartRouter = {
+    gridSize: 20, // 그리드 크기 (px)
+
+    /**
+     * 경로 탐색 메인 함수
+     * @param {Object} start {x, y}
+     * @param {Object} end {x, y}
+     * @param {Array} obstacles [{left, top, right, bottom}, ...]
+     */
+    findPath(start, end, obstacles) {
+        // 좌표를 그리드 단위로 정렬
+        const sNode = this.toGrid(start.x, start.y);
+        const eNode = this.toGrid(end.x, end.y);
+
+        // 탐색 범위 제한 (너무 멀리 돌지 않도록. 캔버스 전체는 비효율적)
+        // start와 end를 포함하는 bounding box + padding
+        const padding = 100; // 여유 공간
+        const bounds = {
+            minX: Math.min(start.x, end.x) - padding,
+            maxX: Math.max(start.x, end.x) + padding,
+            minY: Math.min(start.y, end.y) - padding,
+            maxY: Math.max(start.y, end.y) + padding
+        };
+
+        // Open/Closed Set
+        const openSet = [];
+        const closedSet = new Set();
+
+        openSet.push({
+            x: sNode.x,
+            y: sNode.y,
+            g: 0,
+            h: this.heuristic(sNode, eNode),
+            parent: null,
+            dir: null // 진입 방향 (직선 선호용)
+        });
+
+        // Loop 제한 (무한 루프 방지)
+        let loops = 0;
+        const maxLoops = 3000;
+
+        while (openSet.length > 0) {
+            if (loops++ > maxLoops) return null; // 실패 시 Fallback
+
+            // f값(g+h)이 가장 낮은 노드 선택
+            openSet.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+            const current = openSet.shift();
+            const key = `${current.x},${current.y}`;
+
+            if (closedSet.has(key)) continue;
+            closedSet.add(key);
+
+            // 목적지 도달 (근사치 허용)
+            // if (current.x === eNode.x && current.y === eNode.y) {
+            if (Math.abs(current.x - eNode.x) < 2 && Math.abs(current.y - eNode.y) < 2) {
+                // 정확한 끝점으로 보정하여 경로 재구성
+                return this.reconstructPath(current, start, end);
+            }
+
+            // 이웃 탐색 (상하좌우)
+            const neighbors = [
+                { x: current.x, y: current.y - this.gridSize, dir: 'up' },
+                { x: current.x, y: current.y + this.gridSize, dir: 'down' },
+                { x: current.x - this.gridSize, y: current.y, dir: 'left' },
+                { x: current.x + this.gridSize, y: current.y, dir: 'right' }
+            ];
+
+            for (const n of neighbors) {
+                // 범위 체크
+                if (n.x < bounds.minX || n.x > bounds.maxX || n.y < bounds.minY || n.y > bounds.maxY) continue;
+
+                // 장애물 체크
+                if (this.isColliding(n.x, n.y, obstacles)) continue;
+
+                // 비용 계산
+                // 기본 비용(10) + 방향 전환 페널티(5) -> 직선 선호
+                const turnPenalty = (current.dir && current.dir !== n.dir) ? 5 : 0;
+                const gScore = current.g + 10 + turnPenalty;
+
+                const neighborKey = `${n.x},${n.y}`;
+                if (closedSet.has(neighborKey)) continue;
+
+                const existing = openSet.find(o => o.x === n.x && o.y === n.y);
+                if (!existing || gScore < existing.g) {
+                    if (!existing) {
+                        openSet.push({
+                            x: n.x, y: n.y,
+                            g: gScore,
+                            h: this.heuristic(n, eNode),
+                            parent: current,
+                            dir: n.dir
+                        });
+                    } else {
+                        existing.g = gScore;
+                        existing.parent = current;
+                        existing.dir = n.dir;
+                    }
+                }
+            }
+        }
+        return null; // 경로 못 찾음
+    },
+
+    toGrid(x, y) {
+        return {
+            x: Math.round(x / this.gridSize) * this.gridSize,
+            y: Math.round(y / this.gridSize) * this.gridSize
+        };
+    },
+
+    heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    },
+
+    isColliding(x, y, obstacles) {
+        // 점(x,y)이 장애물 박스 안에 있는지 확인
+        // 약간의 여유(GridSize/2)를 두어 관통 방지
+        const margin = 5;
+        for (const obs of obstacles) {
+            if (x >= obs.left - margin && x <= obs.right + margin &&
+                y >= obs.top - margin && y <= obs.bottom + margin) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    reconstructPath(node, startReal, endReal) {
+        const path = [];
+        let curr = node;
+        while (curr) {
+            path.push({ x: curr.x, y: curr.y });
+            curr = curr.parent;
+        }
+        path.reverse();
+
+        // 시작점과 끝점을 실제 핀 좌표로 교체 (그리드 스냅 보정)
+        path[0] = { x: startReal.x, y: startReal.y };
+        path[path.length - 1] = { x: endReal.x, y: endReal.y };
+
+        return path;
+    },
+
+    /**
+     * 경로 데이터를 SVG D 문자열로 변환
+     */
+    toPathString(path) {
+        if (!path || path.length === 0) return '';
+        let d = `M ${path[0].x} ${path[0].y}`;
+        // 경로 단순화 (일직선상의 점 제거)
+        for (let i = 1; i < path.length; i++) {
+            d += ` L ${path[i].x} ${path[i].y}`;
+        }
+        return d;
+    }
+};
+
+// WireManager 확장에 Router 통합
+Object.assign(CircuitSimulator.prototype, {
+    // ... (기존 메서드들 중 일부 오버라이드 또는 추가) ...
+
+    /**
+     * [Routing] 스마트 경로 계산 (충돌 회피)
+     */
+    updateSmartPath(wire, skipObstacles = false) {
+        if (!wire || !wire.from || !wire.to) return;
+
+        const start = this.getNodePosition(wire.from);
+        const end = this.getNodePosition(wire.to);
+
+        // 드래그 중이거나 옵션이 꺼져있으면 기본 직각 라우팅 (빠름)
+        if (this.isWiring || skipObstacles) {
+            this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
+            this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
+            return;
+        }
+
+        // 장애물 수집 (캐싱 가능)
+        const obstacles = [];
+        document.querySelectorAll('.component').forEach(comp => {
+            // 연결된 컴포넌트는 장애물에서 제외 (안 그러면 출발/도착도 못 함)
+            const isConnected = comp.contains(wire.from) || comp.contains(wire.to);
+
+            // JOINT, VCC, GND 등 작은 건 무시? -> 아니오, 다 피하는 게 좋음
+            // 단, 컴포넌트 내부 핀 근처는 허용해야 함.
+
+            if (!isConnected) {
+                const rect = comp.getBoundingClientRect();
+                const wsRect = this.workspace.getBoundingClientRect();
+                const scale = this.scale || 1;
+
+                obstacles.push({
+                    left: (rect.left - wsRect.left) / scale,
+                    top: (rect.top - wsRect.top) / scale,
+                    right: (rect.right - wsRect.left) / scale,
+                    bottom: (rect.bottom - wsRect.top) / scale
+                });
+            }
+        });
+
+        // A* 실행
+        const pathPoints = SmartRouter.findPath(start, end, obstacles);
+
+        if (pathPoints) {
+            const d = SmartRouter.toPathString(pathPoints);
+            wire.line.setAttribute('d', d);
+            wire.hitbox.setAttribute('d', d);
+        } else {
+            // 경로 못 찾으면 기본 라우팅 Fallback
+            this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
+            this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
+        }
+    }
+});
