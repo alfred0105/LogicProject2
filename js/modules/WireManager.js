@@ -548,7 +548,7 @@ window.VirtualJoint = VirtualJoint;
  * 컴포넌트 회피 및 최적 경로 탐색 (With Lead-out)
  */
 const SmartRouter = {
-    gridSize: 10, // 그리드 크기 (px)
+    gridSize: 10, // 10px 격자
 
     findPath(start, end, obstacles, startDir = null, endDir = null) {
         // [Feature] Smart Lead-out: 핀 방향으로 20px 직진
@@ -688,10 +688,27 @@ const SmartRouter = {
      */
     toPathString(path) {
         if (!path || path.length === 0) return '';
-        let d = `M ${path[0].x} ${path[0].y}`;
-        // 경로 단순화 (일직선상의 점 제거)
-        for (let i = 1; i < path.length; i++) {
-            d += ` L ${path[i].x} ${path[i].y}`;
+
+        // 경로 단순화: 일직선상의 중간 점 제거
+        const simplified = [path[0]];
+        for (let i = 1; i < path.length - 1; i++) {
+            const prev = simplified[simplified.length - 1];
+            const curr = path[i];
+            const next = path[i + 1];
+
+            // 세 점이 일직선이면 중간 점 스킵
+            const sameX = prev.x === curr.x && curr.x === next.x;
+            const sameY = prev.y === curr.y && curr.y === next.y;
+            if (!sameX && !sameY) {
+                simplified.push(curr);
+            }
+        }
+        if (path.length > 1) simplified.push(path[path.length - 1]);
+
+        // SVG 경로 생성
+        let d = `M ${simplified[0].x} ${simplified[0].y}`;
+        for (let i = 1; i < simplified.length; i++) {
+            d += ` L ${simplified[i].x} ${simplified[i].y}`;
         }
         return d;
     }

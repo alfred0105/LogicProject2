@@ -955,10 +955,10 @@ body.expert-mode .section.expert-only {
         /* Major grid - every 100px */
         linear-gradient(var(--border-subtle) 1px, transparent 1px),
         linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px),
-        /* Minor grid - every 20px */
+        /* Minor grid - every 10px */
         linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    background-size: 100px 100px, 100px 100px, 10px 10px, 10px 10px;
 
     cursor: default;
 }
