@@ -551,8 +551,8 @@ const SmartRouter = {
     gridSize: 10, // 그리드 크기 (px)
 
     findPath(start, end, obstacles) {
-        // [Feature] Lead-out: 핀에서 20px 직진 보장
-        const leadDist = 20;
+        // [Feature] Lead-out: 임시 비활성화 (핀 방향 미고려 문제)
+        const leadDist = 0;
 
         const getSafeLead = (pt) => {
             const dirs = [
