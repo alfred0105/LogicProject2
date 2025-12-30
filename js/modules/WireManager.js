@@ -581,6 +581,71 @@ const SmartRouter = {
         const sLead = getDirectionalLead(start, startDir, end);
         const eLead = getDirectionalLead(end, endDir, start);
 
+        // [Fast Path] 간단한 경로 체크: 직선 또는 단순 직각
+        const trySimplePath = () => {
+            const grid = this.gridSize;
+            const snap = (v) => Math.round(v / grid) * grid;
+
+            // 거의 수평인 경우
+            if (Math.abs(start.y - end.y) < 20) {
+                const midY = snap((start.y + end.y) / 2);
+                // 직선 경로가 장애물에 안 걸리는지 체크
+                const blocked = obstacles.some(obs =>
+                    midY >= obs.top && midY <= obs.bottom &&
+                    Math.min(start.x, end.x) < obs.right && Math.max(start.x, end.x) > obs.left
+                );
+                if (!blocked) {
+                    return [
+                        { x: start.x, y: start.y },
+                        { x: end.x, y: end.y }
+                    ];
+                }
+            }
+
+            // 거의 수직인 경우
+            if (Math.abs(start.x - end.x) < 20) {
+                const midX = snap((start.x + end.x) / 2);
+                const blocked = obstacles.some(obs =>
+                    midX >= obs.left && midX <= obs.right &&
+                    Math.min(start.y, end.y) < obs.bottom && Math.max(start.y, end.y) > obs.top
+                );
+                if (!blocked) {
+                    return [
+                        { x: start.x, y: start.y },
+                        { x: end.x, y: end.y }
+                    ];
+                }
+            }
+
+            // Z-Shape 경로 시도 (중간에서 꺾기)
+            const midX = snap((start.x + end.x) / 2);
+            const zBlocked = obstacles.some(obs => {
+                // 수평선 체크
+                const hLine1 = start.y >= obs.top && start.y <= obs.bottom &&
+                    Math.min(start.x, midX) < obs.right && Math.max(start.x, midX) > obs.left;
+                const hLine2 = end.y >= obs.top && end.y <= obs.bottom &&
+                    Math.min(midX, end.x) < obs.right && Math.max(midX, end.x) > obs.left;
+                // 수직선 체크
+                const vLine = midX >= obs.left && midX <= obs.right &&
+                    Math.min(start.y, end.y) < obs.bottom && Math.max(start.y, end.y) > obs.top;
+                return hLine1 || hLine2 || vLine;
+            });
+
+            if (!zBlocked) {
+                return [
+                    { x: start.x, y: start.y },
+                    { x: midX, y: start.y },
+                    { x: midX, y: end.y },
+                    { x: end.x, y: end.y }
+                ];
+            }
+
+            return null; // A* 필요
+        };
+
+        const simplePath = trySimplePath();
+        if (simplePath) return simplePath;
+
         const sNode = this.toGrid(sLead.x, sLead.y);
         const eNode = this.toGrid(eLead.x, eLead.y);
 
