@@ -37,13 +37,19 @@ class VirtualJoint {
     }
 
     onMouseDown(e) {
-        if (window.sim.mode === 'pan' || e.button === 1) return;
+        // [Safety Check]
+        const sim = window.sim;
+        if (!sim) return;
+
+        if (sim.mode === 'pan' || e.button === 1) return;
         e.stopPropagation();
         this.startDrag(e);
     }
 
     startDrag(e) {
         const sim = this.manager || window.sim;
+        if (!sim) return;
+
         const startX = e.clientX;
         const startY = e.clientY;
         let hasMoved = false;
