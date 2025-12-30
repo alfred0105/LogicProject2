@@ -44,100 +44,23 @@ Object.assign(CircuitSimulator.prototype, {
     // ===================================
     // 2. Context Menu & Info
     // ===================================
+    // [DEPRECATED] All context menu logic is now handled by ContextMenuManager.js
     showContextMenu(x, y) {
-        if (!this.contextMenu) {
-            this.contextMenu = document.getElementById('context-menu');
-        }
-        if (!this.contextMenu) return;
-
-        // [재설계] Focus-Blur 시스템 도입
-        // 1. 메뉴를 포커스 가능한 요소로 만듦 (tabindex="-1")
-        if (!this.contextMenu.hasAttribute('tabindex')) {
-            this.contextMenu.setAttribute('tabindex', '-1');
-            this.contextMenu.style.outline = 'none'; // 포커스 테두리 제거
-
-            // 2. 포커스 해제(Blur) 시 닫기 핸들러 등록 (영구 등록)
-            this.contextMenu.addEventListener('blur', (e) => {
-                // 새로운 포커스 대상이 메뉴 내부라면 닫지 않음
-                if (e.relatedTarget && this.contextMenu.contains(e.relatedTarget)) {
-                    return;
-                }
-                // Blur 발생 시 메뉴 닫기 (클릭 처리 시간을 위해 약간 지연)
-                setTimeout(() => this.hideContextMenu(), 100);
-            }, true);
-
-            // [중요] 메뉴 내부 클릭 시 포커스를 잃지 않도록 방지
-            // (div 등 포커스 불가능한 요소를 클릭해도 메뉴가 계속 포커스를 유지하게 함)
-            this.contextMenu.addEventListener('mousedown', (e) => {
-                // 입력 필드 등이 아닌 경우에만 포커스 유지
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                }
-            });
-        }
-
-        // LED Color Options Visibility
-        const hasLED = this.selectedComponents.some(comp =>
-            comp.getAttribute('data-type') === 'LED'
-        );
-        this.contextMenu.querySelectorAll('.ctx-led-only').forEach(el => {
-            el.style.display = hasLED ? '' : 'none';
-        });
-
-        // 메뉴 표시
-        this.contextMenu.style.display = 'block';
-        this.contextMenu.style.top = y + 'px';
-
-        const menuRect = this.contextMenu.getBoundingClientRect();
-        if (x + menuRect.width > window.innerWidth) {
-            this.contextMenu.style.left = (x - menuRect.width) + 'px';
-        } else {
-            this.contextMenu.style.left = x + 'px';
-        }
-
-        // 3. 메뉴에 강제로 포커스를 줌 (이것이 핵심)
-        // requestAnimationFrame을 사용하여 display:block 처리가 브라우저에 반영된 후 포커스
-        requestAnimationFrame(() => {
-            this.contextMenu.focus();
-        });
+        // No-op: handled centrally
     },
 
-    // 이전 리스너 제거 함수는 더 이상 필요 없지만 호환성을 위해 빈 함수로 유지하거나 삭제
     _removeCtxMenuListeners() { },
 
     hideContextMenu() {
-        if (!this.contextMenu) {
-            this.contextMenu = document.getElementById('context-menu');
-        }
-        if (this.contextMenu) {
-            this.contextMenu.style.display = 'none';
-        }
-
-        // TabManager 등 다른 메뉴도 같이 닫기 (이 로직은 유지)
-        const dynamicMenu = document.getElementById('component-context-menu');
-        if (dynamicMenu) {
-            dynamicMenu.classList.remove('visible');
-            setTimeout(() => dynamicMenu.remove(), 100);
+        if (this.contextMenuManager) {
+            this.contextMenuManager.close();
         }
     },
 
-    // 모든 동적 생성 컨텍스트 메뉴 닫기 (TabManager 포함)
     hideAllContextMenus() {
-        // 메인 컨텍스트 메뉴 닫기
-        this.hideContextMenu();
-
-        // TabManager에서 생성한 컨텍스트 메뉴
-        const dynamicMenu = document.getElementById('component-context-menu');
-        if (dynamicMenu) {
-            dynamicMenu.classList.remove('visible');
-            setTimeout(() => dynamicMenu.remove(), 150);
+        if (this.contextMenuManager) {
+            this.contextMenuManager.close();
         }
-
-        // 기타 동적 context-menu 클래스 메뉴들
-        document.querySelectorAll('.context-menu.visible').forEach(menu => {
-            menu.classList.remove('visible');
-            setTimeout(() => menu.remove(), 150);
-        });
     },
 
     getComponentInfo(type) {

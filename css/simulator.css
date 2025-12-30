@@ -4374,3 +4374,154 @@ div.component[data-type="NOT"] {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* ============================================
+   NEW CONTEXT MENU MANAGER STYLES
+   ============================================ */
+.cm-container {
+    position: fixed;
+    z-index: 10000;
+    /* Highest priority */
+    min-width: 220px;
+    background: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(0, 0, 0, 0.2);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: cm-enter 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+    transform-origin: top left;
+    user-select: none;
+    font-family: 'Inter', sans-serif;
+}
+
+@keyframes cm-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.cm-container.closing {
+    animation: cm-exit 0.1s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes cm-exit {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.cm-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #e5e5e5;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.cm-item:hover,
+.cm-item.selected {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.cm-item:active {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(0.98);
+}
+
+.cm-item.danger {
+    color: #fca5a5;
+}
+
+.cm-item.danger:hover {
+    background: rgba(220, 38, 38, 0.15);
+    /* Red-600 with opacity */
+    color: #fecaca;
+}
+
+.cm-item.danger .cm-icon {
+    color: #ef4444;
+}
+
+.cm-item.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: default;
+}
+
+.cm-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: #a1a1aa;
+    /* Zinc-400 */
+    transition: color 0.1s;
+}
+
+.cm-item:hover .cm-icon {
+    color: #e4e4e7;
+    /* Zinc-200 */
+}
+
+/* SVG Icon sizing fix */
+.cm-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke-width: 2px;
+}
+
+.cm-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cm-shortcut {
+    font-size: 11px;
+    color: #71717a;
+    /* Zinc-500 */
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    margin-left: 12px;
+}
+
+.cm-arrow {
+    font-size: 14px;
+    color: #71717a;
+    margin-left: 4px;
+}
+
+.cm-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 4px 0;
+}

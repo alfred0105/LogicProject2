@@ -1618,95 +1618,17 @@ Object.assign(CircuitSimulator.prototype, {
     /**
      * 모듈 컴포넌트 우클릭 컨텍스트 메뉴
      */
+    // [DEPRECATED] Handled by ContextMenuManager
     showModuleContextMenu(e, component) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // 기존 메뉴 제거
-        this.hideContextMenu();
-
-        const type = component.getAttribute('data-type');
-        const isPackage = component.classList.contains('package-comp');
-
-        // 컨텍스트 메뉴 생성
-        const menu = document.createElement('div');
-        menu.className = 'context-menu';
-        menu.id = 'component-context-menu';
-
-        let menuHTML = '';
-
-        if (isPackage) {
-            menuHTML += `
-                <div class="context-menu-item" onclick="sim.editModuleFromContextMenu('${component.id}')">
-                    <span class="icon">✏️</span>
-                    <span>모듈 내부 수정</span>
-                </div>
-                <div class="context-menu-divider"></div>
-            `;
-        }
-
-        menuHTML += `
-            <div class="context-menu-item" onclick="sim.duplicateComponent('${component.id}')">
-                <span class="icon">📋</span>
-                <span>복제</span>
-            </div>
-            <div class="context-menu-divider"></div>
-            <div class="context-menu-item danger" onclick="sim.deleteComponent('${component.id}')">
-                <span class="icon">🗑️</span>
-                <span>삭제</span>
-            </div>
-        `;
-
-        menu.innerHTML = menuHTML;
-        document.body.appendChild(menu);
-
-        // 위치 설정
-        menu.style.left = e.clientX + 'px';
-        menu.style.top = e.clientY + 'px';
-
-        // 화면 밖으로 나가지 않도록 조정
-        const rect = menu.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-            menu.style.left = (e.clientX - rect.width) + 'px';
-        }
-        if (rect.bottom > window.innerHeight) {
-            menu.style.top = (e.clientY - rect.height) + 'px';
-        }
-
-        // 표시 애니메이션
-        requestAnimationFrame(() => {
-            menu.classList.add('visible');
-
-            // [재설계] Focus-Blur 시스템 적용 (SelectionManager와 동일)
-            menu.setAttribute('tabindex', '-1');
-            menu.style.outline = 'none';
-            menu.focus();
-
-            // 포커스 해제(Blur) 시 메뉴 닫기 및 제거
-            const blurHandler = (e) => {
-                // 메뉴 내부 클릭 시 닫지 않음
-                if (e.relatedTarget && menu.contains(e.relatedTarget)) return;
-
-                // 메뉴 닫기
-                this.hideContextMenu(); // setTimeout 불필요 (mousedown 방지로 포커스 유지됨)
-            };
-            menu.addEventListener('blur', blurHandler, true);
-
-            // [안전장치] 메뉴 내부 클릭 시 포커스 유지
-            menu.onmousedown = (e) => e.preventDefault();
-        });
-
-        // [Refactor] 외부 클릭 감지는 Focus-Blur 시스템으로 대체됨
+        // No-op
     },
 
     /**
      * 컨텍스트 메뉴 숨기기
      */
     hideContextMenu() {
-        const menu = document.getElementById('component-context-menu');
-        if (menu) {
-            menu.classList.remove('visible');
-            setTimeout(() => menu.remove(), 150);
+        if (this.contextMenuManager) {
+            this.contextMenuManager.close();
         }
     },
 
