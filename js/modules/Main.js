@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 시뮬레이터 인스턴스 생성
     window.sim = new CircuitSimulator();
 
+    // NetManager (회로 연결 관리) 초기화
+    if (window.NetManager) {
+        window.sim.netManager = new NetManager(window.sim);
+    }
+
     // 컨텍스트 메뉴 시스템 초기화 (통합 매니저)
     if (window.ContextMenuManager) {
         window.sim.contextMenuManager = new ContextMenuManager(window.sim);

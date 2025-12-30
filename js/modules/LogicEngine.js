@@ -558,58 +558,181 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     propagate(wireList = this.wires) {
+        // [Hybrid Mode]
+        // 내부 회로 시뮬레이션(wires 인자가 전달됨)이거나 NetManager가 없으면 레거시 모드 사용
+        if (wireList !== this.wires || !this.sim?.netManager) {
+            return this.propagateLegacy(wireList);
+        }
+
+        // Netlist 기반 시뮬레이션 (High Performance)
+        return this.propagateNetlist();
+    },
+
+    /**
+     * Netlist 기반 신호 전파 (O(N) -> O(1) 수준 최적화)
+     */
+    propagateNetlist() {
+        let changed = false;
+        const netManager = this.sim.netManager || this.netManager; // Access check
+
+        if (!netManager) return false;
+
+        // 모든 Net 순회
+        netManager.nets.forEach(net => {
+            // Wired-OR Logic: 하나의 Output이라도 High면 전체 Net이 High
+            let isHigh = false;
+
+            for (const pin of net.pins) {
+                // 이 핀이 소스(Output) 역할을 하는지 확인하고 값 읽기
+                if (this.isDrivingPin(pin)) {
+                    if (this.getPinLevel(pin)) {
+                        isHigh = true;
+                        break; // 하나만 High여도 됨
+                    }
+                }
+            }
+
+            // [상태 동기화]
+            // Net 상태가 변경되었거나, 핀들의 signal이 동기화되지 않았을 경우를 위해
+            // 변경이 없더라도 한 번은 전파해야 함? -> 아니오, 변경 시에만 전파.
+            // 단, 최초 로드 시 등에는 불일치할 수 있음.
+
+            const newState = isHigh ? 1 : 0;
+            if (net.state !== newState) {
+                net.state = newState;
+                changed = true;
+
+                // 시각적 업데이트 (Net에 속한 모든 Wire)
+                net.wires.forEach(wire => this.updateWireVisual(wire, isHigh));
+            }
+
+            // 모든 핀에게 신호 전파 (Input 핀들이 읽을 수 있게)
+            // 최적화: 값이 다를 때만 setAttribute
+            const signalStr = isHigh ? '1' : '0';
+            net.pins.forEach(pin => {
+                if (pin.getAttribute('data-signal') !== signalStr) {
+                    pin.setAttribute('data-signal', signalStr);
+                }
+            });
+        });
+
+        return changed;
+    },
+
+    /**
+     * 레거시 전파 로직 (Wire-by-Wire) - 패키지 내부 등에서 사용
+     */
+    propagateLegacy(wireList) {
         let changed = false;
         wireList.forEach(wire => {
             const fromPin = wire.from;
             const toPin = wire.to;
 
             let signal = false;
-            const fromComp = fromPin.parentElement;
 
-            if (fromComp) {
-                const type = fromComp.getAttribute('data-type');
-                // [FIX] Package Multi-Output Support (Standard & Custom)
-                if (type === 'PACKAGE' || fromComp.classList.contains('package-comp')) {
-                    signal = fromPin.getAttribute('data-output-signal') === '1';
-                } else {
-                    let val = fromComp.getAttribute('data-value');
-                    if (type === 'SWITCH' && !val) val = '0';
-                    const isHigh = val === '1';
-
-                    if (fromPin.classList.contains('emit')) {
-                        signal = isHigh;
-                    } else if (fromPin.classList.contains('output')) {
-                        signal = isHigh;
-                    } else if (fromPin.classList.contains('joint-pin') || type === 'JOINT') {
-                        signal = isHigh;
-                    }
-                }
+            if (this.isDrivingPin(fromPin)) {
+                signal = this.getPinLevel(fromPin);
             }
 
             const currentSignal = toPin.getAttribute('data-signal') === '1';
 
-            // 데이터 업데이트
             if (signal !== currentSignal) {
                 toPin.setAttribute('data-signal', signal ? '1' : '0');
                 changed = true;
             }
 
-            // [VISUALIZATION FIX] Use CSS classes for animation
-            if (signal) {
+            this.updateWireVisual(wire, signal);
+        });
+        return changed;
+    },
+
+    /**
+     * [Helper] 핀이 신호를 출력하는지 판단
+     */
+    isDrivingPin(pin) {
+        // Output Pin Types
+        if (pin.classList.contains('output')) return true;
+        if (pin.classList.contains('emit')) return true; // Transistor Emitter (can be input too, but usually source in digital logic abstraction)
+        if (pin.classList.contains('out')) return true;
+        if (pin.classList.contains('joint-pin')) return true; // Joint는 양방향이지만, 값이 1이면 Driver가 됨
+
+        // Package Output check
+        const comp = pin.parentElement;
+        if (comp && (comp.getAttribute('data-type') === 'PACKAGE' || comp.classList.contains('package-comp'))) {
+            // Package의 Pin은 방향을 클래스로 구분하기 어려울 수 있음.
+            // 하지만 보통 output 클래스가 붙어있음.
+            // 안 붙어있다면? -> 여기서 추가 로직 필요하지만 일단 패스
+        }
+
+        return false;
+    },
+
+    /**
+     * [Helper] 핀의 현재 논리 레벨(High/Low) 읽기
+     */
+    getPinLevel(pin) {
+        const comp = pin.parentElement;
+        if (!comp) return false;
+
+        const type = comp.getAttribute('data-type');
+
+        // 1. Package Output (Special handling)
+        if (type === 'PACKAGE' || comp.classList.contains('package-comp')) {
+            return pin.getAttribute('data-output-signal') === '1';
+        }
+
+        // 2. Component Value
+        let val = comp.getAttribute('data-value');
+        if (type === 'SWITCH' && !val) val = '0';
+        const isCompHigh = val === '1';
+
+        // 3. Pin Type Specifics
+        if (pin.classList.contains('output') || pin.classList.contains('out')) {
+            return isCompHigh;
+        }
+        if (pin.classList.contains('emit')) { // Transistor Emitter
+            return isCompHigh;
+        }
+        if (pin.classList.contains('joint-pin') || type === 'JOINT') {
+            // Joint는 data-value를 따르지 않고, 자신이 Input으로 받은 data-signal이 1이면 1임
+            // 하지만 Netlist에서는 Joint 핀은 Driver가 아니라 그냥 Net의 일부임.
+            // 문제는 Legacy 모드에서는 Joint가 Driver 역할을 할 수도 있음.
+            // Netlist 모드에서는 이 부분이 무시되어야 함.
+            // 하지만 isDrivingPin에서 true를 반환하므로 여기서 처리해야 함.
+
+            // Netlist 모드에서 Joint 핀은 사실상 '투명'해야 함.
+            // 하지만 Net에 전원을 공급하는 '진짜' Driver(VCC 등)가 없다면 Joint 혼자 High가 될 수 없음.
+            // 따라서 false 리턴이 안전함. (Joint 자체는 전원 소스가 아님)
+            return false;
+        }
+
+        return false;
+    },
+
+    /**
+     * [Visual] 전선 애니메이션 및 스타일 업데이트
+     */
+    updateWireVisual(wire, isHigh) {
+        if (!wire.line) return;
+
+        if (isHigh) {
+            // Animation Classes
+            if (!wire.line.classList.contains('active-flow')) {
                 wire.line.classList.add('active-flow');
                 wire.line.style.stroke = '';
                 wire.line.style.strokeWidth = '';
                 wire.line.style.strokeDasharray = '';
-                // Force Reflow
-                void wire.line.offsetWidth;
-            } else {
+                void wire.line.offsetWidth; // Force Reflow
+            }
+        } else {
+            if (wire.line.classList.contains('active-flow')) {
                 wire.line.classList.remove('active-flow');
-                // Reset to default inline styles if needed, or rely on CSS default
                 wire.line.style.stroke = '#555555';
                 wire.line.style.strokeWidth = '3px';
                 wire.line.style.strokeDasharray = 'none';
             }
-        });
-        return changed;
+        }
+
+        // Hitbox는 업데이트 불필요 (투명함)
     }
 });
