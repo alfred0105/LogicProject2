@@ -50,32 +50,6 @@ Object.assign(CircuitSimulator.prototype, {
         }
         if (!this.contextMenu) return;
 
-        // [구조적 개선] 투명 오버레이 생성 (확실한 닫기 처리용)
-        let overlay = document.getElementById('context-menu-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'context-menu-overlay';
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100vw';
-            overlay.style.height = '100vh';
-            overlay.style.zIndex = '99998'; // 메뉴 바로 아래
-            overlay.style.cursor = 'default';
-            // 오버레이 클릭 시 닫기
-            overlay.onclick = (e) => {
-                e.stopPropagation();
-                this.hideContextMenu();
-            };
-            // 오버레이네 우클릭 방지 (브라우저 기본 메뉴 방지)
-            overlay.oncontextmenu = (e) => {
-                e.preventDefault();
-                this.hideContextMenu();
-            };
-            document.body.appendChild(overlay);
-        }
-        overlay.style.display = 'block';
-
         // LED Color Options Visibility
         const hasLED = this.selectedComponents.some(comp =>
             comp.getAttribute('data-type') === 'LED'
@@ -85,7 +59,6 @@ Object.assign(CircuitSimulator.prototype, {
         });
 
         this.contextMenu.style.display = 'block';
-        this.contextMenu.style.zIndex = '99999'; // 오버레이보다 위
         this.contextMenu.style.top = y + 'px';
 
         const menuRect = this.contextMenu.getBoundingClientRect();
@@ -95,26 +68,50 @@ Object.assign(CircuitSimulator.prototype, {
             this.contextMenu.style.left = x + 'px';
         }
 
-        // 기존 리스너 방식 제거 (오버레이가 처리하므로 불필요)
+        // [Global Event Listener]
+        // 캡처링(capture: true)을 사용하여 다른 요소의 stopPropagation을 무시하고
+        // 최상위에서 이벤트를 감지하여 메뉴를 닫습니다.
+
+        // 기존 핸들러 제거 (안전장치)
         if (this._ctxMenuHandler) {
-            document.removeEventListener('mousedown', this._ctxMenuHandler);
+            document.removeEventListener('mousedown', this._ctxMenuHandler, true); // true for capture
             this._ctxMenuHandler = null;
         }
+
+        // 새 핸들러 정의
+        this._ctxMenuHandler = (e) => {
+            // 메뉴 내부 클릭 시에는 닫지 않음
+            if (e.target.closest('#context-menu') || e.target.closest('.context-menu')) {
+                return;
+            }
+            // 그 외 모든 클릭(빈 공간, 다른 컴포넌트 등) 시 메뉴 닫기
+            this.hideContextMenu();
+        };
+
+        // 캡처링 단계에서 이벤트 등록 (capture: true)
+        // setTimeout을 사용하여 현재 클릭 이벤트(메뉴 여는 클릭)가 즉시 닫기 로직을 트리거하지 않도록 함
+        setTimeout(() => {
+            document.addEventListener('mousedown', this._ctxMenuHandler, true);
+        }, 50);
     },
 
     hideContextMenu() {
-        // 오버레이 숨기기
-        const overlay = document.getElementById('context-menu-overlay');
-        if (overlay) {
-            overlay.style.display = 'none';
-        }
-
         if (!this.contextMenu) {
             this.contextMenu = document.getElementById('context-menu');
         }
         if (this.contextMenu) {
             this.contextMenu.style.display = 'none';
         }
+
+        // 핸들러 정리 (메모리 누수 방지)
+        if (this._ctxMenuHandler) {
+            document.removeEventListener('mousedown', this._ctxMenuHandler, true);
+            this._ctxMenuHandler = null;
+        }
+
+        // 오버레이 제거 (이전 코드의 잔재가 있다면 삭제)
+        const overlay = document.getElementById('context-menu-overlay');
+        if (overlay) overlay.remove();
 
         // TabManager 등 다른 메뉴도 같이 닫기
         const dynamicMenu = document.getElementById('component-context-menu');
