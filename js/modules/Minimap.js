@@ -10,7 +10,6 @@ Object.assign(CircuitSimulator.prototype, {
     initMinimap() {
         // 중복 생성 방지
         if (this.minimapContainer && document.getElementById('minimap-container')) {
-            console.log('[Minimap] Already initialized');
             return;
         }
 
@@ -69,8 +68,6 @@ Object.assign(CircuitSimulator.prototype, {
         if (!document.getElementById('minimap-styles')) {
             this.addMinimapStyles();
         }
-
-        console.log('[Minimap] Initialized');
     },
 
     /**
@@ -446,5 +443,3 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
-
-console.log('[Minimap] Module loaded');

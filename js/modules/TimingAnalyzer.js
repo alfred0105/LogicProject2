@@ -20,7 +20,6 @@ Object.assign(CircuitSimulator.prototype, {
         };
 
         this.createTimingPanel();
-        console.log('[TimingAnalyzer] Initialized');
     },
 
     /**
@@ -759,7 +758,38 @@ Object.assign(CircuitSimulator.prototype, {
 
         this.showTimingPanel();
         this.showToast(`"${type}" 타이밍 추적 추가됨`, 'success');
+    },
+
+    /**
+     * 신호 선택기 표시 (컴포넌트 목록에서 선택)
+     */
+    showSignalPicker() {
+        // 현재 회로의 컴포넌트 목록 표시
+        const components = this.components.filter(c => {
+            const type = c.getAttribute('data-type');
+            return ['SWITCH', 'CLOCK', 'LED', 'AND', 'OR', 'NOT', 'NAND', 'NOR', 'XOR', 'XNOR', 'PACKAGE'].includes(type) ||
+                c.classList.contains('package-comp');
+        });
+
+        if (components.length === 0) {
+            this.showToast('추적 가능한 컴포넌트가 없습니다', 'warning');
+            return;
+        }
+
+        // 간단한 선택 다이얼로그
+        const items = components.map(c => {
+            const type = c.getAttribute('data-type');
+            const id = c.id.substring(0, 10);
+            return `${type} (${id})`;
+        });
+
+        const selected = prompt('추적할 신호를 선택하세요:\n\n' + items.map((item, i) => `${i + 1}. ${item}`).join('\n') + '\n\n번호 입력:');
+
+        if (selected) {
+            const index = parseInt(selected) - 1;
+            if (index >= 0 && index < components.length) {
+                this.addComponentToTiming(components[index]);
+            }
+        }
     }
 });
-
-console.log('[TimingAnalyzer] Module loaded');

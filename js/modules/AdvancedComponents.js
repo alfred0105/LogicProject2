@@ -620,5 +620,3 @@ advancedComponentStyles.textContent = `
     }
 `;
 document.head.appendChild(advancedComponentStyles);
-
-console.log('[AdvancedComponents] 7-Segment, 4-bit Counter, Keypad loaded');

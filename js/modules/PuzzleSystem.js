@@ -16,7 +16,6 @@ Object.assign(CircuitSimulator.prototype, {
         };
 
         this.createPuzzlePanel();
-        console.log('[PuzzleSystem] Initialized with', this.puzzleData.puzzles.length, 'puzzles');
     },
 
     /**
@@ -734,8 +733,16 @@ Object.assign(CircuitSimulator.prototype, {
         this.puzzleData.isActive = true;
         this.hidePuzzlePanel();
 
-        // 캔버스 초기화
-        this.clearCanvas();
+        // 캔버스 초기화 (모든 컴포넌트/와이어 삭제)
+        this.components.slice().forEach(comp => {
+            if (comp && comp.parentElement) comp.remove();
+        });
+        this.components = [];
+        this.wires.forEach(wire => {
+            if (wire.path && wire.path.parentElement) wire.path.remove();
+        });
+        this.wires = [];
+        this.selectedComponents = [];
 
         // 입력 스위치 자동 배치
         puzzle.constraints.inputs.forEach((inputName, i) => {
@@ -989,8 +996,16 @@ Object.assign(CircuitSimulator.prototype, {
         const styles = document.getElementById('puzzle-mode-styles');
         if (styles) styles.remove();
 
-        // 캔버스 초기화
-        this.clearCanvas();
+        // 캔버스 초기화 (모든 컴포넌트/와이어 삭제)
+        this.components.slice().forEach(comp => {
+            if (comp && comp.parentElement) comp.remove();
+        });
+        this.components = [];
+        this.wires.forEach(wire => {
+            if (wire.path && wire.path.parentElement) wire.path.remove();
+        });
+        this.wires = [];
+        this.selectedComponents = [];
     },
 
     /**
@@ -1004,5 +1019,3 @@ Object.assign(CircuitSimulator.prototype, {
         this.puzzlePanel.style.display = 'none';
     }
 });
-
-console.log('[PuzzleSystem] Module loaded');
