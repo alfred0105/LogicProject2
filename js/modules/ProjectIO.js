@@ -151,10 +151,10 @@ Object.assign(CircuitSimulator.prototype, {
                         label: c.querySelector('.comp-label')?.innerText
                     })),
                     wires: comp.internals.wires.map(w => ({
-                        fromCompId: w.from.parentElement.id,
-                        fromPinClass: w.from.classList[1],
-                        toCompId: w.to.parentElement.id,
-                        toPinClass: w.to.classList[1]
+                        fromCompId: w.from.parentElement?.id,
+                        fromPinClass: w.from.classList?.[1],
+                        toCompId: w.to.parentElement?.id,
+                        toPinClass: w.to.classList?.[1]
                     }))
                 };
             }

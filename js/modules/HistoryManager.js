@@ -34,12 +34,20 @@ Object.assign(CircuitSimulator.prototype, {
                 y: parseFloat(comp.style.top),
                 value: comp.getAttribute('data-value')
             })),
-            wires: this.wires.map(wire => ({
-                fromId: wire.from.parentElement.id,
-                fromPinClass: wire.from.classList[1],
-                toId: wire.to.parentElement.id,
-                toPinClass: wire.to.classList[1]
-            }))
+            wires: this.wires.map(wire => {
+                // [Fix] VirtualJoint 호환성
+                const isFromJoint = wire.from instanceof window.VirtualJoint;
+                const isToJoint = wire.to instanceof window.VirtualJoint;
+
+                return {
+                    fromId: isFromJoint ? wire.from.id : wire.from.parentElement?.id,
+                    fromPinClass: isFromJoint ? 'virtual-joint' : wire.from.classList?.[1],
+                    toId: isToJoint ? wire.to.id : wire.to.parentElement?.id,
+                    toPinClass: isToJoint ? 'virtual-joint' : wire.to.classList?.[1],
+                    fromIsJoint: isFromJoint,
+                    toIsJoint: isToJoint
+                };
+            })
         };
 
         const stateStr = JSON.stringify(state);
