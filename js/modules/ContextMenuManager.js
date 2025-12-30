@@ -2,14 +2,13 @@
  * 모듈: 중앙 집중식 컨텍스트 메뉴 관리자 (ContextMenuManager)
  * - 모든 우클릭 메뉴를 통합 관리
  * - 동적 DOM 생성 및 위치 자동 보정
- * - 키보드 네비게이션 지원
- * - 애니메이션 및 글래스모피즘 스타일
+ * - 서브메뉴 지원
  */
 class ContextMenuManager {
     constructor(sim) {
         this.sim = sim;
         this.activeMenu = null;
-        this.overlay = null;
+        this.activeSubmenu = null; // 현재 열린 서브메뉴
 
         // 전역 클릭 감지 바인딩
         this._handleGlobalClick = this._handleGlobalClick.bind(this);
@@ -19,133 +18,152 @@ class ContextMenuManager {
     }
 
     init() {
-        // 기존 메뉴들 제거 (청소)
         const oldMenus = document.querySelectorAll('.context-menu, #context-menu, #component-context-menu');
         oldMenus.forEach(el => el.remove());
 
-        // 전역 우클릭 리스너 등록 (Capture 단계)
-        // 기존 컴포넌트들의 stopPropagation을 무시하고 최우선으로 처리하기 위해 true 사용
+        // 전역 우클릭 리스너 (Capture)
         document.addEventListener('contextmenu', (e) => this.handleContextMenu(e), true);
     }
 
-    /**
-     * 우클릭 이벤트 핸들링 (진입점)
-     */
     handleContextMenu(e) {
-        // Shift 키를 누르면 브라우저 기본 메뉴 허용 (디버깅용)
         if (e.shiftKey) return;
-
         e.preventDefault();
 
-        // 대상 식별
         const target = e.target;
 
-        // 1. 컴포넌트 클릭
         const component = target.closest('.component');
         if (component) {
             this.showComponentMenu(e, component);
             return;
         }
 
-        // 2. 와이어 클릭
         const wire = target.closest('.wire-path');
         if (wire) {
             this.showWireMenu(e, wire);
             return;
         }
 
-        // 3. 빈 공간 클릭 (워크스페이스)
         if (target.closest('#workspace') || target.id === 'workspace' || target.closest('#module-canvas')) {
             this.showWorkspaceMenu(e);
             return;
         }
 
-        // 그 외 영역은 메뉴 닫기
         this.close();
     }
 
-    /**
-     * 컴포넌트 메뉴 항목 정의 및 표시
-     */
     showComponentMenu(e, component) {
         const type = component.getAttribute('data-type');
         const isSelected = component.classList.contains('selected');
 
-        // 선택되지 않은 상태에서 우클릭 시, 해당 컴포넌트만 선택 (또는 추가 선택 로직)
         if (!isSelected) {
             this.sim.selectComponent(component, false);
         }
 
+        const selectedCount = this.sim.selectedComponents ? this.sim.selectedComponents.length : 1;
         const items = [];
 
-        // 1. 모듈 편집 (패키지인 경우)
+        // 1. 모듈 편집
         if (type === 'PACKAGE') {
             items.push({
                 label: '모듈 내부 수정',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
-                action: () => this.sim.openModuleEditor ? this.sim.openModuleEditor(component) : null
+                icon: '✏️',
+                action: () => this.sim.openModuleEditor && this.sim.openModuleEditor(component)
             });
             items.push({ separator: true });
         }
 
-        // 2. LED 색상 변경 (LED인 경우)
-        if (type === 'LED') {
-            items.push({
-                label: '색상 변경',
-                icon: '🎨',
-                submenu: [
-                    { label: 'Red', action: () => this.sim.setLEDColor('red'), icon: '🔴' },
-                    { label: 'Green', action: () => this.sim.setLEDColor('green'), icon: '🟢' },
-                    { label: 'Blue', action: () => this.sim.setLEDColor('blue'), icon: '🔵' },
-                    { label: 'Yellow', action: () => this.sim.setLEDColor('yellow'), icon: '🟡' },
-                    { label: 'White', action: () => this.sim.setLEDColor('white'), icon: '⚪' }
-                ]
-            });
-            items.push({ separator: true });
-        }
-
-        // 3. 기본 편집기능
+        // 2. 기본 편집 (복사/붙여넣기/복제)
         items.push({
             label: '복사',
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+            icon: this._getIconSVG('copy'),
             shortcut: 'Ctrl+C',
             action: () => this.sim.copySelection()
         });
-
         items.push({
             label: '복제',
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+            icon: this._getIconSVG('duplicate'),
             shortcut: 'Ctrl+D',
             action: () => this.sim.duplicateSelection()
         });
 
+        // 3. LED 색상 (서브메뉴)
+        const hasLED = this.sim.selectedComponents.some(c => c.getAttribute('data-type') === 'LED');
+        if (hasLED) {
+            items.push({ separator: true });
+            items.push({
+                label: 'LED 색상',
+                icon: '🎨',
+                submenu: [
+                    { label: '빨강 LED', icon: '🔴', action: () => this.sim.setLEDColor('red') },
+                    { label: '초록 LED', icon: '🟢', action: () => this.sim.setLEDColor('green') },
+                    { label: '파랑 LED', icon: '🔵', action: () => this.sim.setLEDColor('blue') },
+                    { label: '노랑 LED', icon: '🟡', action: () => this.sim.setLEDColor('yellow') },
+                    { label: '흰색 LED', icon: '⚪', action: () => this.sim.setLEDColor('white') }
+                ]
+            });
+        }
+
+        // 4. 정렬 및 배치 (다중 선택 시)
+        if (selectedCount > 1) {
+            items.push({ separator: true });
+            items.push({
+                label: '정렬',
+                icon: this._getIconSVG('align'),
+                submenu: [
+                    { label: '수평 정렬', icon: '━', action: () => this.sim.alignSelectedHorizontal() },
+                    { label: '수직 정렬', icon: '┃', action: () => this.sim.alignSelectedVertical() }
+                ]
+            });
+            items.push({
+                label: '균등 배치',
+                icon: this._getIconSVG('distribute'),
+                submenu: [
+                    { label: '수평 균등', icon: '⬌', action: () => this.sim.distributeHorizontal() },
+                    { label: '수직 균등', icon: '⬍', action: () => this.sim.distributeVertical() }
+                ]
+            });
+        }
+
         items.push({ separator: true });
 
+        // 5. 변환 (회전/반전)
+        items.push({
+            label: '회전',
+            icon: this._getIconSVG('rotate'),
+            shortcut: 'R',
+            action: () => this.sim.rotateSelected()
+        });
+        items.push({ label: '좌우 반전', icon: '↔️', action: () => this.sim.flipHorizontal() });
+        items.push({ label: '상하 반전', icon: '↕️', action: () => this.sim.flipVertical() });
+
+        // 6. 타이밍 추적 (단일 선택)
+        if (selectedCount === 1 && this.sim.addComponentToTiming) {
+            items.push({ separator: true });
+            items.push({ label: '📈 타이밍 추적', action: () => this.sim.addComponentToTiming(component) });
+        }
+
+        // 7. 삭제 및 정보
+        items.push({ separator: true });
         items.push({
             label: '삭제',
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+            icon: this._getIconSVG('trash'),
             shortcut: 'Del',
             danger: true,
             action: () => this.sim.deleteSelected()
         });
 
-        // 4. 정보 보기 (마지막)
         items.push({ separator: true });
         const info = this.sim.getComponentInfo(type);
         items.push({
-            label: `${info.name || type} 정보`,
-            icon: 'info', // TODO: SVG로 교체 가능
+            label: '정보 보기', // 이름이 너무 길어질 수 있으므로 고정
+            icon: 'ℹ️',
             action: () => this.sim.updateComponentInfoPanel(component)
         });
 
         this.open(e.clientX, e.clientY, items);
     }
 
-    /**
-     * 와이어 메뉴
-     */
     showWireMenu(e, wireEl) {
-        // 와이어 객체 찾기
         const wire = this.sim.wires.find(w => w.line === wireEl)
             || (this.sim.moduleWires && this.sim.moduleWires.find(w => w.line === wireEl));
 
@@ -154,22 +172,12 @@ class ContextMenuManager {
         const items = [
             {
                 label: '전선 삭제',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>',
+                icon: this._getIconSVG('trash'),
                 danger: true,
                 action: () => {
                     this.sim.removeWire(wire);
-                    // 모듈 모드일 때는 저장 처리 추가 필요
                     if (this.sim.saveCurrentModuleTabState) this.sim.saveCurrentModuleTabState();
                     if (this.sim.saveState) this.sim.saveState();
-                }
-            },
-            {
-                label: 'Joint 추가',
-                icon: '⚫',
-                action: () => {
-                    // WireManager에 insertJointOnWire가 구현되어 있어야 함
-                    // 좌표 계산 필요 (복잡하므로 단순히 기능이 있다고 가정하거나, WireManager의 기능을 호출)
-                    // 여기서는 일단 패스하거나 추후 구현
                 }
             }
         ];
@@ -177,28 +185,28 @@ class ContextMenuManager {
         this.open(e.clientX, e.clientY, items);
     }
 
-    /**
-     * 빈 공간(Workspace) 메뉴
-     */
     showWorkspaceMenu(e) {
+        // 클립보드 확인
+        const hasClipboard = this.sim.clipboard && this.sim.clipboard.length > 0;
+
         const items = [
             {
                 label: '붙여넣기',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>',
+                icon: this._getIconSVG('paste'),
                 shortcut: 'Ctrl+V',
-                disabled: !this.sim.clipboard || this.sim.clipboard.length === 0,
+                disabled: !hasClipboard,
                 action: () => this.sim.pasteFromClipboard()
             },
             { separator: true },
             {
                 label: '모두 선택',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>',
+                icon: this._getIconSVG('select_all'),
                 shortcut: 'Ctrl+A',
                 action: () => this.sim.selectAll()
             },
             {
                 label: '보기 재설정',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                icon: '🔍',
                 action: () => {
                     this.sim.scale = 1;
                     this.sim.panX = 0;
@@ -212,13 +220,27 @@ class ContextMenuManager {
     }
 
     // ===========================================
-    // Core Rendering & Logic
+    // Core Rendering
     // ===========================================
 
     open(x, y, items) {
-        this.close(); // 기존 메뉴 닫기
+        this.close();
 
-        // DOM 생성
+        // 메인 메뉴 생성
+        this.activeMenu = this._renderMenu(items);
+        document.body.appendChild(this.activeMenu);
+
+        // 위치 보정
+        this._positionMenu(this.activeMenu, x, y);
+
+        // 이벤트 바인딩
+        setTimeout(() => {
+            window.addEventListener('mousedown', this._handleGlobalClick, true);
+            window.addEventListener('keydown', this._handleKeyDown, true);
+        }, 0);
+    }
+
+    _renderMenu(items) {
         const menuEl = document.createElement('div');
         menuEl.className = 'cm-container';
 
@@ -257,12 +279,22 @@ class ContextMenuManager {
                 itemEl.appendChild(scEl);
             }
 
-            // Submenu Indicator
+            // Submenu Indicator & Logic
             if (item.submenu) {
                 const arrowEl = document.createElement('span');
                 arrowEl.className = 'cm-arrow';
-                arrowEl.innerHTML = '›'; // SVG로 교체 권장
+                arrowEl.innerHTML = '›';
                 itemEl.appendChild(arrowEl);
+
+                // Hover Event
+                itemEl.addEventListener('mouseenter', () => {
+                    this._openSubmenu(item.submenu, itemEl);
+                });
+            } else {
+                // 다른 아이템 호버 시 열린 서브메뉴 닫기
+                itemEl.addEventListener('mouseenter', () => {
+                    this._closeSubmenu();
+                });
             }
 
             // Click Action
@@ -274,23 +306,62 @@ class ContextMenuManager {
                 };
             }
 
-            // Hover for Submenu (구현 생략 - 심플함을 위해, 필요시 추가)
-            if (item.submenu) {
-                // TODO: 서브메뉴 구현
-                // 마우스 오버 시 서브메뉴 컨테이너 생성 및 표시
-            }
-
             menuEl.appendChild(itemEl);
         });
 
-        document.body.appendChild(menuEl);
-        this.activeMenu = menuEl;
+        return menuEl;
+    }
 
-        // 위치 잡기 (화면 벗어남 방지)
-        // 일단 display: block 상태여야 크기 계산 가능
-        // css class에서 animation 처리
+    _openSubmenu(items, parentItemEl) {
+        this._closeSubmenu(); // 기존 서브메뉴 닫기
 
-        const rect = menuEl.getBoundingClientRect();
+        const submenuEl = this._renderMenu(items);
+        submenuEl.style.zIndex = '10005'; // 메인 메뉴보다 위에 표시
+        document.body.appendChild(submenuEl);
+        this.activeSubmenu = submenuEl;
+
+        // 위치 계산 (부모 아이템의 오른쪽)
+        const rect = parentItemEl.getBoundingClientRect();
+
+        // 서브메뉴 너비 예측 (렌더링 후지만)
+        const subRect = submenuEl.getBoundingClientRect();
+
+        let x = rect.right + 2;
+        let y = rect.top - 4;
+
+        // 화면 오른쪽 넘어가면 왼쪽으로
+        if (x + subRect.width > window.innerWidth) {
+            x = rect.left - subRect.width - 2;
+        }
+
+        // 다시 정확히 보정
+        this._positionMenu(submenuEl, x, y);
+    }
+
+    _closeSubmenu() {
+        if (this.activeSubmenu) {
+            this.activeSubmenu.remove();
+            this.activeSubmenu = null;
+        }
+    }
+
+    close() {
+        this._closeSubmenu();
+        if (this.activeMenu) {
+            const menu = this.activeMenu;
+            this.activeMenu = null;
+            menu.classList.add('closing');
+            menu.addEventListener('animationend', () => menu.remove());
+        }
+
+        window.removeEventListener('mousedown', this._handleGlobalClick, true);
+        window.removeEventListener('keydown', this._handleKeyDown, true);
+    }
+
+    _positionMenu(el, x, y) {
+        // 화면 밖으로 나가지 않도록 조정
+        // 브라우저가 레이아웃 잡을 시간 줌? display가 이미 flex라 정보 있을듯
+        const rect = el.getBoundingClientRect();
         let posX = x;
         let posY = y;
 
@@ -301,35 +372,17 @@ class ContextMenuManager {
             posY = window.innerHeight - rect.height - 10;
         }
 
-        menuEl.style.left = `${posX}px`;
-        menuEl.style.top = `${posY}px`;
+        // 서브메뉴가 왼쪽으로 열릴 때 처리 (간단히)
+        if (posX < 0) posX = 10;
 
-        // 이벤트 바인딩 (닫기용)
-        // setTimeout으로 바인딩을 미뤄서, 메뉴 여는 클릭이 즉시 닫기 이벤트를 유발하지 않게 함
-        setTimeout(() => {
-            window.addEventListener('mousedown', this._handleGlobalClick, true);
-            window.addEventListener('keydown', this._handleKeyDown, true);
-        }, 0);
-    }
-
-    close() {
-        if (this.activeMenu) {
-            const menu = this.activeMenu;
-            this.activeMenu = null;
-
-            // Fade out animation
-            menu.classList.add('closing');
-            menu.addEventListener('animationend', () => menu.remove());
-        }
-
-        // 리스너 해제
-        window.removeEventListener('mousedown', this._handleGlobalClick, true);
-        window.removeEventListener('keydown', this._handleKeyDown, true);
+        el.style.left = `${posX}px`;
+        el.style.top = `${posY}px`;
     }
 
     _handleGlobalClick(e) {
-        // 메뉴 내부 클릭이면 무시
-        if (this.activeMenu && this.activeMenu.contains(e.target)) {
+        // 메뉴나 서브메뉴 내부 클릭이면 무시
+        if ((this.activeMenu && this.activeMenu.contains(e.target)) ||
+            (this.activeSubmenu && this.activeSubmenu.contains(e.target))) {
             return;
         }
         this.close();
@@ -340,7 +393,20 @@ class ContextMenuManager {
             this.close();
         }
     }
+
+    _getIconSVG(name) {
+        const icons = {
+            'copy': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+            'duplicate': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4M16.5 9.4 7.55 4.24M3.29 7 12 12 20.71 7M12 12v9"></path></svg>',
+            'trash': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+            'paste': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>',
+            'select_all': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>',
+            'rotate': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2v2c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8H2z"></path></svg>',
+            'align': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21H3M21 3H3M12 21V3"></path></svg>',
+            'distribute': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2h13M8 22h13M3 6v12M21 6v12"></path></svg>'
+        };
+        return icons[name] || '';
+    }
 }
 
-// 전역 모듈로 등록 (CircuitSimulator 확장이 아님, 별도 클래스)
 window.ContextMenuManager = ContextMenuManager;
