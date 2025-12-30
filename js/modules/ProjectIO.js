@@ -177,8 +177,9 @@ Object.assign(CircuitSimulator.prototype, {
         const wiresData = this.wires.map(wire => {
             let fromCompId, fromPinClass, toCompId, toPinClass;
 
-            // From Node Logic
-            if (window.VirtualJoint && wire.from instanceof window.VirtualJoint) {
+            // From Node Logic - 안전한 VirtualJoint 감지
+            const isFromJoint = !wire.from.closest || (window.VirtualJoint && wire.from instanceof window.VirtualJoint);
+            if (isFromJoint) {
                 fromCompId = wire.from.id;
                 fromPinClass = 'virtual-joint';
             } else {
@@ -188,8 +189,9 @@ Object.assign(CircuitSimulator.prototype, {
                 fromPinClass = wire.from.classList[1];
             }
 
-            // To Node Logic
-            if (window.VirtualJoint && wire.to instanceof window.VirtualJoint) {
+            // To Node Logic - 안전한 VirtualJoint 감지
+            const isToJoint = !wire.to.closest || (window.VirtualJoint && wire.to instanceof window.VirtualJoint);
+            if (isToJoint) {
                 toCompId = wire.to.id;
                 toPinClass = 'virtual-joint';
             } else {
