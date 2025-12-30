@@ -383,9 +383,9 @@ Object.assign(CircuitSimulator.prototype, {
      * [Routing] 직각 경로 계산 (Smart Manhattan)
      */
     updateOrthogonalPath(pathElement, x1, y1, x2, y2) {
-        // 10px Grid Snap for clean lines
-        x1 = Math.round(x1); y1 = Math.round(y1);
-        x2 = Math.round(x2); y2 = Math.round(y2);
+        // 10px Grid Snap for clean lines (시작/끝점 제외한 중간점만)
+        const grid = 10;
+        const snap = (v) => Math.round(v / grid) * grid;
 
         let d = '';
         const dx = x2 - x1;
@@ -396,12 +396,8 @@ Object.assign(CircuitSimulator.prototype, {
             d = `M ${x1} ${y1} L ${x2} ${y2}`;
         }
         else {
-            // Z-Shape (Horizontal First or Vertical First)
-            // 핀의 성격(가로형/세로형)을 알면 좋지만, 일단 거리 기반 판단.
-            // 가로 거리가 더 멀면, 가로로 먼저 간다? (Case by Case)
-            // 보통 회로는 가로로 깁니다. -> Horizontal-Vertical-Horizontal (HVH)
-
-            const midX = Math.round((x1 + x2) / 2 / 10) * 10; // Grid aligned center
+            // Z-Shape: 중간 꺾임점을 그리드에 스냅
+            const midX = snap((x1 + x2) / 2);
             d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
         }
         pathElement.setAttribute('d', d);
@@ -666,18 +662,23 @@ const SmartRouter = {
     },
 
     reconstructPath(node, startReal, endReal, startLead, endLead) {
+        const grid = this.gridSize;
+        const snap = (v) => Math.round(v / grid) * grid;
+
         const path = [];
         let curr = node;
         while (curr) {
-            path.push({ x: curr.x, y: curr.y });
+            path.push({ x: snap(curr.x), y: snap(curr.y) });
             curr = curr.parent;
         }
         path.reverse();
 
-        path.unshift({ x: startLead.x, y: startLead.y });
+        // Lead 포인트도 그리드에 스냅
+        path.unshift({ x: snap(startLead.x), y: snap(startLead.y) });
+        // 실제 핀 위치는 스냅하지 않음 (정확한 연결 유지)
         path.unshift({ x: startReal.x, y: startReal.y });
 
-        path.push({ x: endLead.x, y: endLead.y });
+        path.push({ x: snap(endLead.x), y: snap(endLead.y) });
         path.push({ x: endReal.x, y: endReal.y });
 
         return path;
