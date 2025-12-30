@@ -548,6 +548,17 @@ Object.assign(CircuitSimulator.prototype, {
         this.wires.forEach(w => this.updateWirePath(w));
     },
 
+    // [Compatibility] Legacy method support
+    redrawWires() {
+        this.updateAllWires();
+    },
+
+    handlePinUp(e, node) {
+        if (this.isWiring && node) {
+            this.finishWiring(node);
+        }
+    },
+
     redrawWiresConnectedTo(node, fastMode = false) {
         if (!this.wires) return;
         this.wires.forEach(w => {
