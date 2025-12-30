@@ -39,12 +39,29 @@ Object.assign(CircuitSimulator.prototype, {
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // [UI] 컨텍스트 메뉴 닫기 (강제 캡쳐링)
-        // 다른 요소에서 이벤트를 막아도(stopPropagation) 메뉴가 닫히도록 함
         window.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
+            // console.log('[InputHandler] Global mousedown captured', e.target);
+
+            // 컨텍스트 메뉴 내부 클릭이면 무시
+            if (e.target.closest('#context-menu') || e.target.closest('.context-menu')) {
+                // console.log('[InputHandler] Click inside context menu');
+                return;
+            }
+
+            try {
                 if (typeof this.hideAllContextMenus === 'function') {
+                    // console.log('[InputHandler] Calling hideAllContextMenus');
                     this.hideAllContextMenus();
+                } else {
+                    console.warn('[InputHandler] hideAllContextMenus is not a function');
+                    // 수동으로라도 닫기 시도
+                    const menu = document.getElementById('context-menu');
+                    if (menu) menu.style.display = 'none';
+                    const dynamicMenu = document.getElementById('component-context-menu');
+                    if (dynamicMenu) dynamicMenu.remove();
                 }
+            } catch (err) {
+                console.error('[InputHandler] Error hiding context menu:', err);
             }
         }, { capture: true });
 
