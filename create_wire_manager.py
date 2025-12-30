@@ -1,4 +1,9 @@
 
+import os
+
+file_path = r'c:\Users\ace06\OneDrive\바탕 화면\LogicProject2\js\modules\WireManager.js'
+
+code = r"""
 /**
  * ⚡ Wire Manager Module
  * 전선 생성, 라우팅, 가상 조인트 관리, 시각화 담당
@@ -719,3 +724,9 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
+"""
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("WireManager.js восстановлен.")
