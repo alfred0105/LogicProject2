@@ -50,6 +50,32 @@ Object.assign(CircuitSimulator.prototype, {
         }
         if (!this.contextMenu) return;
 
+        // [구조적 개선] 투명 오버레이 생성 (확실한 닫기 처리용)
+        let overlay = document.getElementById('context-menu-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'context-menu-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.zIndex = '99998'; // 메뉴 바로 아래
+            overlay.style.cursor = 'default';
+            // 오버레이 클릭 시 닫기
+            overlay.onclick = (e) => {
+                e.stopPropagation();
+                this.hideContextMenu();
+            };
+            // 오버레이네 우클릭 방지 (브라우저 기본 메뉴 방지)
+            overlay.oncontextmenu = (e) => {
+                e.preventDefault();
+                this.hideContextMenu();
+            };
+            document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'block';
+
         // LED Color Options Visibility
         const hasLED = this.selectedComponents.some(comp =>
             comp.getAttribute('data-type') === 'LED'
@@ -59,6 +85,7 @@ Object.assign(CircuitSimulator.prototype, {
         });
 
         this.contextMenu.style.display = 'block';
+        this.contextMenu.style.zIndex = '99999'; // 오버레이보다 위
         this.contextMenu.style.top = y + 'px';
 
         const menuRect = this.contextMenu.getBoundingClientRect();
@@ -68,27 +95,20 @@ Object.assign(CircuitSimulator.prototype, {
             this.contextMenu.style.left = x + 'px';
         }
 
-        // [FIX] 외부 클릭 감지하여 닫기
-        // 기존 핸들러 제거
+        // 기존 리스너 방식 제거 (오버레이가 처리하므로 불필요)
         if (this._ctxMenuHandler) {
             document.removeEventListener('mousedown', this._ctxMenuHandler);
             this._ctxMenuHandler = null;
         }
-
-        // 새 핸들러 생성
-        this._ctxMenuHandler = (e) => {
-            // 메뉴 내부 클릭은 무시
-            if (e.target.closest('#context-menu')) return;
-            this.hideContextMenu();
-        };
-
-        // 지연 등록 (현재 이벤트 전파 방지)
-        setTimeout(() => {
-            document.addEventListener('mousedown', this._ctxMenuHandler);
-        }, 50);
     },
 
     hideContextMenu() {
+        // 오버레이 숨기기
+        const overlay = document.getElementById('context-menu-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+
         if (!this.contextMenu) {
             this.contextMenu = document.getElementById('context-menu');
         }
@@ -96,10 +116,11 @@ Object.assign(CircuitSimulator.prototype, {
             this.contextMenu.style.display = 'none';
         }
 
-        // 핸들러 정리
-        if (this._ctxMenuHandler) {
-            document.removeEventListener('mousedown', this._ctxMenuHandler);
-            this._ctxMenuHandler = null;
+        // TabManager 등 다른 메뉴도 같이 닫기
+        const dynamicMenu = document.getElementById('component-context-menu');
+        if (dynamicMenu) {
+            dynamicMenu.classList.remove('visible');
+            setTimeout(() => dynamicMenu.remove(), 100);
         }
     },
 
