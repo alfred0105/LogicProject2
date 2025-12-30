@@ -38,41 +38,32 @@ Object.assign(CircuitSimulator.prototype, {
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // [UI] 컨텍스트 메뉴 닫기 (강제 캡쳐링)
-        window.addEventListener('mousedown', (e) => {
-            // console.log('[InputHandler] Global mousedown captured', e.target);
-
-            // 컨텍스트 메뉴 내부 클릭이면 무시
+        // [구조 개선] 영구적인 메뉴 닫기 감지기 (Single Source of Truth)
+        // 캡처링(capture: true)을 사용하여 모든 클릭 이벤트를 최우선으로 감지
+        const closeMenuHandler = (e) => {
+            // 메뉴 내부 클릭은 무시
             if (e.target.closest('#context-menu') || e.target.closest('.context-menu')) {
-                // console.log('[InputHandler] Click inside context menu');
                 return;
             }
-
-            try {
-                if (typeof this.hideAllContextMenus === 'function') {
-                    // console.log('[InputHandler] Calling hideAllContextMenus');
-                    this.hideAllContextMenus();
-                } else {
-                    console.warn('[InputHandler] hideAllContextMenus is not a function');
-                    // 수동으로라도 닫기 시도
-                    const menu = document.getElementById('context-menu');
-                    if (menu) menu.style.display = 'none';
-                    const dynamicMenu = document.getElementById('component-context-menu');
-                    if (dynamicMenu) dynamicMenu.remove();
-                }
-            } catch (err) {
-                console.error('[InputHandler] Error hiding context menu:', err);
-            }
-        }, { capture: true });
-
-        // 클릭 시 모든 컨텍스트 메뉴 닫기 (백업)
-        window.addEventListener('click', (e) => {
-            // 컨텍스트 메뉴 자체를 클릭한 경우는 제외
-            if (!e.target.closest('#context-menu') && !e.target.closest('.context-menu')) {
-                this.hideContextMenu();
+            // 그 외 모든 클릭 시 메뉴 닫기 시도
+            if (typeof this.hideAllContextMenus === 'function') {
                 this.hideAllContextMenus();
+            } else {
+                // 안전장치: 메서드가 없어도 수동으로 닫기
+                const menu = document.getElementById('context-menu');
+                if (menu) menu.style.display = 'none';
+                const dynamicMenu = document.getElementById('component-context-menu');
+                if (dynamicMenu) {
+                    dynamicMenu.classList.remove('visible');
+                    setTimeout(() => dynamicMenu.remove(), 100);
+                }
             }
-        });
+        };
+
+        // 모든 종류의 터치/클릭 이벤트에 대해 캡처링 리스너 등록
+        window.addEventListener('mousedown', closeMenuHandler, true);
+        window.addEventListener('pointerdown', closeMenuHandler, true);
+        window.addEventListener('touchstart', closeMenuHandler, true);
     },
 
     // [PERFORMANCE] 분리된 위치 표시 업데이트 함수
