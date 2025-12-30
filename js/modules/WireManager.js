@@ -366,6 +366,12 @@ Object.assign(CircuitSimulator.prototype, {
      */
     removeWire(wire) {
         if (!wire) return;
+
+        // [Wire Avoidance] 경로 셀 해제
+        if (wire._pathPoints) {
+            SmartRouter.unregisterPath(wire._pathPoints);
+        }
+
         wire.line.remove();
         wire.hitbox.remove();
 
@@ -542,17 +548,63 @@ window.VirtualJoint = VirtualJoint;
 /**
  * 🧠 Smart Router (A* Pathfinding Implementation)
  * 컴포넌트 회피 및 최적 경로 탐색 (With Lead-out)
- */
 const SmartRouter = {
     gridSize: 10, // 10px 격자
+    usedCells: new Set(), // 사용된 그리드 셀 추적
+    
+    // 셀 키 생성
+    cellKey(x, y) {
+        const gx = Math.round(x / this.gridSize) * this.gridSize;
+        const gy = Math.round(y / this.gridSize) * this.gridSize;
+        return `${gx},${gy}`;
+    },
+    
+    // 경로를 사용된 셀로 등록
+    registerPath(pathPoints) {
+        if (!pathPoints) return;
+        for (const pt of pathPoints) {
+            this.usedCells.add(this.cellKey(pt.x, pt.y));
+        }
+    },
+    
+    // 셀 사용 해제 (와이어 삭제 시)
+    unregisterPath(pathPoints) {
+        if (!pathPoints) return;
+        for (const pt of pathPoints) {
+            this.usedCells.delete(this.cellKey(pt.x, pt.y));
+        }
+    },
+    
+    // 셀이 사용 중인지 확인
+    isCellUsed(x, y) {
+        return this.usedCells.has(this.cellKey(x, y));
+    },
+    
+    // 전체 초기화
+    clearUsedCells() {
+        this.usedCells.clear();
+    },
 
     findPath(start, end, obstacles, startDir = null, endDir = null) {
         // [Feature] Smart Lead-out: 핀 방향으로 20px 직진
         const leadDist = 20;
 
         // 방향에 따른 Lead 포인트 계산
-        const getDirectionalLead = (pt, dir) => {
+        const getDirectionalLead = (pt, dir, target) => {
             if (!dir || leadDist === 0) return { x: pt.x, y: pt.y };
+
+            // 스마트 스킵: Lead-out 방향이 목적지와 반대면 스킵
+            const dx = target.x - pt.x;
+            const dy = target.y - pt.y;
+
+            // 수평 연결(y 비슷)인데 상/하 Lead-out이면 스킵
+            if (Math.abs(dy) < 30 && (dir === 'up' || dir === 'down')) {
+                return { x: pt.x, y: pt.y };
+            }
+            // 수직 연결(x 비슷)인데 좌/우 Lead-out이면 스킵
+            if (Math.abs(dx) < 30 && (dir === 'left' || dir === 'right')) {
+                return { x: pt.x, y: pt.y };
+            }
 
             const offsets = {
                 'left': { dx: -leadDist, dy: 0 },
@@ -565,8 +617,73 @@ const SmartRouter = {
             return { x: pt.x + offset.dx, y: pt.y + offset.dy };
         };
 
-        const sLead = getDirectionalLead(start, startDir);
-        const eLead = getDirectionalLead(end, endDir);
+        const sLead = getDirectionalLead(start, startDir, end);
+        const eLead = getDirectionalLead(end, endDir, start);
+
+        // [Fast Path] 간단한 경로 체크: 직선 또는 단순 직각
+        const trySimplePath = () => {
+            const grid = this.gridSize;
+            const snap = (v) => Math.round(v / grid) * grid;
+
+            // 거의 수평인 경우
+            if (Math.abs(start.y - end.y) < 20) {
+                const midY = snap((start.y + end.y) / 2);
+                // 직선 경로가 장애물에 안 걸리는지 체크
+                const blocked = obstacles.some(obs =>
+                    midY >= obs.top && midY <= obs.bottom &&
+                    Math.min(start.x, end.x) < obs.right && Math.max(start.x, end.x) > obs.left
+                );
+                if (!blocked) {
+                    return [
+                        { x: start.x, y: start.y },
+                        { x: end.x, y: end.y }
+                    ];
+                }
+            }
+
+            // 거의 수직인 경우
+            if (Math.abs(start.x - end.x) < 20) {
+                const midX = snap((start.x + end.x) / 2);
+                const blocked = obstacles.some(obs =>
+                    midX >= obs.left && midX <= obs.right &&
+                    Math.min(start.y, end.y) < obs.bottom && Math.max(start.y, end.y) > obs.top
+                );
+                if (!blocked) {
+                    return [
+                        { x: start.x, y: start.y },
+                        { x: end.x, y: end.y }
+                    ];
+                }
+            }
+
+            // Z-Shape 경로 시도 (중간에서 꺾기)
+            const midX = snap((start.x + end.x) / 2);
+            const zBlocked = obstacles.some(obs => {
+                // 수평선 체크
+                const hLine1 = start.y >= obs.top && start.y <= obs.bottom &&
+                    Math.min(start.x, midX) < obs.right && Math.max(start.x, midX) > obs.left;
+                const hLine2 = end.y >= obs.top && end.y <= obs.bottom &&
+                    Math.min(midX, end.x) < obs.right && Math.max(midX, end.x) > obs.left;
+                // 수직선 체크
+                const vLine = midX >= obs.left && midX <= obs.right &&
+                    Math.min(start.y, end.y) < obs.bottom && Math.max(start.y, end.y) > obs.top;
+                return hLine1 || hLine2 || vLine;
+            });
+
+            if (!zBlocked) {
+                return [
+                    { x: start.x, y: start.y },
+                    { x: midX, y: start.y },
+                    { x: midX, y: end.y },
+                    { x: end.x, y: end.y }
+                ];
+            }
+
+            return null; // A* 필요
+        };
+
+        const simplePath = trySimplePath();
+        if (simplePath) return simplePath;
 
         const sNode = this.toGrid(sLead.x, sLead.y);
         const eNode = this.toGrid(eLead.x, eLead.y);
@@ -617,7 +734,9 @@ const SmartRouter = {
                 if (this.isColliding(n.x, n.y, obstacles)) continue;
 
                 const turnPenalty = (current.dir && current.dir !== n.dir) ? 5 : 0;
-                const gScore = current.g + 10 + turnPenalty;
+                // [Wire Avoidance] 이미 사용된 셀이면 비용 증가 (완전 차단 X)
+                const overlapPenalty = this.isCellUsed(n.x, n.y) ? 50 : 0;
+                const gScore = current.g + 10 + turnPenalty + overlapPenalty;
 
                 const neighborKey = `${n.x},${n.y}`;
                 if (closedSet.has(neighborKey)) continue;
@@ -790,6 +909,33 @@ Object.assign(CircuitSimulator.prototype, {
             }
         });
 
+        // [Wire Avoidance] 비활성화 - 너무 공격적으로 작동하여 경로가 복잡해짐
+        // TODO: 더 스마트한 알고리즘으로 개선 필요
+        /*
+        const wireMargin = 8;
+        this.wires.forEach(otherWire => {
+            if (otherWire === wire) return;
+            const pathStr = otherWire.line?.getAttribute('d');
+            if (!pathStr) return;
+            const points = [];
+            const regex = /([ML])\s*([\d.-]+)\s+([\d.-]+)/g;
+            let match;
+            while ((match = regex.exec(pathStr)) !== null) {
+                points.push({ x: parseFloat(match[2]), y: parseFloat(match[3]) });
+            }
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                obstacles.push({
+                    left: Math.min(p1.x, p2.x) - wireMargin,
+                    right: Math.max(p1.x, p2.x) + wireMargin,
+                    top: Math.min(p1.y, p2.y) - wireMargin,
+                    bottom: Math.max(p1.y, p2.y) + wireMargin
+                });
+            }
+        });
+        */
+
         // A* 실행 (핀 방향 전달)
         const pathPoints = SmartRouter.findPath(start, end, obstacles, startDir, endDir);
 
@@ -797,6 +943,10 @@ Object.assign(CircuitSimulator.prototype, {
             const d = SmartRouter.toPathString(pathPoints);
             wire.line.setAttribute('d', d);
             wire.hitbox.setAttribute('d', d);
+
+            // [Wire Avoidance] 경로를 사용된 셀로 등록
+            SmartRouter.registerPath(pathPoints);
+            wire._pathPoints = pathPoints; // 나중에 삭제 시 사용
         } else {
             // 경로 못 찾으면 기본 라우팅 Fallback
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
