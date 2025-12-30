@@ -865,5 +865,12 @@ Object.assign(CircuitSimulator.prototype, {
      */
     cancelWiring() {
         this.stopWiring();
+    },
+
+    /**
+     * [Alias] 와이어링 중 마우스 이동 핸들러 (InputHandler 연동)
+     */
+    handleWireMove(e) {
+        this.updateTempWire(e);
     }
 });
