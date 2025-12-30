@@ -446,6 +446,31 @@ Object.assign(CircuitSimulator.prototype, {
     },
 
     /**
+     * [Helper] 마우스 이벤트 좌표를 Workspace 좌표로 변환
+     */
+    getMousePosition(e) {
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        
+        // Touch support
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+             clientX = e.changedTouches[0].clientX;
+             clientY = e.changedTouches[0].clientY;
+        }
+
+        const rect = this.workspace.getBoundingClientRect();
+        const scale = this.scale || 1;
+        
+        return {
+            x: (clientX - rect.left) / scale,
+            y: (clientY - rect.top) / scale
+        };
+    },
+
+    /**
      * [Core] 와이어 생성 및 연결
      */
     createWire(fromNode, toNode, { skipSave = false, skipRedraw = false } = {}) {
