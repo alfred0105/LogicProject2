@@ -1678,11 +1678,7 @@ Object.assign(CircuitSimulator.prototype, {
             menu.classList.add('visible');
         });
 
-        // 외부 클릭 시 닫기
-        setTimeout(() => {
-            document.addEventListener('click', this.hideContextMenu.bind(this), { once: true });
-            document.addEventListener('contextmenu', this.hideContextMenu.bind(this), { once: true });
-        }, 100);
+        // [Refactor] 외부 클릭 감지는 InputHandler에서 전역적으로 처리하므로 개별 리스너 제거
     },
 
     /**
