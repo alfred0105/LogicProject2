@@ -127,6 +127,7 @@ Object.assign(CircuitSimulator.prototype, {
      * 프로젝트 데이터를 JSON 객체로 반환 (중요: CloudManager에서 사용)
      */
     exportProjectData() {
+        // Components Data
         const componentsData = this.components.map(comp => {
             const data = {
                 id: comp.id,
@@ -134,7 +135,6 @@ Object.assign(CircuitSimulator.prototype, {
                 x: parseFloat(comp.style.left),
                 y: parseFloat(comp.style.top),
                 value: comp.getAttribute('data-value'),
-                // [FIX] 패키지인 경우 package-id도 저장
                 packageId: comp.getAttribute('data-package-id'),
                 width: parseFloat(comp.style.width) || null,
                 height: parseFloat(comp.style.height) || null
@@ -161,17 +161,46 @@ Object.assign(CircuitSimulator.prototype, {
             return data;
         });
 
-        const wiresData = this.wires.map(wire => {
-            const fromComp = wire.from.closest('.component');
-            const toComp = wire.to.closest('.component');
+        // [New] Virtual Joints Data (Mix into components list with special type)
+        if (this.virtualJoints) {
+            this.virtualJoints.forEach(vj => {
+                componentsData.push({
+                    id: vj.id,
+                    type: 'VIRTUAL_JOINT',
+                    x: vj.x,
+                    y: vj.y
+                });
+            });
+        }
 
-            if (!fromComp || !toComp) return null;
+        // Wires Data
+        const wiresData = this.wires.map(wire => {
+            let fromCompId, fromPinClass, toCompId, toPinClass;
+
+            // From Node Logic
+            if (window.VirtualJoint && wire.from instanceof window.VirtualJoint) {
+                fromCompId = wire.from.id;
+                fromPinClass = 'virtual-joint';
+            } else {
+                const fromComp = wire.from.closest('.component');
+                if (!fromComp) return null;
+                fromCompId = fromComp.id;
+                fromPinClass = wire.from.classList[1];
+            }
+
+            // To Node Logic
+            if (window.VirtualJoint && wire.to instanceof window.VirtualJoint) {
+                toCompId = wire.to.id;
+                toPinClass = 'virtual-joint';
+            } else {
+                const toComp = wire.to.closest('.component');
+                if (!toComp) return null;
+                toCompId = toComp.id;
+                toPinClass = wire.to.classList[1];
+            }
 
             return {
-                fromCompId: fromComp.id,
-                fromPinClass: wire.from.classList[1],
-                toCompId: toComp.id,
-                toPinClass: wire.to.classList[1]
+                fromCompId, fromPinClass, toCompId, toPinClass
             };
         }).filter(w => w !== null);
 
@@ -266,29 +295,45 @@ Object.assign(CircuitSimulator.prototype, {
         if (!projectData) return;
 
         this.currentProjectName = projectData.name || "Untitled";
-        this.updateProjectNameUI(this.currentProjectName); // UI 업데이트
+        this.updateProjectNameUI(this.currentProjectName);
 
-        // 패키지 로드 (프로젝트 종속)
         this.userPackages = projectData.packages || [];
         if (this.updatePackageList) this.updatePackageList();
 
+        // Cleanup
         this.components.forEach(c => c.remove());
         this.components = [];
         this.wires.forEach(w => w.line.remove());
+
+        // [New] Cleanup Virtual Joints
+        if (this.virtualJoints) {
+            this.virtualJoints.forEach(vj => {
+                if (vj.element) vj.element.remove();
+            });
+            this.virtualJoints = [];
+        }
+
         this.wires = [];
         this.wireLayer.innerHTML = '';
 
         const compMap = {};
-        // 내장 패키지 타입 목록
         const builtInPackages = ['HALF_ADDER', 'FULL_ADDER', 'SR_LATCH', 'D_FLIPFLOP'];
 
         if (projectData.components) {
             projectData.components.forEach(cData => {
                 let newComp;
 
-                // [FIX] PACKAGE 타입 또는 내장 패키지 처리
+                // [New] Virtual Joint Support
+                if (cData.type === 'VIRTUAL_JOINT') {
+                    if (this.addVirtualJoint) {
+                        newComp = this.addVirtualJoint(cData.x, cData.y);
+                        newComp.id = cData.id;
+                        compMap[cData.id] = newComp;
+                    }
+                    return;
+                }
+
                 if (cData.type === 'PACKAGE' && cData.packageId !== null && cData.packageId !== undefined) {
-                    // 사용자 정의 패키지 - userPackages에서 복원
                     const pkgIndex = parseInt(cData.packageId);
                     if (this.userPackages && this.userPackages[pkgIndex]) {
                         newComp = this.addUserPackage(pkgIndex);
@@ -297,12 +342,10 @@ Object.assign(CircuitSimulator.prototype, {
                             newComp.style.top = cData.y + 'px';
                         }
                     } else {
-                        // 패키지를 찾을 수 없으면 기본 모듈로 추가
                         this.addModule(cData.type, cData.x, cData.y);
                         newComp = this.components[this.components.length - 1];
                     }
                 } else if (builtInPackages.includes(cData.type)) {
-                    // 내장 패키지 (D_FLIPFLOP 등) - addPackage 함수 사용
                     if (this.addPackage) {
                         newComp = this.addPackage(cData.type);
                         if (newComp) {
@@ -310,12 +353,10 @@ Object.assign(CircuitSimulator.prototype, {
                             newComp.style.top = cData.y + 'px';
                         }
                     } else {
-                        // addPackage가 없으면 기본 모듈로 추가
                         this.addModule(cData.type, cData.x, cData.y);
                         newComp = this.components[this.components.length - 1];
                     }
                 } else {
-                    // 일반 컴포넌트
                     this.addModule(cData.type, cData.x, cData.y);
                     newComp = this.components[this.components.length - 1];
                 }
@@ -331,7 +372,6 @@ Object.assign(CircuitSimulator.prototype, {
                 if (cData.type === 'SWITCH') {
                     const label = newComp.querySelector('.comp-label');
                     if (label) label.innerText = cData.value === '1' ? 'ON' : 'OFF';
-                    // [FIX] background 스타일 대신 클래스 토글 (SVG 충돌 방지)
                     if (cData.value === '1') {
                         newComp.classList.add('switch-on');
                     } else {
@@ -349,16 +389,27 @@ Object.assign(CircuitSimulator.prototype, {
 
         if (projectData.wires) {
             projectData.wires.forEach(wData => {
-                const fromComp = compMap[wData.fromCompId];
-                const toComp = compMap[wData.toCompId];
+                const fromNode = compMap[wData.fromCompId];
+                const toNode = compMap[wData.toCompId];
 
-                if (fromComp && toComp) {
-                    const fromPin = fromComp.querySelector(`.${wData.fromPinClass}`);
-                    const toPin = toComp.querySelector(`.${wData.toPinClass}`);
+                let fromPin, toPin;
 
-                    if (fromPin && toPin) {
-                        this.createWire(fromPin, toPin);
-                    }
+                // From Node Check
+                if (window.VirtualJoint && fromNode instanceof window.VirtualJoint) {
+                    fromPin = fromNode;
+                } else if (fromNode) {
+                    fromPin = fromNode.querySelector(`.${wData.fromPinClass}`);
+                }
+
+                // To Node Check
+                if (window.VirtualJoint && toNode instanceof window.VirtualJoint) {
+                    toPin = toNode;
+                } else if (toNode) {
+                    toPin = toNode.querySelector(`.${wData.toPinClass}`);
+                }
+
+                if (fromPin && toPin) {
+                    this.createWire(fromPin, toPin);
                 }
             });
         }
