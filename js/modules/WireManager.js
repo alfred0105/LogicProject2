@@ -49,11 +49,24 @@ class VirtualJoint {
 
     // 핀 인터페이스 호환 (getPinCenter 등에서 사용)
     getBoundingClientRect() {
-        // SVG 좌표계를 화면 좌표계로 변환해야 함
-        // 하지만 getPinCenter는 다시 역변환을 하므로...
-        // VirtualJoint는 이미 Workspace 좌표계임.
-        // 따라서 특수 처리가 필요함. (isVirtual 확인)
         return null;
+    }
+
+    // [Dom Compatibility Helpers]
+    setAttribute(name, value) {
+        if (this.element) this.element.setAttribute(name, value);
+    }
+
+    getAttribute(name) {
+        return this.element ? this.element.getAttribute(name) : null;
+    }
+
+    get classList() {
+        return this.element ? this.element.classList : { add: () => { }, remove: () => { }, contains: () => false };
+    }
+
+    get parentElement() {
+        return null; // LogicEngine에서 체크 시 안전하게 처리
     }
 }
 
