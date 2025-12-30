@@ -39,12 +39,56 @@ class VirtualJoint {
     onMouseDown(e) {
         if (window.sim.mode === 'pan' || e.button === 1) return;
         e.stopPropagation();
+        this.startDrag(e);
+    }
 
-        // 조인트 드래그 시작 (또는 와이어 시작)
-        // 여기서는 와이어 시작점으로 활용
-        if (window.sim.mode === 'wire' || window.sim.mode === 'edit') {
-            window.sim.handlePinDown(e, this); // 핀처럼 행동
-        }
+    startDrag(e) {
+        const sim = this.manager || window.sim;
+        const startX = e.clientX;
+        const startY = e.clientY;
+        let hasMoved = false;
+
+        const onMove = (evt) => {
+            const dx = evt.clientX - startX;
+            const dy = evt.clientY - startY;
+            if (dx * dx + dy * dy > 9) hasMoved = true;
+
+            const pos = sim.getMousePosition(evt);
+            // Snap to Grid (10px)
+            const gx = Math.round(pos.x / 10) * 10;
+            const gy = Math.round(pos.y / 10) * 10;
+
+            this.x = gx;
+            this.y = gy;
+            if (this.element) {
+                this.element.setAttribute('cx', gx);
+                this.element.setAttribute('cy', gy);
+            }
+            // Smart Routing (Fast Mode) for responsiveness
+            // redrawWires 내부에서 isDragging 등을 체크하므로
+            // 여기서는 강제로 isDragging을 흉내내거나 직접 updateSmartPath 호출이 나음
+            // 하지만 redrawWires()가 가장 안전.
+            sim.isDragging = true;
+            sim.redrawWires();
+            sim.isDragging = false;
+        };
+
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+
+            if (hasMoved) {
+                sim.saveState();
+            } else {
+                // Click Action: Start Wiring from here
+                if (sim.mode === 'wire' || sim.mode === 'edit') {
+                    sim.handlePinDown(e, this);
+                }
+            }
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
     }
 
     // 핀 인터페이스 호환 (getPinCenter 등에서 사용)
@@ -372,6 +416,9 @@ Object.assign(CircuitSimulator.prototype, {
         this.virtualJoints.push(joint);
         this.wireLayer.appendChild(joint.element);
 
+        // [Feature] 조인트 즉시 드래그 (위치 수정 용이성)
+        if (joint.startDrag) joint.startDrag(event);
+
         // 기존 와이어 제거
         const { from, to } = wire;
         this.removeWire(wire);
@@ -492,25 +539,36 @@ window.VirtualJoint = VirtualJoint;
 
 /**
  * 🧠 Smart Router (A* Pathfinding Implementation)
- * 컴포넌트 회피 및 최적 경로 탐색
+ * 컴포넌트 회피 및 최적 경로 탐색 (With Lead-out)
  */
 const SmartRouter = {
-    gridSize: 20, // 그리드 크기 (px)
+    gridSize: 10, // 그리드 크기 (px)
 
-    /**
-     * 경로 탐색 메인 함수
-     * @param {Object} start {x, y}
-     * @param {Object} end {x, y}
-     * @param {Array} obstacles [{left, top, right, bottom}, ...]
-     */
     findPath(start, end, obstacles) {
-        // 좌표를 그리드 단위로 정렬
-        const sNode = this.toGrid(start.x, start.y);
-        const eNode = this.toGrid(end.x, end.y);
+        // [Feature] Lead-out: 핀에서 20px 직진 보장
+        const leadDist = 20;
 
-        // 탐색 범위 제한 (너무 멀리 돌지 않도록. 캔버스 전체는 비효율적)
-        // start와 end를 포함하는 bounding box + padding
-        const padding = 100; // 여유 공간
+        const getSafeLead = (pt) => {
+            const dirs = [
+                { dx: -leadDist, dy: 0 }, { dx: leadDist, dy: 0 },
+                { dx: 0, dy: -leadDist }, { dx: 0, dy: leadDist }
+            ];
+            for (const d of dirs) {
+                const tx = pt.x + d.dx;
+                const ty = pt.y + d.dy;
+                // 장애물 충돌 없고, 맵 범위 내인지 확인
+                if (!this.isColliding(tx, ty, obstacles)) return { x: tx, y: ty };
+            }
+            return { x: pt.x, y: pt.y };
+        };
+
+        const sLead = getSafeLead(start);
+        const eLead = getSafeLead(end);
+
+        const sNode = this.toGrid(sLead.x, sLead.y);
+        const eNode = this.toGrid(eLead.x, eLead.y);
+
+        const padding = 100;
         const bounds = {
             minX: Math.min(start.x, end.x) - padding,
             maxX: Math.max(start.x, end.x) + padding,
@@ -518,27 +576,21 @@ const SmartRouter = {
             maxY: Math.max(start.y, end.y) + padding
         };
 
-        // Open/Closed Set
         const openSet = [];
         const closedSet = new Set();
 
         openSet.push({
-            x: sNode.x,
-            y: sNode.y,
-            g: 0,
-            h: this.heuristic(sNode, eNode),
-            parent: null,
-            dir: null // 진입 방향 (직선 선호용)
+            x: sNode.x, y: sNode.y,
+            g: 0, h: this.heuristic(sNode, eNode),
+            parent: null, dir: null
         });
 
-        // Loop 제한 (무한 루프 방지)
         let loops = 0;
         const maxLoops = 3000;
 
         while (openSet.length > 0) {
-            if (loops++ > maxLoops) return null; // 실패 시 Fallback
+            if (loops++ > maxLoops) return null;
 
-            // f값(g+h)이 가장 낮은 노드 선택
             openSet.sort((a, b) => (a.g + a.h) - (b.g + b.h));
             const current = openSet.shift();
             const key = `${current.x},${current.y}`;
@@ -546,14 +598,10 @@ const SmartRouter = {
             if (closedSet.has(key)) continue;
             closedSet.add(key);
 
-            // 목적지 도달 (근사치 허용)
-            // if (current.x === eNode.x && current.y === eNode.y) {
-            if (Math.abs(current.x - eNode.x) < 2 && Math.abs(current.y - eNode.y) < 2) {
-                // 정확한 끝점으로 보정하여 경로 재구성
-                return this.reconstructPath(current, start, end);
+            if (Math.abs(current.x - eNode.x) < 5 && Math.abs(current.y - eNode.y) < 5) {
+                return this.reconstructPath(current, start, end, sLead, eLead);
             }
 
-            // 이웃 탐색 (상하좌우)
             const neighbors = [
                 { x: current.x, y: current.y - this.gridSize, dir: 'up' },
                 { x: current.x, y: current.y + this.gridSize, dir: 'down' },
@@ -562,14 +610,9 @@ const SmartRouter = {
             ];
 
             for (const n of neighbors) {
-                // 범위 체크
                 if (n.x < bounds.minX || n.x > bounds.maxX || n.y < bounds.minY || n.y > bounds.maxY) continue;
-
-                // 장애물 체크
                 if (this.isColliding(n.x, n.y, obstacles)) continue;
 
-                // 비용 계산
-                // 기본 비용(10) + 방향 전환 페널티(5) -> 직선 선호
                 const turnPenalty = (current.dir && current.dir !== n.dir) ? 5 : 0;
                 const gScore = current.g + 10 + turnPenalty;
 
@@ -581,20 +624,16 @@ const SmartRouter = {
                     if (!existing) {
                         openSet.push({
                             x: n.x, y: n.y,
-                            g: gScore,
-                            h: this.heuristic(n, eNode),
-                            parent: current,
-                            dir: n.dir
+                            g: gScore, h: this.heuristic(n, eNode),
+                            parent: current, dir: n.dir
                         });
                     } else {
-                        existing.g = gScore;
-                        existing.parent = current;
-                        existing.dir = n.dir;
+                        existing.g = gScore; existing.parent = current; existing.dir = n.dir;
                     }
                 }
             }
         }
-        return null; // 경로 못 찾음
+        return null; // Fallback
     },
 
     toGrid(x, y) {
@@ -609,8 +648,6 @@ const SmartRouter = {
     },
 
     isColliding(x, y, obstacles) {
-        // 점(x,y)이 장애물 박스 안에 있는지 확인
-        // 약간의 여유(GridSize/2)를 두어 관통 방지
         const margin = 5;
         for (const obs of obstacles) {
             if (x >= obs.left - margin && x <= obs.right + margin &&
@@ -621,7 +658,7 @@ const SmartRouter = {
         return false;
     },
 
-    reconstructPath(node, startReal, endReal) {
+    reconstructPath(node, startReal, endReal, startLead, endLead) {
         const path = [];
         let curr = node;
         while (curr) {
@@ -630,9 +667,11 @@ const SmartRouter = {
         }
         path.reverse();
 
-        // 시작점과 끝점을 실제 핀 좌표로 교체 (그리드 스냅 보정)
-        path[0] = { x: startReal.x, y: startReal.y };
-        path[path.length - 1] = { x: endReal.x, y: endReal.y };
+        path.unshift({ x: startLead.x, y: startLead.y });
+        path.unshift({ x: startReal.x, y: startReal.y });
+
+        path.push({ x: endLead.x, y: endLead.y });
+        path.push({ x: endReal.x, y: endReal.y });
 
         return path;
     },
@@ -674,8 +713,10 @@ Object.assign(CircuitSimulator.prototype, {
         // 장애물 수집 (캐싱 가능)
         const obstacles = [];
         document.querySelectorAll('.component').forEach(comp => {
-            // 연결된 컴포넌트는 장애물에서 제외 (안 그러면 출발/도착도 못 함)
-            const isConnected = comp.contains(wire.from) || comp.contains(wire.to);
+            // [Fix] Node check for VirtualJoint compatibility
+            const fromDOM = (wire.from && wire.from.nodeType) ? wire.from : null;
+            const toDOM = (wire.to && wire.to.nodeType) ? wire.to : null;
+            const isConnected = (fromDOM && comp.contains(fromDOM)) || (toDOM && comp.contains(toDOM));
 
             // JOINT, VCC, GND 등 작은 건 무시? -> 아니오, 다 피하는 게 좋음
             // 단, 컴포넌트 내부 핀 근처는 허용해야 함.
