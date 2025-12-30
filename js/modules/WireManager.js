@@ -551,8 +551,21 @@ const SmartRouter = {
         const leadDist = 20;
 
         // 방향에 따른 Lead 포인트 계산
-        const getDirectionalLead = (pt, dir) => {
+        const getDirectionalLead = (pt, dir, target) => {
             if (!dir || leadDist === 0) return { x: pt.x, y: pt.y };
+
+            // 스마트 스킵: Lead-out 방향이 목적지와 반대면 스킵
+            const dx = target.x - pt.x;
+            const dy = target.y - pt.y;
+
+            // 수평 연결(y 비슷)인데 상/하 Lead-out이면 스킵
+            if (Math.abs(dy) < 30 && (dir === 'up' || dir === 'down')) {
+                return { x: pt.x, y: pt.y };
+            }
+            // 수직 연결(x 비슷)인데 좌/우 Lead-out이면 스킵
+            if (Math.abs(dx) < 30 && (dir === 'left' || dir === 'right')) {
+                return { x: pt.x, y: pt.y };
+            }
 
             const offsets = {
                 'left': { dx: -leadDist, dy: 0 },
@@ -565,8 +578,8 @@ const SmartRouter = {
             return { x: pt.x + offset.dx, y: pt.y + offset.dy };
         };
 
-        const sLead = getDirectionalLead(start, startDir);
-        const eLead = getDirectionalLead(end, endDir);
+        const sLead = getDirectionalLead(start, startDir, end);
+        const eLead = getDirectionalLead(end, endDir, start);
 
         const sNode = this.toGrid(sLead.x, sLead.y);
         const eNode = this.toGrid(eLead.x, eLead.y);
