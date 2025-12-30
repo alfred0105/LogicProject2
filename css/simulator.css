@@ -1608,32 +1608,7 @@ body.mode-wire #workspace {
     display: none;
 }
 
-/* ============================================
-   MINIMAP - Overview Panel
-   ============================================ */
-.minimap {
-    position: absolute;
-    bottom: 40px;
-    right: 16px;
-    width: 180px;
-    height: 120px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-    z-index: 60;
-}
 
-.minimap-viewport {
-    position: absolute;
-    border: 2px solid var(--accent-blue);
-    background: rgba(59, 130, 246, 0.15);
-    border-radius: 2px;
-    pointer-events: none;
-    transition: all 0.1s ease-out;
-}
 
 /* ============================================
    CONTEXT MENU - Premium Dropdown
