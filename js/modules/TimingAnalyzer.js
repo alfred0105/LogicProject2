@@ -91,14 +91,14 @@ Object.assign(CircuitSimulator.prototype, {
             left: 0;
             right: 0;
             height: 300px;
-            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-            border-top: 2px solid #667eea;
+            background: var(--bg-surface, #0a0a0a);
+            border-top: 1px solid var(--accent-blue, #3b82f6);
             z-index: 2000;
             display: none;
             flex-direction: column;
             font-family: 'Inter', sans-serif;
             transform: translateY(100%);
-            transition: transform 0.3s ease;
+            transition: transform var(--duration-normal, 250ms) var(--ease-out);
         `;
 
         document.body.appendChild(this.timingPanel);
@@ -127,64 +127,74 @@ Object.assign(CircuitSimulator.prototype, {
      */
     addTimingStyles() {
         const style = document.createElement('style');
+        style.id = 'timing-analyzer-styles';
         style.textContent = `
             #timing-panel .timing-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 padding: 10px 16px;
-                background: rgba(0, 0, 0, 0.3);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                background: var(--bg-elevated, #111111);
+                border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #timing-panel .timing-title {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                color: white;
+                color: var(--text-primary, #e2e2e2);
             }
 
             #timing-panel .timing-icon {
-                font-size: 16px;
+                font-size: 14px;
             }
 
             #timing-panel .timing-controls {
                 display: flex;
-                gap: 8px;
+                gap: 6px;
             }
 
             #timing-panel .timing-btn {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 6px;
-                color: white;
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                border-radius: var(--radius-sm, 6px);
+                color: var(--text-secondary, #a1a1aa);
                 padding: 6px 12px;
                 font-size: 11px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all var(--duration-fast, 150ms) var(--ease-out);
                 display: flex;
                 align-items: center;
                 gap: 4px;
             }
 
             #timing-panel .timing-btn:hover {
-                background: rgba(255, 255, 255, 0.2);
+                background: var(--bg-hover, #1f1f1f);
+                color: var(--text-primary, #e2e2e2);
+                border-color: var(--border-default, rgba(255, 255, 255, 0.12));
             }
 
             #timing-panel .timing-btn.active {
-                background: #ef4444;
-                border-color: #ef4444;
+                background: var(--accent-red, #ef4444);
+                border-color: var(--accent-red, #ef4444);
+                color: white;
             }
 
             #timing-panel .timing-btn.close {
-                background: rgba(239, 68, 68, 0.2);
-                border-color: rgba(239, 68, 68, 0.3);
+                background: transparent;
+                border-color: var(--accent-red, #ef4444);
+                color: var(--accent-red, #ef4444);
+            }
+
+            #timing-panel .timing-btn.close:hover {
+                background: var(--accent-red, #ef4444);
+                color: white;
             }
 
             #timing-panel .timing-btn .record-dot {
-                color: #ef4444;
+                color: var(--accent-red, #ef4444);
                 font-size: 8px;
             }
 
@@ -206,8 +216,8 @@ Object.assign(CircuitSimulator.prototype, {
 
             #timing-panel .timing-signals {
                 width: 150px;
-                background: rgba(0, 0, 0, 0.2);
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                background: var(--bg-elevated, #111111);
+                border-right: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
                 display: flex;
                 flex-direction: column;
             }
@@ -218,18 +228,26 @@ Object.assign(CircuitSimulator.prototype, {
                 align-items: center;
                 padding: 8px 12px;
                 font-size: 11px;
-                color: rgba(255, 255, 255, 0.7);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--text-secondary, #a1a1aa);
+                border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #timing-panel .add-signal-btn {
-                background: #667eea;
+                background: var(--accent-blue, #3b82f6);
                 border: none;
-                border-radius: 4px;
+                border-radius: var(--radius-xs, 4px);
                 color: white;
                 padding: 4px 8px;
                 font-size: 10px;
                 cursor: pointer;
+                transition: all var(--duration-fast, 150ms);
+            }
+
+            #timing-panel .add-signal-btn:hover {
+                background: #2563eb;
             }
 
             #timing-panel .signal-list {
@@ -239,10 +257,10 @@ Object.assign(CircuitSimulator.prototype, {
             }
 
             #timing-panel .empty-signals {
-                color: rgba(255, 255, 255, 0.3);
+                color: var(--text-muted, #52525b);
                 font-size: 10px;
                 text-align: center;
-                padding: 20px;
+                padding: 20px 10px;
                 line-height: 1.6;
             }
 
@@ -251,16 +269,17 @@ Object.assign(CircuitSimulator.prototype, {
                 align-items: center;
                 gap: 8px;
                 padding: 6px 8px;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 4px;
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                border-radius: var(--radius-xs, 4px);
                 margin-bottom: 4px;
                 font-size: 11px;
-                color: white;
+                color: var(--text-primary, #e2e2e2);
             }
 
             #timing-panel .signal-color {
-                width: 12px;
-                height: 12px;
+                width: 10px;
+                height: 10px;
                 border-radius: 2px;
             }
 
@@ -269,18 +288,21 @@ Object.assign(CircuitSimulator.prototype, {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 10px;
             }
 
             #timing-panel .signal-remove {
                 background: none;
                 border: none;
-                color: rgba(255, 255, 255, 0.4);
+                color: var(--text-muted, #52525b);
                 cursor: pointer;
                 padding: 2px;
+                font-size: 10px;
             }
 
             #timing-panel .signal-remove:hover {
-                color: #ef4444;
+                color: var(--accent-red, #ef4444);
             }
 
             #timing-panel .timing-canvas-container {
@@ -292,8 +314,9 @@ Object.assign(CircuitSimulator.prototype, {
             #timing-panel #timing-canvas {
                 width: 100%;
                 height: 100%;
-                background: #0a0a14;
-                border-radius: 6px;
+                background: var(--bg-base, #050505);
+                border-radius: var(--radius-sm, 6px);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #timing-panel .timing-cursor {
@@ -301,7 +324,7 @@ Object.assign(CircuitSimulator.prototype, {
                 top: 10px;
                 width: 2px;
                 height: calc(100% - 40px);
-                background: #fbbf24;
+                background: var(--accent-orange, #f59e0b);
                 pointer-events: none;
                 display: none;
             }
@@ -318,7 +341,8 @@ Object.assign(CircuitSimulator.prototype, {
 
             #timing-panel .timing-time {
                 font-size: 9px;
-                color: rgba(255, 255, 255, 0.4);
+                color: var(--text-muted, #52525b);
+                font-family: 'JetBrains Mono', monospace;
             }
 
             #timing-panel .timing-footer {
@@ -326,10 +350,10 @@ Object.assign(CircuitSimulator.prototype, {
                 justify-content: space-between;
                 align-items: center;
                 padding: 8px 16px;
-                background: rgba(0, 0, 0, 0.3);
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                background: var(--bg-elevated, #111111);
+                border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
                 font-size: 11px;
-                color: rgba(255, 255, 255, 0.6);
+                color: var(--text-secondary, #a1a1aa);
             }
 
             #timing-panel .glitch-indicator {
@@ -339,11 +363,11 @@ Object.assign(CircuitSimulator.prototype, {
             }
 
             #timing-panel .glitch-icon {
-                color: #f59e0b;
+                color: var(--accent-orange, #f59e0b);
             }
 
             #timing-panel.has-glitches .glitch-indicator {
-                color: #f59e0b;
+                color: var(--accent-orange, #f59e0b);
             }
         `;
         document.head.appendChild(style);

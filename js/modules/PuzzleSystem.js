@@ -259,7 +259,7 @@ Object.assign(CircuitSimulator.prototype, {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: var(--bg-base, #050505);
             z-index: 3000;
             display: none;
             font-family: 'Inter', sans-serif;
@@ -287,6 +287,7 @@ Object.assign(CircuitSimulator.prototype, {
      */
     addPuzzleStyles() {
         const style = document.createElement('style');
+        style.id = 'puzzle-system-styles';
         style.textContent = `
             #puzzle-panel {
                 display: flex;
@@ -294,8 +295,8 @@ Object.assign(CircuitSimulator.prototype, {
 
             #puzzle-panel .puzzle-sidebar {
                 width: 320px;
-                background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                background: var(--bg-surface, #0a0a0a);
+                border-right: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
                 display: flex;
                 flex-direction: column;
             }
@@ -304,53 +305,63 @@ Object.assign(CircuitSimulator.prototype, {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 20px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                background: var(--bg-elevated, #111111);
             }
 
             #puzzle-panel .puzzle-header h2 {
                 margin: 0;
-                font-size: 18px;
-                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text-primary, #e2e2e2);
             }
 
             #puzzle-panel .puzzle-close {
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                color: white;
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                color: var(--text-secondary, #a1a1aa);
                 width: 32px;
                 height: 32px;
-                border-radius: 8px;
+                border-radius: var(--radius-sm, 6px);
                 cursor: pointer;
-                font-size: 16px;
+                font-size: 14px;
+                transition: all var(--duration-fast, 150ms);
+            }
+
+            #puzzle-panel .puzzle-close:hover {
+                background: var(--accent-red, #ef4444);
+                border-color: var(--accent-red, #ef4444);
+                color: white;
             }
 
             #puzzle-panel .puzzle-categories {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 8px;
-                padding: 16px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                gap: 6px;
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #puzzle-panel .category-btn {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: rgba(255, 255, 255, 0.7);
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                color: var(--text-secondary, #a1a1aa);
                 padding: 6px 12px;
-                border-radius: 16px;
+                border-radius: var(--radius-md, 8px);
                 font-size: 11px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all var(--duration-fast, 150ms);
             }
 
             #puzzle-panel .category-btn:hover {
-                background: rgba(255, 255, 255, 0.2);
+                background: var(--bg-hover, #1f1f1f);
+                border-color: var(--border-default, rgba(255, 255, 255, 0.12));
             }
 
             #puzzle-panel .category-btn.active {
-                background: #667eea;
-                border-color: #667eea;
+                background: var(--accent-blue, #3b82f6);
+                border-color: var(--accent-blue, #3b82f6);
                 color: white;
             }
 
@@ -361,23 +372,22 @@ Object.assign(CircuitSimulator.prototype, {
             }
 
             #puzzle-panel .puzzle-card {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                padding: 16px;
-                margin-bottom: 12px;
+                background: var(--bg-elevated, #111111);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                border-radius: var(--radius-md, 8px);
+                padding: 14px;
+                margin-bottom: 10px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all var(--duration-fast, 150ms) var(--ease-out);
             }
 
             #puzzle-panel .puzzle-card:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: #667eea;
-                transform: translateX(4px);
+                background: var(--bg-hover, #1f1f1f);
+                border-color: var(--accent-blue, #3b82f6);
             }
 
             #puzzle-panel .puzzle-card.completed {
-                border-color: #22c55e;
+                border-color: var(--accent-green, #10b981);
             }
 
             #puzzle-panel .puzzle-card-header {
@@ -388,41 +398,43 @@ Object.assign(CircuitSimulator.prototype, {
             }
 
             #puzzle-panel .puzzle-card-title {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                color: white;
+                color: var(--text-primary, #e2e2e2);
             }
 
             #puzzle-panel .puzzle-card-difficulty {
                 font-size: 10px;
                 padding: 2px 8px;
-                border-radius: 10px;
+                border-radius: var(--radius-xs, 4px);
+                font-weight: 600;
             }
 
             #puzzle-panel .puzzle-card-difficulty.easy {
-                background: #22c55e;
+                background: var(--accent-green, #10b981);
                 color: white;
             }
 
             #puzzle-panel .puzzle-card-difficulty.medium {
-                background: #f59e0b;
+                background: var(--accent-orange, #f59e0b);
                 color: white;
             }
 
             #puzzle-panel .puzzle-card-difficulty.hard {
-                background: #ef4444;
+                background: var(--accent-red, #ef4444);
                 color: white;
             }
 
             #puzzle-panel .puzzle-card-desc {
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.6);
-                line-height: 1.4;
+                font-size: 11px;
+                color: var(--text-secondary, #a1a1aa);
+                line-height: 1.5;
             }
 
             #puzzle-panel .puzzle-card-stars {
                 margin-top: 8px;
-                color: #fbbf24;
+                color: var(--accent-orange, #f59e0b);
+                font-size: 12px;
             }
 
             #puzzle-panel .puzzle-detail {

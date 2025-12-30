@@ -8,12 +8,22 @@ Object.assign(CircuitSimulator.prototype, {
      * 미니맵 초기화
      */
     initMinimap() {
+        // 중복 생성 방지
+        if (this.minimapContainer && document.getElementById('minimap-container')) {
+            console.log('[Minimap] Already initialized');
+            return;
+        }
+
+        // 기존 미니맵 제거
+        const existing = document.getElementById('minimap-container');
+        if (existing) existing.remove();
+
         // 미니맵 컨테이너 생성
         this.minimapContainer = document.createElement('div');
         this.minimapContainer.id = 'minimap-container';
         this.minimapContainer.innerHTML = `
             <div class="minimap-header">
-                <span class="minimap-title">🗺️ 미니맵</span>
+                <span class="minimap-title">미니맵</span>
                 <button class="minimap-toggle" title="미니맵 접기/펼치기">−</button>
             </div>
             <div class="minimap-content">
@@ -24,23 +34,6 @@ Object.assign(CircuitSimulator.prototype, {
                     <span class="minimap-count">0 부품</span>
                 </div>
             </div>
-        `;
-
-        // 스타일
-        this.minimapContainer.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 200px;
-            background: rgba(26, 26, 46, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
         `;
 
         document.body.appendChild(this.minimapContainer);
@@ -72,8 +65,10 @@ Object.assign(CircuitSimulator.prototype, {
         // 초기 렌더링
         this.updateMinimap();
 
-        // 스타일 추가
-        this.addMinimapStyles();
+        // 스타일 추가 (중복 방지)
+        if (!document.getElementById('minimap-styles')) {
+            this.addMinimapStyles();
+        }
 
         console.log('[Minimap] Initialized');
     },
@@ -83,41 +78,67 @@ Object.assign(CircuitSimulator.prototype, {
      */
     addMinimapStyles() {
         const style = document.createElement('style');
+        style.id = 'minimap-styles';
         style.textContent = `
+            #minimap-container {
+                position: fixed;
+                bottom: 40px;
+                right: 20px;
+                width: 200px;
+                background: var(--bg-surface, #0a0a0a);
+                border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+                border-radius: var(--radius-lg, 12px);
+                box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.5));
+                z-index: 1000;
+                overflow: hidden;
+                font-family: 'Inter', sans-serif;
+                transition: all var(--duration-normal, 250ms) var(--ease-out);
+            }
+
             #minimap-container .minimap-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 8px 12px;
-                background: rgba(0, 0, 0, 0.3);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 10px 12px;
+                background: var(--bg-elevated, #111111);
+                border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #minimap-container .minimap-title {
                 font-size: 11px;
                 font-weight: 600;
-                color: rgba(255, 255, 255, 0.8);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--text-secondary, #a1a1aa);
             }
 
             #minimap-container .minimap-toggle {
-                background: none;
-                border: none;
-                color: rgba(255, 255, 255, 0.6);
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                border-radius: var(--radius-xs, 4px);
+                color: var(--text-secondary, #a1a1aa);
                 cursor: pointer;
-                font-size: 14px;
-                padding: 0 4px;
-                transition: color 0.2s;
+                font-size: 12px;
+                width: 22px;
+                height: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all var(--duration-fast, 150ms);
             }
 
             #minimap-container .minimap-toggle:hover {
+                background: var(--accent-blue, #3b82f6);
                 color: white;
+                border-color: var(--accent-blue, #3b82f6);
             }
 
             #minimap-container .minimap-content {
                 position: relative;
                 padding: 10px;
                 height: 140px;
-                transition: height 0.3s ease, opacity 0.3s ease;
+                transition: height var(--duration-normal, 250ms) var(--ease-out), 
+                            opacity var(--duration-normal, 250ms) var(--ease-out);
             }
 
             #minimap-container.collapsed .minimap-content {
@@ -130,19 +151,19 @@ Object.assign(CircuitSimulator.prototype, {
             #minimap-container #minimap-canvas {
                 width: 100%;
                 height: 120px;
-                background: #0f0f1a;
-                border-radius: 6px;
+                background: var(--bg-base, #050505);
+                border-radius: var(--radius-sm, 6px);
                 cursor: crosshair;
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
             }
 
             #minimap-container .minimap-viewport {
                 position: absolute;
-                border: 2px solid #667eea;
-                background: rgba(102, 126, 234, 0.1);
+                border: 2px solid var(--accent-blue, #3b82f6);
+                background: var(--accent-blue-glow, rgba(59, 130, 246, 0.15));
                 border-radius: 2px;
                 pointer-events: none;
                 transition: all 0.1s ease;
-                box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
             }
 
             #minimap-container .minimap-info {
@@ -150,28 +171,23 @@ Object.assign(CircuitSimulator.prototype, {
                 justify-content: space-between;
                 margin-top: 6px;
                 font-size: 10px;
-                color: rgba(255, 255, 255, 0.5);
+                color: var(--text-muted, #52525b);
             }
 
             #minimap-container .minimap-zoom {
-                color: #667eea;
+                color: var(--accent-blue, #3b82f6);
                 font-weight: 600;
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            #minimap-container .minimap-count {
+                color: var(--text-secondary, #a1a1aa);
             }
 
             /* 반응형 */
             @media (max-width: 768px) {
                 #minimap-container {
-                    width: 150px;
-                    bottom: 10px;
-                    right: 10px;
-                }
-
-                #minimap-container #minimap-canvas {
-                    height: 90px;
-                }
-
-                #minimap-container .minimap-content {
-                    height: 110px;
+                    display: none;
                 }
             }
         `;

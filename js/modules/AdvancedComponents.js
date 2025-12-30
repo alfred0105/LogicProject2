@@ -28,10 +28,10 @@ Object.assign(CircuitSimulator.prototype, {
             top: ${spawnY}px;
             width: 80px;
             height: 120px;
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-            border: 3px solid #0f3460;
-            border-radius: 10px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            background: var(--bg-elevated, #111111);
+            border: 2px solid var(--border-default, rgba(255, 255, 255, 0.12));
+            border-radius: var(--radius-lg, 12px);
+            box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.4));
             cursor: move;
             display: flex;
             flex-direction: column;
@@ -245,10 +245,10 @@ Object.assign(CircuitSimulator.prototype, {
             top: ${spawnY}px;
             width: 100px;
             height: 90px;
-            background: linear-gradient(135deg, #4a0080 0%, #2d0050 100%);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(74, 0, 128, 0.4);
+            background: var(--bg-elevated, #111111);
+            border: 2px solid var(--accent-purple, #8b5cf6);
+            border-radius: var(--radius-md, 8px);
+            box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.4));
             cursor: move;
             display: flex;
             flex-direction: column;
@@ -263,9 +263,9 @@ Object.assign(CircuitSimulator.prototype, {
         valueDisplay.style.cssText = `
             font-size: 24px;
             font-weight: bold;
-            color: #00ff88;
-            font-family: 'Consolas', 'Monaco', monospace;
-            text-shadow: 0 0 10px #00ff88;
+            color: var(--accent-green, #10b981);
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            text-shadow: 0 0 10px var(--accent-green-glow, rgba(16, 185, 129, 0.4));
         `;
         el.appendChild(valueDisplay);
 
@@ -399,10 +399,10 @@ Object.assign(CircuitSimulator.prototype, {
             top: ${spawnY}px;
             width: 140px;
             height: 160px;
-            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
-            border: 3px solid #34495e;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            background: var(--bg-elevated, #111111);
+            border: 2px solid var(--border-default, rgba(255, 255, 255, 0.12));
+            border-radius: var(--radius-lg, 12px);
+            box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.4));
             cursor: move;
             padding: 10px;
         `;
@@ -436,15 +436,15 @@ Object.assign(CircuitSimulator.prototype, {
                             key === 'E' ? '14' :
                                 key === 'F' ? '15' : key);
             btn.style.cssText = `
-                background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 6px;
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
+                background: var(--bg-active, #1a1a1a);
+                border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+                border-radius: var(--radius-sm, 6px);
+                color: var(--text-primary, #e2e2e2);
+                font-size: 11px;
+                font-weight: 600;
                 cursor: pointer;
-                transition: all 0.1s ease;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                transition: all var(--duration-fast, 150ms) var(--ease-out);
+                box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.3));
             `;
 
             btn.onmousedown = (e) => {
