@@ -717,5 +717,121 @@ Object.assign(CircuitSimulator.prototype, {
             this.updateOrthogonalPath(wire.line, start.x, start.y, end.x, end.y);
             this.updateOrthogonalPath(wire.hitbox, start.x, start.y, end.x, end.y);
         }
+    },
+
+    /**
+     * [Iteraction] 핀 클릭 시 와이어링 시작
+     */
+    handlePinDown(e, pin) {
+        if (e.button !== 0) return;
+        
+        // 입력 핀은 1개의 와이어만? -> 기존 와이어 있으면 제거하고 새로 연결 (편의성)
+        if (pin.classList.contains('input-pin')) {
+            const existingWire = this.wires.find(w => w.to === pin);
+            if (existingWire) {
+                this.removeWire(existingWire);
+            }
+        }
+
+        this.startWiring(pin);
+        e.stopPropagation();
+    },
+
+    /**
+     * [Iteraction] 핀에서 마우스 뗐을 때 와이어링 완료
+     */
+    handlePinUp(e, pin) {
+        if (this.isWiring && this.tempWire) {
+            this.finishWiring(pin);
+            e.stopPropagation();
+        }
+    },
+
+    /**
+     * [Core] 와이어링 시작
+     */
+    startWiring(startNode) {
+        this.isWiring = true;
+        this.startNode = startNode;
+
+        // 임시 와이어 생성
+        this.tempWire = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        this.tempWire.setAttribute('class', 'wire temp-wire');
+        this.tempWire.style.pointerEvents = 'none';
+        this.wireLayer.appendChild(this.tempWire);
+
+        // 전역 이벤트 리스너
+        this._bindWiringEvents();
+    },
+
+    _bindWiringEvents() {
+        this.onWiringMove = (e) => this.updateTempWire(e);
+        this.onWiringUp = (e) => this.stopWiring();
+
+        document.addEventListener('mousemove', this.onWiringMove);
+        document.addEventListener('mouseup', this.onWiringUp);
+        document.addEventListener('touchmove', this.onWiringMove, { passive: false });
+        document.addEventListener('touchend', this.onWiringUp);
+    },
+
+    _unbindWiringEvents() {
+        if (this.onWiringMove) {
+            document.removeEventListener('mousemove', this.onWiringMove);
+            document.removeEventListener('touchmove', this.onWiringMove);
+        }
+        if (this.onWiringUp) {
+            document.removeEventListener('mouseup', this.onWiringUp);
+            document.removeEventListener('touchend', this.onWiringUp);
+        }
+    },
+
+    /**
+     * [Core] 임시 와이어 업데이트 (드래그 중)
+     */
+    updateTempWire(e) {
+        if (!this.isWiring || !this.startNode) return;
+
+        const startPos = this.getNodePosition(this.startNode);
+        const mousePos = this.getMousePosition(e);
+
+        // 직각 라우팅 (빠르게)
+        this.updateOrthogonalPath(this.tempWire, startPos.x, startPos.y, mousePos.x, mousePos.y);
+    },
+
+    /**
+     * [Core] 와이어링 완료 시도
+     */
+    finishWiring(endNode) {
+        if (!this.isWiring || !this.startNode) return;
+        if (this.startNode === endNode) return;
+
+        // 연결 유효성 및 방향 정규화 (Output -> Input)
+        const isStartInput = this.startNode.classList.contains('input-pin');
+        const isEndInput = endNode.classList.contains('input-pin');
+
+        let fromNode = this.startNode;
+        let toNode = endNode;
+
+        if (isStartInput && !isEndInput) {
+            fromNode = endNode;
+            toNode = this.startNode;
+        }
+
+        // 와이어 생성
+        this.createWire(fromNode, toNode);
+        this.stopWiring();
+    },
+
+    /**
+     * [Core] 와이어링 취소/종료
+     */
+    stopWiring() {
+        this.isWiring = false;
+        this.startNode = null;
+        if (this.tempWire) {
+            this.tempWire.remove();
+            this.tempWire = null;
+        }
+        this._unbindWiringEvents();
     }
 });
