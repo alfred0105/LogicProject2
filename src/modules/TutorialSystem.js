@@ -665,3 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+
+// [Vite Export] Make globally available
+if (typeof TutorialSystem !== 'undefined') { window.TutorialSystem = TutorialSystem; }

@@ -931,3 +931,7 @@ Object.assign(CircuitSimulator.prototype, {
         return false;
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof PackageManager !== 'undefined') { window.PackageManager = PackageManager; }

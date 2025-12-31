@@ -1668,3 +1668,7 @@ Object.assign(CircuitSimulator.prototype, {
     }
 });
 
+
+
+// [Vite Export] Make globally available
+if (typeof TabManager !== 'undefined') { window.TabManager = TabManager; }

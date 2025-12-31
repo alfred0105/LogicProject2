@@ -486,3 +486,7 @@ Object.assign(CircuitSimulator.prototype, {
 window.throttle = throttle;
 window.debounce = debounce;
 window.rafThrottle = rafThrottle;
+
+
+// [Vite Export] Make globally available
+if (typeof PerformanceOptimizer !== 'undefined') { window.PerformanceOptimizer = PerformanceOptimizer; }

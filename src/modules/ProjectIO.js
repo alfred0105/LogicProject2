@@ -528,3 +528,7 @@ Object.assign(CircuitSimulator.prototype, {
         URL.revokeObjectURL(url);
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof ProjectIO !== 'undefined') { window.ProjectIO = ProjectIO; }

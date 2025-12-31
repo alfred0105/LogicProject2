@@ -403,3 +403,7 @@
     }, 10000);
 
 })();
+
+
+// [Vite Export] Make globally available
+if (typeof Security !== 'undefined') { window.Security = Security; }

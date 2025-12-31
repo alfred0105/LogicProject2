@@ -261,3 +261,7 @@ Object.assign(CircuitSimulator.prototype, {
         parent.appendChild(pin);
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof ComponentManager !== 'undefined') { window.ComponentManager = ComponentManager; }

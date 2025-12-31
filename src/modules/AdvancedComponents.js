@@ -620,3 +620,7 @@ advancedComponentStyles.textContent = `
     }
 `;
 document.head.appendChild(advancedComponentStyles);
+
+
+// [Vite Export] Make globally available
+if (typeof AdvancedComponents !== 'undefined') { window.AdvancedComponents = AdvancedComponents; }

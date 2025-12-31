@@ -1019,3 +1019,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.puzzlePanel.style.display = 'none';
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof PuzzleSystem !== 'undefined') { window.PuzzleSystem = PuzzleSystem; }

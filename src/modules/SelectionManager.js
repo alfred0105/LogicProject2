@@ -672,3 +672,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.alignSelectedVertical();
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof SelectionManager !== 'undefined') { window.SelectionManager = SelectionManager; }

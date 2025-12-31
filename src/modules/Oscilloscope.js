@@ -160,3 +160,7 @@ class Oscilloscope {
     }
 }
 
+
+
+// [Vite Export] Make globally available
+if (typeof Oscilloscope !== 'undefined') { window.Oscilloscope = Oscilloscope; }

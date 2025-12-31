@@ -527,3 +527,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof InputHandler !== 'undefined') { window.InputHandler = InputHandler; }

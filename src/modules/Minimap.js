@@ -469,3 +469,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof Minimap !== 'undefined') { window.Minimap = Minimap; }

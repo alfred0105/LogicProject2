@@ -1,183 +1,192 @@
 /**
- * LoCAD - Logic Circuit Design Tool
- * Main Entry Point (ESM)
- * 
- * @description 애플리케이션 메인 진입점입니다.
- *              모든 모듈을 초기화하고 연결합니다.
- * 
- * Phase 2: Engine & Feature Upgrade 완료
- * - Module Factory Pattern (Deep Clone)
- * - Enhanced Oscilloscope (CircularBuffer)
- * - Quantum Abstraction Ready (ISimulationEngine)
+ * 🚀 LoCAD - Main Entry Point (Vite ESM)
+ * All modules are loaded here and attached to window.sim
  */
 
-import { sim } from './core/CircuitSimulator.js';
-import { logicEngine } from './core/ClassicLogicEngine.js';
-import { componentFactory } from './components/ComponentFactory.js';
-import { oscilloscope } from './ui/Oscilloscope.js';
-import { TRANSLATIONS, CONFIG } from './utils/Constants.js';
-import { eventBus, getFromStorage } from './utils/Helpers.js';
+// ============================================
+// 📦 Import All Modules
+// ============================================
 
-// ============================================================================
-// 전역 설정 초기화
-// ============================================================================
-const savedSettings = getFromStorage('logic_sim_settings', {});
-const currentLang = savedSettings.language || 'ko';
-const dict = TRANSLATIONS[currentLang] || TRANSLATIONS['ko'];
+// Core Modules (순서 중요!)
+import './modules/Security.js';            // 보안 (가장 먼저)
+import './modules/Constants.js';           // 상수 정의
+import './modules/SupabaseClient.js';      // Supabase 클라이언트
+import './modules/CircuitSimulator.js';    // 메인 시뮬레이터 클래스
+import './modules/ComponentManager.js';    // 컴포넌트 관리
+import './modules/WireManager.js';         // 전선 관리
+import './modules/NetManager.js';          // 네트리스트 관리
+import './modules/InputHandler.js';        // 입력 처리
+import './modules/SelectionManager.js';    // 선택 관리
+import './modules/HistoryManager.js';      // 실행취소/다시실행
+import './modules/LogicEngine.js';         // 논리 계산 엔진
 
-// ============================================================================
-// DOM 로드 완료 후 초기화
-// ============================================================================
+// UI Modules
+import './modules/UIManager.js';           // UI 관리
+import './modules/ContextMenuManager.js';  // 컨텍스트 메뉴
+import './modules/Minimap.js';             // 미니맵
+import './modules/Oscilloscope.js';        // 오실로스코프
+
+// Feature Modules
+import './modules/TabManager.js';          // 탭/모듈 시스템
+import './modules/PackageManager.js';      // 패키지 관리
+import './modules/AdvancedComponents.js';  // 고급 컴포넌트
+import './modules/ProjectIO.js';           // 프로젝트 저장/로드
+import './modules/CloudManager.js';        // 클라우드 저장
+import './modules/LibraryManager.js';      // 라이브러리
+
+// Advanced Features
+import './modules/CircuitValidator.js';    // 회로 검증
+import './modules/TimingAnalyzer.js';      // 타이밍 분석
+import './modules/CollaborationManager.js'; // 실시간 협업
+import './modules/PerformanceOptimizer.js'; // 성능 최적화
+import './modules/TouchHandler.js';        // 터치 입력
+
+// Education & Tutorial
+import './modules/TutorialSystem.js';      // 튜토리얼
+import './modules/PuzzleSystem.js';        // 퍼즐 시스템
+
+// Utility
+import './modules/PostManager.js';         // 게시물 관리
+
+// ============================================
+// 🎬 Application Initialization
+// ============================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[LoCAD] Initializing application...');
-    console.log('[LoCAD] Phase 2: Engine & Feature Upgrade');
+    console.log('🚀 LoCAD Vite ESM Initializing...');
 
-    // 시뮬레이터 초기화
-    sim.init();
-
-    // 로직 엔진 연결
-    logicEngine.setComponents(sim.components);
-    logicEngine.setWires(sim.wires);
-
-    // NetManager 연결 (있는 경우)
-    if (sim.netManager) {
-        logicEngine.setNetManager(sim.netManager);
+    // 시뮬레이터 인스턴스 생성
+    if (typeof CircuitSimulator !== 'undefined') {
+        window.sim = new CircuitSimulator();
+        console.log('✅ CircuitSimulator created');
+    } else {
+        console.error('❌ CircuitSimulator class not found!');
+        return;
     }
 
-    // [Phase 2] ComponentFactory 초기화
-    componentFactory.setUserPackages(sim.userPackages || []);
-
-    // [Phase 2] Oscilloscope 연결 (ESM과 레거시 둘 다 지원)
-    if (oscilloscope.canvas) {
-        sim.oscilloscope = oscilloscope;
-        console.log('[LoCAD] ESM Oscilloscope connected');
+    // NetManager (회로 연결 관리) 초기화
+    if (typeof NetManager !== 'undefined') {
+        window.sim.netManager = new NetManager(window.sim);
+        console.log('✅ NetManager initialized');
     }
 
-    // 이벤트 연결
-    setupEventListeners();
+    // 컨텍스트 메뉴 시스템 초기화
+    if (typeof ContextMenuManager !== 'undefined') {
+        window.sim.contextMenuManager = new ContextMenuManager(window.sim);
+        console.log('✅ ContextMenuManager initialized');
+    }
 
-    // 메인 루프 시작
-    startMainLoop();
+    // 탭 시스템 초기화
+    if (window.sim.initTabs) {
+        window.sim.initTabs();
+        console.log('✅ Tab System initialized');
+    }
 
-    // 로딩 화면 숨기기
-    hideLoadingScreen();
+    // 회로 검증 도구 초기화
+    if (typeof CircuitValidator !== 'undefined') {
+        window.sim.validator = new CircuitValidator(window.sim);
+        console.log('✅ CircuitValidator initialized');
+    }
 
-    console.log('[LoCAD] Application initialized successfully');
-});
+    // 라이브러리 관리자 초기화
+    if (typeof LibraryManager !== 'undefined') {
+        window.library = new LibraryManager();
+        console.log('✅ LibraryManager initialized');
+    }
 
-// ============================================================================
-// 이벤트 리스너 설정
-// ============================================================================
-function setupEventListeners() {
-    // 글로벌 이벤트 버스 연결
-    eventBus.on('circuit:update', () => {
-        logicEngine.updateCircuit();
-    });
+    // 협업 관리자 초기화
+    if (typeof CollaborationManager !== 'undefined') {
+        window.sim.collaboration = new CollaborationManager(window.sim);
+        console.log('✅ CollaborationManager initialized');
 
-    eventBus.on('circuit:reset', () => {
-        logicEngine.reset();
-        sim.showToast(dict.resetSimulation || '시뮬레이션 초기화', 'info');
-    });
+        // URL에 협업 파라미터가 있으면 자동 시작
+        const urlParams = new URLSearchParams(window.location.search);
+        const collaborateId = urlParams.get('collaborate');
+        if (collaborateId && window.sim.currentProjectId) {
+            setTimeout(() => {
+                window.sim.collaboration.startCollaboration(window.sim.currentProjectId);
+            }, 2000);
+        }
+    }
 
-    eventBus.on('circuit:step', () => {
-        logicEngine.step();
-        sim.showToast('1 스텝 실행', 'info');
-    });
+    // 미니맵 초기화
+    if (window.sim.initMinimap) {
+        setTimeout(() => {
+            window.sim.initMinimap();
+            console.log('✅ Minimap initialized');
+        }, 500);
+    }
 
-    // 키보드 단축키는 CircuitSimulator에서 처리
-}
+    // 타이밍 분석기 초기화
+    if (window.sim.initTimingAnalyzer) {
+        window.sim.initTimingAnalyzer();
+        console.log('✅ TimingAnalyzer initialized');
+    }
 
-// ============================================================================
-// 메인 애니메이션 루프
-// ============================================================================
-function startMainLoop() {
-    let lastFrameTime = performance.now();
-    let lastOscilloscopeTime = 0;
+    // 퍼즐 시스템 초기화
+    if (window.sim.initPuzzleSystem) {
+        window.sim.initPuzzleSystem();
+        console.log('✅ PuzzleSystem initialized');
+    }
 
-    function animate(timestamp) {
-        // Delta Time 계산
-        const now = performance.now();
-        const deltaTime = now - lastFrameTime;
-        lastFrameTime = now;
+    // ============================================
+    // 🔄 Main Animation Loop
+    // ============================================
+    function animate() {
+        if (window.sim) {
+            window.sim.loop();
 
-        // 시뮬레이션 실행 중일 때
-        if (sim.isRunning) {
-            logicEngine.clockAccumulator += deltaTime;
+            if (window.sim.oscilloscope) {
+                window.sim.oscilloscope.draw();
+            }
 
-            // 클럭 틱 처리
-            while (logicEngine.clockAccumulator >= logicEngine.clockInterval) {
-                logicEngine.step();
-                logicEngine.clockAccumulator -= logicEngine.clockInterval;
+            if (window.sim.updateAdvancedComponents) {
+                window.sim.updateAdvancedComponents();
+            }
+
+            // 미니맵 업데이트 (10프레임마다)
+            if (window.sim.updateMinimap) {
+                window.sim._minimapCounter = (window.sim._minimapCounter || 0) + 1;
+                if (window.sim._minimapCounter >= 10) {
+                    window.sim._minimapCounter = 0;
+                    window.sim.updateMinimap();
+                }
+            }
+
+            // 자동 검증 모드
+            if (window.autoValidateEnabled && window.sim.validator) {
+                clearTimeout(window.autoValidateTimer);
+                window.autoValidateTimer = setTimeout(() => {
+                    if (window.sim.validator) {
+                        const results = window.sim.validator.validateCircuit();
+                        if (window.updateValidationStats) {
+                            window.updateValidationStats(results);
+                        }
+                    }
+                }, 2000);
             }
         }
-
-        // 오실로스코프 업데이트 (10fps 제한)
-        if (sim.oscilloscope && timestamp - lastOscilloscopeTime > 100) {
-            sim.oscilloscope.update();
-            sim.oscilloscope.draw();
-            lastOscilloscopeTime = timestamp;
-        }
-
-        // 미니맵 업데이트 (10프레임마다)
-        if (sim.updateMinimap) {
-            if (!sim._minimapCounter) sim._minimapCounter = 0;
-            sim._minimapCounter++;
-            if (sim._minimapCounter >= 10) {
-                sim._minimapCounter = 0;
-                sim.updateMinimap();
-            }
-        }
-
         requestAnimationFrame(animate);
     }
-
     requestAnimationFrame(animate);
-}
 
-// ============================================================================
-// 로딩 화면 처리
-// ============================================================================
-function hideLoadingScreen() {
+    // ============================================
+    // 🎬 Hide Loading Screen
+    // ============================================
     setTimeout(() => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
             setTimeout(() => loadingScreen.remove(), 500);
         }
+        console.log('🎉 LoCAD Ready!');
     }, 1500);
-}
+});
 
-// ============================================================================
-// 글로벌 에러 핸들러
-// ============================================================================
-window.onerror = (msg, url, line, col, error) => {
-    const errorMessages = {
-        ko: {
-            title: '시뮬레이터 오류',
-            line: '위치',
-            message: '오류 내용',
-            suggestion: '페이지를 새로고침하거나 개발자 도구 콘솔(F12)을 확인하세요.'
-        },
-        en: {
-            title: 'Simulator Error',
-            line: 'Line',
-            message: 'Error',
-            suggestion: 'Please refresh the page or check the developer console (F12).'
-        }
-    };
+// ============================================
+// 🌐 Global Exports (for HTML onclick handlers)
+// ============================================
+// HTML에서 sim.xxx() 호출을 위해 window.sim 노출
+// (이미 DOMContentLoaded에서 설정됨)
 
-    const t = errorMessages[currentLang] || errorMessages.ko;
-    console.error('Simulator Error:', { msg, url, line, col, error });
-
-    // 사용자에게 알림 (개발 중에는 상세 정보 표시)
-    if (process?.env?.NODE_ENV !== 'production') {
-        console.warn(`${t.title}\n\n${t.line}: ${line}\n${t.message}: ${msg}`);
-    }
-
-    return false;
-};
-
-// ============================================================================
-// 모듈 내보내기 (다른 모듈에서 접근 가능)
-// ============================================================================
-export { sim, logicEngine, componentFactory, oscilloscope };
+console.log('📦 LoCAD modules loaded via Vite ESM');

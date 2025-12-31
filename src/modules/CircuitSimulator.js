@@ -229,3 +229,7 @@ class CircuitSimulator {
         });
     }
 }
+
+
+// [Vite Export] Make globally available
+if (typeof CircuitSimulator !== 'undefined') { window.CircuitSimulator = CircuitSimulator; }

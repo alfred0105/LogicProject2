@@ -1,7 +1,8 @@
 /**
  * 모듈: 시뮬레이션 및 로직 연산 엔진
  */
-Object.assign(CircuitSimulator.prototype, {
+// [Vite Fix] Define functionality as object first
+const LogicEngineMixin = {
     toggleSwitch(e, el) {
         // [수정] 읽기 전용 모드에서도 스위치 토글 허용 (인터랙티브 미리보기)
         // pan 모드일 때만 차단하되, 읽기 전용 모드에서는 예외 허용
@@ -746,4 +747,18 @@ Object.assign(CircuitSimulator.prototype, {
 
         // Hitbox는 업데이트 불필요 (투명함)
     }
-});
+};
+
+// [Vite Fix] Apply Mixin to CircuitSimulator
+if (typeof CircuitSimulator !== 'undefined') {
+    Object.assign(CircuitSimulator.prototype, LogicEngineMixin);
+} else if (typeof window !== 'undefined' && window.CircuitSimulator) {
+    Object.assign(window.CircuitSimulator.prototype, LogicEngineMixin);
+} else {
+    console.warn('LogicEngineMixin: CircuitSimulator not found, logic will not work.');
+}
+
+// Global Export
+if (typeof window !== 'undefined') {
+    window.LogicEngineMixin = LogicEngineMixin;
+}

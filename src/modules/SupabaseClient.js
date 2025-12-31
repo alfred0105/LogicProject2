@@ -195,3 +195,7 @@
     }
 
 })();
+
+
+// [Vite Export] Make globally available
+if (typeof SupabaseClient !== 'undefined') { window.SupabaseClient = SupabaseClient; }

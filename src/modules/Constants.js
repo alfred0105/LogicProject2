@@ -345,3 +345,12 @@ const GATE_SCHEMATICS = {
         wires: []
     }
 };
+
+
+// [Vite Export] Make globally available
+if (typeof Constants !== 'undefined') { window.Constants = Constants; }
+
+
+// [Vite Export] Global Exposure
+if (typeof TRANSLATIONS !== 'undefined') window.TRANSLATIONS = TRANSLATIONS;
+if (typeof GATE_SCHEMATICS !== 'undefined') window.GATE_SCHEMATICS = GATE_SCHEMATICS;

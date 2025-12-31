@@ -843,3 +843,7 @@ Object.assign(CircuitSimulator.prototype, {
         localStorage.setItem('locad_ui_scale', scale);
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof UIManager !== 'undefined') { window.UIManager = UIManager; }

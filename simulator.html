@@ -26,7 +26,6 @@
 
     <link rel="stylesheet" href="css/validation.css">
     <link rel="stylesheet" href="css/collaboration.css">
-    <script src="js/modules/Security.js"></script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <script>
         // 초기 로딩 에러(ReferenceError: sim is not defined) 방지용 더미 객체
@@ -2666,12 +2665,8 @@
             });
         </script>
 
-        <!-- 고급 기능 모듈 -->
-        <script src="js/modules/AdvancedComponents.js"></script>
-        <script src="js/modules/Minimap.js"></script>
-        <script src="js/modules/TimingAnalyzer.js"></script>
-        <script src="js/modules/PuzzleSystem.js"></script>
-
+        <!-- Vite Entry Point -->
+        <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>

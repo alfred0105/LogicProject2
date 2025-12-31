@@ -362,3 +362,7 @@ document.body.addEventListener('touchmove', function (e) {
         }
     }
 }, { passive: false });
+
+
+// [Vite Export] Make globally available
+if (typeof TouchHandler !== 'undefined') { window.TouchHandler = TouchHandler; }

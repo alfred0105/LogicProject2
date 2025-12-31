@@ -793,3 +793,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof TimingAnalyzer !== 'undefined') { window.TimingAnalyzer = TimingAnalyzer; }

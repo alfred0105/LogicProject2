@@ -161,3 +161,7 @@ Object.assign(CircuitSimulator.prototype, {
         this.updateStatusBar();
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof HistoryManager !== 'undefined') { window.HistoryManager = HistoryManager; }

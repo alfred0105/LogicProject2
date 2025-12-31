@@ -815,3 +815,7 @@ Object.assign(CircuitSimulator.prototype, {
         }
     }
 });
+
+
+// [Vite Export] Make globally available
+if (typeof WireManager !== 'undefined') { window.WireManager = WireManager; }
