@@ -432,15 +432,27 @@ Object.assign(CircuitSimulator.prototype, {
         } catch (err) {
             console.error("MouseUp Error:", err);
         } finally {
+            // [안전장치] 에러 발생 시에도 dragging 클래스 정리
+            if (this.dragTarget) {
+                this.dragTarget.classList.remove('dragging');
+            }
             this.dragTarget = null;
         }
     },
 
     resetDragState() {
         if (this.dragTarget) {
+            this.dragTarget.classList.remove('dragging');
             this.dragTarget.style.cursor = 'grab';
             this.dragTarget = null;
         }
+
+        // [안전장치] 혹시 고착된 dragging 클래스가 있는 모든 컴포넌트 정리
+        document.querySelectorAll('.component.dragging').forEach(comp => {
+            comp.classList.remove('dragging');
+            comp.style.cursor = 'grab';
+        });
+
         this.isPanning = false;
         if (this.isSelecting) {
             this.isSelecting = false;

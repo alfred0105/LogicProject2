@@ -4120,9 +4120,10 @@ div.component[data-type="NOT"] {
 }
 
 /* 터치 드래그 시 성능 최적화 */
+/* 주의: pointer-events: none은 제거함 - 클릭/드래그 동작을 완전히 차단함 */
 .component.dragging {
     will-change: transform, left, top;
-    pointer-events: none;
+    /* pointer-events: none; 삭제됨 - 이 속성이 모든 인터랙션을 차단함 */
 }
 
 /* iOS Safari 안전 영역 대응 */
