@@ -68,7 +68,7 @@ function rafThrottle(fn) {
 
 // === 성능 최적화 모듈 ===
 
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
 
     /**
      * 성능 모니터링 초기화

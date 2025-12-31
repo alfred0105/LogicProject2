@@ -119,7 +119,7 @@
     overflow: visible;
     pointer-events: none;
     /* SVG 배경은 클릭 통과, 내부 path는 pointer-events: stroke로 제어 */
-    z-index: 1;
+    z-index: 5;
     /* 부품 뒤에 위치 */
 }
 

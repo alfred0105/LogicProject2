@@ -4,7 +4,7 @@
  * - 팝업 없이 내부 탭으로 모듈 편집
  * - 다중 모듈 탭 지원
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     // 현재 활성화된 탭 (main 또는 module_{id})
     currentTab: 'main',
 

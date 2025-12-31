@@ -1,7 +1,7 @@
 /**
  * 모듈: 선택, 그룹 조작, 컨텍스트 메뉴, 컴포넌트 정보
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     // ===================================
     // 1. Basic Selection
     // ===================================

@@ -1,7 +1,7 @@
 /**
  * 모듈: 패키지 시스템 (Package, Module, Sub-circuits)
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     addPackage(pkgType) {
         const pkgDefs = {
             'HALF_ADDER': {

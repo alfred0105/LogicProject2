@@ -375,7 +375,7 @@ const SmartRouter = {
 // Assuming CircuitSimulator is defined in Main.js and we extend its prototype.
 // This is the cleanest way to add functionality without class inheritance hell.
 
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     // Note: this.wires, this.virtualJoints should be initialized in constructor or here lazily.
     // We assume this.netManager exists.
 
@@ -552,9 +552,9 @@ Object.assign(CircuitSimulator.prototype, {
         });
 
         // Append to DOM
-        this.wireLayer.appendChild(hitbox); // Hitbox first? No, doesn't matter for events if pointer-events set.
-        // Actually, hitbox should be *above* line if both were visible, but here one is invisible.
-        // It's safer to put hitbox *after* line so it's on top in Z-order.
+        // Append to DOM
+        // Hitbox must be last to capture events (if pointer-events:stroke)
+        // But visually, line should be below hitbox? No, hitbox is invisible.
         this.wireLayer.appendChild(line);
         this.wireLayer.appendChild(hitbox);
 
@@ -604,21 +604,35 @@ Object.assign(CircuitSimulator.prototype, {
         });
 
         // Pathfinding
-        const path = SmartRouter.findPath(start, end, obstacles);
+        let path = null;
+        try {
+            path = SmartRouter.findPath(start, end, obstacles);
+        } catch (e) {
+            console.error('[WireManager] Pathfinding error:', e);
+        }
 
         // Apply to SVG
+        let d = '';
         if (path) {
-            const d = SmartRouter.toPathString(path);
-            wire.line.setAttribute('d', d);
-            wire.hitbox.setAttribute('d', d);
-        } else {
-            // [Fallback] Pure simple Z-shape if routing fails
+            d = SmartRouter.toPathString(path);
+        }
+
+        // [Fallback & Safety] If Smart Routing fails or returns empty, use reliable shapes
+        if (!d || d.includes('NaN')) {
+            // 1. Try Simple Z-shape
             const midX = (start.x + end.x) / 2;
             const snapMidX = Math.round(midX / 10) * 10;
-            const d = `M ${start.x} ${start.y} L ${snapMidX} ${start.y} L ${snapMidX} ${end.y} L ${end.x} ${end.y}`;
-            wire.line.setAttribute('d', d);
-            wire.hitbox.setAttribute('d', d);
+            d = `M ${start.x} ${start.y} L ${snapMidX} ${start.y} L ${snapMidX} ${end.y} L ${end.x} ${end.y}`;
+
+            // 2. Ultimate Fallback: Direct Line (if coords are messy)
+            if (d.includes('NaN')) {
+                console.warn('[WireManager] Using direct line fallback due to invalid coords');
+                d = `M ${start.x || 0} ${start.y || 0} L ${end.x || 0} ${end.y || 0}`;
+            }
         }
+
+        if (wire.line) wire.line.setAttribute('d', d);
+        if (wire.hitbox) wire.hitbox.setAttribute('d', d);
     },
 
     updateAllWires() {

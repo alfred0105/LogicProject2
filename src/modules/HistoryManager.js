@@ -2,7 +2,7 @@
  * 모듈: 실행 취소 및 재실행 (Undo/Redo)
  * 메모리 관리 강화: 스냅샷 크기 제한, 쓰로틀링, 자동 정리
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     // 히스토리 설정
     _historyThrottleDelay: 300,  // 연속 저장 방지 딜레이 (ms)
     _maxSnapshotSize: 500000,     // 개별 스냅샷 최대 크기 (bytes, ~500KB)

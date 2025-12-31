@@ -8,7 +8,7 @@
  * - 스위치 토글 (탭)
  */
 
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     /**
      * 터치 이벤트 초기화
      */

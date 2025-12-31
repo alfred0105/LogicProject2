@@ -1,7 +1,7 @@
 /**
  * 모듈: 입력 핸들링 (마우스, 키보드)
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     initEvents() {
         // [PERFORMANCE] 쓰로틀된 마우스 이동 핸들러
         this._throttledMouseMove = rafThrottle((e) => this.onMouseMove(e));

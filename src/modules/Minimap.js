@@ -2,7 +2,7 @@
  * 모듈: 미니맵 (Minimap)
  * 전체 회로를 축소해서 보여주고 클릭으로 네비게이션
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
 
     /**
      * 미니맵 초기화

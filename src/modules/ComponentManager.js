@@ -1,7 +1,7 @@
 /**
  * 모듈: 컴포넌트 생성 및 관리
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     addModule(type, x = null, y = null, options = {}) {
         const { skipSave = false } = options;
         let el;

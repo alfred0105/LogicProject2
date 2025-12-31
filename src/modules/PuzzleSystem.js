@@ -2,7 +2,7 @@
  * 모듈: 퍼즐 모드 (Challenge/Puzzle System)
  * 제한된 부품으로 목표 회로를 만드는 교육용 게임
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
 
     /**
      * 퍼즐 시스템 초기화

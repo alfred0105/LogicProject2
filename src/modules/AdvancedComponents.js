@@ -2,7 +2,7 @@
  * 모듈: 고급 컴포넌트 (7-Segment, RAM, 키패드 등)
  * 교육용 시뮬레이터를 위한 확장 컴포넌트
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
 
     /**
      * 7-Segment 디스플레이 추가

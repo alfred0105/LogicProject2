@@ -1,7 +1,7 @@
 /**
  * 모듈: UI 관리 (토스트, 모달, 모드 전환, 줌, 툴팁, 미니맵, 모드 설정)
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     showToast(message, type = 'info') {
         const existingToast = document.querySelector('.toast-notification');
         if (existingToast) existingToast.remove();

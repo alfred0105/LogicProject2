@@ -3,7 +3,7 @@
  * 여러 신호의 시간에 따른 변화를 시각화
  * 글리치 감지 및 스텝 실행 지원
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
 
     /**
      * 타이밍 분석기 초기화

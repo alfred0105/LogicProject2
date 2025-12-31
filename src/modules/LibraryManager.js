@@ -343,6 +343,94 @@ class LibraryManager {
 
         return data[0];
     }
+
+    /**
+     * [UI] 트렌딩 프로젝트 로드 및 렌더링
+     */
+    async loadTrendingProjects() {
+        const grid = document.getElementById('trending-grid');
+        if (!grid) return;
+
+        try {
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>불러오는 중...</p></div>';
+            const projects = await this.getPublicProjects('trending');
+            this.renderProjectGrid(projects, grid);
+        } catch (error) {
+            console.error('Failed to load trending projects:', error);
+            grid.innerHTML = `<div class="error-message">프로젝트를 불러오지 못했습니다.<br>${error.message}</div>`;
+        }
+    }
+
+    /**
+     * [UI] 최신 프로젝트 로드 및 렌더링
+     */
+    async loadLatestProjects() {
+        const grid = document.getElementById('latest-grid');
+        if (!grid) return;
+
+        try {
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            const projects = await this.getPublicProjects('latest');
+            this.renderProjectGrid(projects, grid);
+        } catch (error) {
+            console.error('Failed to load latest projects:', error);
+            grid.innerHTML = `<div class="error-message">오류 발생</div>`;
+        }
+    }
+
+    /**
+     * [UI] 프로젝트 그리드 렌더링
+     */
+    renderProjectGrid(projects, container) {
+        if (!projects || projects.length === 0) {
+            container.innerHTML = '<div class="empty-state">프로젝트가 없습니다.</div>';
+            return;
+        }
+
+        container.innerHTML = projects.map(p => this.createProjectCardHTML(p)).join('');
+    }
+
+    createProjectCardHTML(project) {
+        const title = project.title || 'Untitled Project';
+        const author = project.author_name || 'Anonymous';
+        const likes = project.likes || 0;
+        const views = project.views || 0;
+        const desc = project.description || '';
+        const thumbnail = project.thumbnail_url
+            ? `<img src="${project.thumbnail_url}" alt="${title}">`
+            : `<div class="thumbnail-placeholder" style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#333;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
+
+        return `
+            <div class="project-card" onclick="location.href='simulator.html?project=${project.id}'">
+                <div class="card-thumbnail">
+                    ${thumbnail}
+                </div>
+                <div class="card-body">
+                    <div class="card-header">
+                        <div class="author-avatar">${(author[0] || 'A').toUpperCase()}</div>
+                        <div class="author-info">
+                            <div class="author-name">${author}</div>
+                            <div class="project-date">${new Date(project.created_at).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    <div class="card-title">${title}</div>
+                    <div class="card-description">${desc}</div>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <div class="stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                ${likes}
+                            </div>
+                            <div class="stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                ${views}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // 전역 등록

@@ -1,7 +1,7 @@
 /**
  * 모듈: 프로젝트 저장/로드 및 내보내기
  */
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     initProject() {
         const params = new URLSearchParams(window.location.search);
         const projectId = params.get('id');

@@ -6,7 +6,7 @@
  * - 소자 드래그 단계 포함
  */
 
-Object.assign(CircuitSimulator.prototype, {
+Object.assign(window.CircuitSimulator.prototype, {
     // 튜토리얼 상태
     tutorialActive: false,
     tutorialStep: 0,

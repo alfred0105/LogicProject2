@@ -320,6 +320,59 @@ if (window.PostManager) {
             if (error) throw error;
             return data || [];
         }
+
+        /**
+         * [UI] 게시글 목록 로드 (Vite Migration 추가)
+         */
+        async loadPosts(containerId = 'posts-list', category = 'all') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            try {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div><p>게시글 불러오는 중...</p></div>';
+
+                const posts = await this.getPosts(category === 'all' ? null : category);
+
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">게시글이 없습니다.</div>';
+                    return;
+                }
+
+                container.innerHTML = posts.map(p => this.createPostHTML(p)).join('');
+            } catch (error) {
+                console.error('Failed to load posts:', error);
+                container.innerHTML = `<div class="error-message">게시글 로드 실패<br>${error.message}</div>`;
+            }
+        }
+
+        createPostHTML(post) {
+            const date = new Date(post.created_at).toLocaleDateString();
+            const author = post.user_name || 'Anonymous';
+            const views = post.views || 0;
+            const likes = post.likes || 0;
+            // const commentCount = post.comment_count || 0; // DB 컬럼 확인 필요, 일단 제외
+            const categoryMap = { 'general': '자유', 'question': '질문', 'showcase': '자랑', 'feedback': '피드백' };
+            const category = categoryMap[post.category] || post.category;
+
+            return `
+                <div class="post-item" onclick="location.href='community_view.html?id=${post.id}'">
+                    <div class="post-main">
+                        <div class="post-category-badge ${post.category}">${category}</div>
+                        <div class="post-content">
+                            <div class="post-title">${post.title}</div>
+                            <div class="post-meta">
+                                <span class="author">${author}</span>
+                                <span class="date">${date}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span class="stat"><i class="icon-eye"></i> ${views}</span>
+                        <span class="stat"><i class="icon-heart"></i> ${likes}</span>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     // 전역 등록
