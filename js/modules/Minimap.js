@@ -283,8 +283,34 @@ Object.assign(CircuitSimulator.prototype, {
         ctx.lineWidth = 1;
         this.wires.forEach(wire => {
             if (!wire.from || !wire.to) return;
-            const fromComp = wire.from.closest('.component');
-            const toComp = wire.to.closest('.component');
+
+            // VirtualJoint 또는 DOM 엘리먼트 처리
+            let fromComp, toComp;
+
+            // wire.from 처리
+            if (typeof wire.from.closest === 'function') {
+                fromComp = wire.from.closest('.component');
+            } else if (wire.from.x !== undefined && wire.from.y !== undefined) {
+                // VirtualJoint인 경우 직접 좌표 사용
+                fromComp = {
+                    style: { left: wire.from.x + 'px', top: wire.from.y + 'px' },
+                    offsetWidth: 0,
+                    offsetHeight: 0
+                };
+            }
+
+            // wire.to 처리
+            if (typeof wire.to.closest === 'function') {
+                toComp = wire.to.closest('.component');
+            } else if (wire.to.x !== undefined && wire.to.y !== undefined) {
+                // VirtualJoint인 경우 직접 좌표 사용
+                toComp = {
+                    style: { left: wire.to.x + 'px', top: wire.to.y + 'px' },
+                    offsetWidth: 0,
+                    offsetHeight: 0
+                };
+            }
+
             if (!fromComp || !toComp) return;
 
             const x1 = (parseFloat(fromComp.style.left) || 0) + (fromComp.offsetWidth || 80) / 2;

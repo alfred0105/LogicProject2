@@ -1,0 +1,35 @@
+{
+  "name": "locad",
+  "version": "4.0.0",
+  "description": "LoCAD - Logic Circuit Design Tool",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"Tests coming soon...\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alfred0105/LogicProject2.git"
+  },
+  "keywords": [
+    "logic-simulator",
+    "circuit-design",
+    "digital-circuits",
+    "education"
+  ],
+  "author": "LoCAD Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alfred0105/LogicProject2/issues"
+  },
+  "homepage": "https://github.com/alfred0105/LogicProject2#readme",
+  "devDependencies": {
+    "vite": "^7.3.0"
+  },
+  "dependencies": {
+    "lodash-es": "^4.17.21"
+  }
+}

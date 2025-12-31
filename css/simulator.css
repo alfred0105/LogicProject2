@@ -97,12 +97,20 @@
 
 /* GPU 가속을 위한 레이어 프로모션 */
 .workspace-wrapper,
-#workspace,
-#wire-layer {
+#workspace {
     will-change: transform;
     transform: translateZ(0);
     transform-origin: 0 0;
     /* 미니맵 연동 좌표 계산 단순화 */
+    position: relative;
+    /* wire-layer의 position: absolute 기준점 */
+}
+
+/* Wire Layer - SVG Canvas for wires */
+#wire-layer {
+    will-change: transform;
+    transform: translateZ(0);
+    transform-origin: 0 0;
     position: absolute;
     top: 0;
     left: 0;
@@ -110,18 +118,32 @@
     height: 100%;
     overflow: visible;
     pointer-events: none;
-    /* SVG 배경은 클릭 통과, 내부 path는 pointer-events: auto/stroke로 제어 */
+    /* SVG 배경은 클릭 통과, 내부 path는 pointer-events: stroke로 제어 */
     z-index: 1;
-    /* 부품 뒤에 위치 (부품은 z-index가 더 높아야 함) */
+    /* 부품 뒤에 위치 */
 }
 
 /* 컴포넌트는 드래그 시에만 will-change 적용 (JS에서 동적 처리) */
 .component {
     contain: layout style;
+    position: absolute;
+    z-index: 10;
+    /* wire-layer(5)보다 위, 핀 아래 */
+    cursor: grab;
+}
+
+.component .pin {
+    z-index: 15;
+    /* 컴포넌트보다 위 - 클릭 우선순위 */
+    position: absolute;
+    cursor: crosshair;
 }
 
 .component.dragging {
     will-change: left, top;
+    z-index: 100;
+    /* 드래그 시 최상위 */
+    cursor: grabbing;
 }
 
 /* 와이어 레이어 최적화 */
@@ -985,15 +1007,22 @@ body.mode-wire #workspace {
     cursor: crosshair;
 }
 
-/* Wire Layer */
+/* Wire Layer - 컴포넌트(10)보다 아래에 위치 */
 #wire-layer {
     position: absolute;
     width: 6000px;
-    /* Ensure huge size */
     height: 4000px;
     pointer-events: none;
-    z-index: 5;
+    /* SVG 배경은 클릭 통과 */
+    z-index: 2;
+    /* 컴포넌트(10)보다 낮게 */
     overflow: visible;
+}
+
+/* Wire hitbox는 클릭 가능 */
+#wire-layer .wire-hitbox {
+    pointer-events: stroke;
+    cursor: pointer;
 }
 
 #wire-layer path {

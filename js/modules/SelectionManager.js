@@ -351,6 +351,10 @@ Object.assign(CircuitSimulator.prototype, {
         this.selectedComponents = [];
         this.hideContextMenu();
         this.saveState();
+
+        // [Performance] Invalidate pin cache after deletion
+        if (this.invalidatePinCache) this.invalidatePinCache();
+
         this.showToast('삭제됨', 'info');
     },
 

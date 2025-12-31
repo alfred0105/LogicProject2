@@ -114,12 +114,81 @@ window.VirtualJoint = VirtualJoint;
 
 
 // =============================================================================
-// 2. Smart Router (Manhattan Geometry + Obstacle Avoidance)
+// 1.5. MinHeap for A* Performance (O(n log n) → O(log n) per operation)
+// =============================================================================
+class MinHeap {
+    constructor(comparator = (a, b) => a - b) {
+        this.heap = [];
+        this.compare = comparator;
+    }
+
+    get length() {
+        return this.heap.length;
+    }
+
+    push(item) {
+        this.heap.push(item);
+        this._bubbleUp(this.heap.length - 1);
+    }
+
+    pop() {
+        if (this.heap.length === 0) return null;
+        if (this.heap.length === 1) return this.heap.pop();
+
+        const min = this.heap[0];
+        this.heap[0] = this.heap.pop();
+        this._bubbleDown(0);
+        return min;
+    }
+
+    peek() {
+        return this.heap[0] || null;
+    }
+
+    _bubbleUp(index) {
+        while (index > 0) {
+            const parentIndex = Math.floor((index - 1) / 2);
+            if (this.compare(this.heap[index], this.heap[parentIndex]) >= 0) break;
+            [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+            index = parentIndex;
+        }
+    }
+
+    _bubbleDown(index) {
+        const length = this.heap.length;
+        while (true) {
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
+            let smallest = index;
+
+            if (left < length && this.compare(this.heap[left], this.heap[smallest]) < 0) {
+                smallest = left;
+            }
+            if (right < length && this.compare(this.heap[right], this.heap[smallest]) < 0) {
+                smallest = right;
+            }
+            if (smallest === index) break;
+
+            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+            index = smallest;
+        }
+    }
+
+    // For A* - check if item with same key exists with lower cost
+    findByKey(keyFn, targetKey) {
+        return this.heap.find(item => keyFn(item) === targetKey);
+    }
+}
+
+
+// =============================================================================
+// 2. Smart Router (Manhattan Geometry + Obstacle Avoidance) - OPTIMIZED
 // =============================================================================
 const SmartRouter = {
     gridSize: 10,
 
-    // A* Pathfinding
+
+    // A* Pathfinding - OPTIMIZED with MinHeap
     findPath(start, end, obstacles) {
         // Quantize coordinates to grid
         const sx = Math.round(start.x / 10) * 10;
@@ -127,29 +196,36 @@ const SmartRouter = {
         const ex = Math.round(end.x / 10) * 10;
         const ey = Math.round(end.y / 10) * 10;
 
-        // Optimization: Direct Line Check
+        // Optimization 1: Direct Line Check
         if (this.isDirectPathCool(sx, sy, ex, ey, obstacles)) {
             return [{ x: sx, y: sy }, { x: ex, y: ey }];
         }
 
-        // Optimization: Simple L-Shape or Z-Shape Check
-        // (Skipped for brevity, jumping to A* if simple fails)
+        // Optimization 2: Simple L-Shape Check (no obstacles in path)
+        const midX = sx;
+        const midY = ey;
+        if (this.isDirectPathCool(sx, sy, midX, midY, obstacles) &&
+            this.isDirectPathCool(midX, midY, ex, ey, obstacles)) {
+            return [{ x: sx, y: sy }, { x: midX, y: midY }, { x: ex, y: ey }];
+        }
 
-        // const openSet = new Heap((a, b) => a.f - b.f); // Min-heap conceptually
-        // Using simple array for simplicity in this implementation, can optimize later.
-        const openList = [];
+        // Full A* with MinHeap (O(n log n))
+        const openSet = new MinHeap((a, b) => a.f - b.f);
         const closedSet = new Set();
+        const gScore = new Map(); // For tracking best g-score per node
 
         // Heuristic (Manhattan)
-        const h = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        const h = (ax, ay) => Math.abs(ax - ex) + Math.abs(ay - ey);
 
-        openList.push({
+        const startNode = {
             x: sx, y: sy,
             g: 0,
-            f: h({ x: sx, y: sy }, { x: ex, y: ey }),
+            f: h(sx, sy),
             parent: null,
             dir: null
-        });
+        };
+        openSet.push(startNode);
+        gScore.set(`${sx},${sy}`, 0);
 
         // Bounding Box for Search Area (Optimization)
         const padding = 200;
@@ -162,12 +238,11 @@ const SmartRouter = {
         let loops = 0;
         const MAX_LOOPS = 3000; // Circuit breaker
 
-        while (openList.length > 0) {
+        while (openSet.length > 0) {
             if (loops++ > MAX_LOOPS) break; // Fail-safe
 
-            // Get node with lowest f
-            openList.sort((a, b) => a.f - b.f);
-            const current = openList.shift();
+            // Get node with lowest f (O(log n) with MinHeap)
+            const current = openSet.pop();
             const key = `${current.x},${current.y}`;
 
             if (closedSet.has(key)) continue;
@@ -188,6 +263,8 @@ const SmartRouter = {
             ];
 
             for (const n of neighbors) {
+                const nKey = `${n.x},${n.y}`;
+
                 // Out of bounds check
                 if (n.x < minX || n.x > maxX || n.y < minY || n.y > maxY) continue;
 
@@ -195,31 +272,25 @@ const SmartRouter = {
                 if (this.isColliding(n.x, n.y, obstacles)) continue;
 
                 // Closed set check
-                if (closedSet.has(`${n.x},${n.y}`)) continue;
+                if (closedSet.has(nKey)) continue;
 
                 // Costs
-                const turnCost = (current.dir && current.dir !== n.dir) ? 5 : 0; // Minimize turns
-                const g = current.g + 10 + turnCost;
-                const f = g + h(n, { x: ex, y: ey });
+                const turnCost = (current.dir && current.dir !== n.dir) ? 5 : 0;
+                const tentativeG = current.g + 10 + turnCost;
 
-                // Check if already in openList with lower cost
-                const existing = openList.find(node => node.x === n.x && node.y === n.y);
-                if (existing && existing.g <= g) continue;
+                // Check if this path is better than previously known
+                const existingG = gScore.get(nKey);
+                if (existingG !== undefined && existingG <= tentativeG) continue;
 
-                // Add to openList
-                if (existing) {
-                    existing.g = g;
-                    existing.f = f;
-                    existing.parent = current;
-                    existing.dir = n.dir;
-                } else {
-                    openList.push({
-                        x: n.x, y: n.y,
-                        g: g, f: f,
-                        parent: current,
-                        dir: n.dir
-                    });
-                }
+                // This path is better - record it
+                gScore.set(nKey, tentativeG);
+                openSet.push({
+                    x: n.x, y: n.y,
+                    g: tentativeG,
+                    f: tentativeG + h(n.x, n.y),
+                    parent: current,
+                    dir: n.dir
+                });
             }
         }
 
@@ -668,22 +739,79 @@ Object.assign(CircuitSimulator.prototype, {
 
     findSnapTarget(x, y) {
         const threshold = 15;
-        // Check VJs
+        const thresholdSq = threshold * threshold; // 제곱 비교로 sqrt 제거
+
+        // Check VJs first (usually fewer)
         if (this.virtualJoints) {
             for (const vj of this.virtualJoints) {
-                const dist = Math.hypot(vj.x - x, vj.y - y);
-                if (dist < threshold) return vj;
+                const dx = vj.x - x;
+                const dy = vj.y - y;
+                if (dx * dx + dy * dy < thresholdSq) return vj;
             }
         }
-        // Check Pins (Expensive DOM query? Optimize later)
-        // Ideally we should have a list of all pins.
-        // For now, let's trust InputHandler handles component snapping or iterate pins.
+
+        // Check Pins with Cache
+        // 캐시가 없거나 무효화되었으면 빌드
+        if (!this._pinCache || this._pinCacheInvalid) {
+            this.buildPinCache();
+        }
+
+        // 캐시된 핀 검색 (O(n) but with spatial locality)
+        for (const cachedPin of this._pinCache) {
+            const dx = cachedPin.x - x;
+            const dy = cachedPin.y - y;
+            if (dx * dx + dy * dy < thresholdSq) {
+                return cachedPin.element;
+            }
+        }
+
+        return null;
+    },
+
+    /**
+     * 핀 캐시 빌드 (컴포넌트 추가/삭제/이동 시 호출)
+     */
+    buildPinCache() {
+        this._pinCache = [];
+        this._pinCacheInvalid = false;
+
+        // 현재 워크스페이스의 모든 핀 수집
         const pins = document.querySelectorAll('.pin');
         for (const pin of pins) {
             const pos = this.getCenter(pin);
-            const dist = Math.hypot(pos.x - x, pos.y - y);
-            if (dist < threshold) return pin;
+            this._pinCache.push({
+                element: pin,
+                x: pos.x,
+                y: pos.y
+            });
         }
-        return null;
+
+        console.log(`[WireManager] Pin cache built: ${this._pinCache.length} pins`);
+    },
+
+    /**
+     * 핀 캐시 무효화 (컴포넌트 추가/삭제/드래그 시 호출)
+     */
+    invalidatePinCache() {
+        this._pinCacheInvalid = true;
+    },
+
+    /**
+     * 컴포넌트 이동 후 핀 캐시 업데이트 (선택적 최적화)
+     */
+    updatePinCacheFor(component) {
+        if (!this._pinCache) return;
+
+        const pins = component.querySelectorAll('.pin');
+        for (const pin of pins) {
+            const pos = this.getCenter(pin);
+            const cached = this._pinCache.find(c => c.element === pin);
+            if (cached) {
+                cached.x = pos.x;
+                cached.y = pos.y;
+            } else {
+                this._pinCache.push({ element: pin, x: pos.x, y: pos.y });
+            }
+        }
     }
 });

@@ -192,6 +192,10 @@ Object.assign(CircuitSimulator.prototype, {
 
             this.workspace.appendChild(el);
             this.components.push(el);
+
+            // [Performance] Pin cache invalidation for wire snap
+            if (this.invalidatePinCache) this.invalidatePinCache();
+
             this.updateStatusBar();
             if (!skipSave) this.saveState();
         } catch (err) {

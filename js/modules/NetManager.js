@@ -62,15 +62,21 @@ class NetManager {
         net.pins.add(pin);
         this.pinToNet.set(pin, net.id);
 
-        // 시각적 디버깅 (속성 추가)
-        pin.setAttribute('data-net-id', net.id);
+        // 시각적 디버깅 (속성 추가) - DOM 엘리먼트인 경우에만
+        if (pin && typeof pin.setAttribute === 'function') {
+            pin.setAttribute('data-net-id', net.id);
+        }
     }
 
     removePinFromNet(net, pin) {
         if (!net || !pin) return;
         net.pins.delete(pin);
         this.pinToNet.delete(pin);
-        pin.removeAttribute('data-net-id');
+
+        // DOM 엘리먼트인 경우에만
+        if (pin && typeof pin.removeAttribute === 'function') {
+            pin.removeAttribute('data-net-id');
+        }
 
         // 빈 Net 정리
         if (net.pins.size === 0 && net.wires.size === 0) {

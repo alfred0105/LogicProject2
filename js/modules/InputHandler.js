@@ -399,6 +399,19 @@ Object.assign(CircuitSimulator.prototype, {
                     this.saveState();
                     this._justDragged = true;
                     setTimeout(() => { this._justDragged = false; }, 100);
+
+                    // [Performance] Update pin cache after drag
+                    if (this.updatePinCacheFor) {
+                        this.updatePinCacheFor(this.dragTarget);
+                        // Update other selected components too
+                        if (this.selectedComponents.length > 1) {
+                            this.selectedComponents.forEach(comp => {
+                                if (comp !== this.dragTarget) {
+                                    this.updatePinCacheFor(comp);
+                                }
+                            });
+                        }
+                    }
                 } else {
                     // [FIX] 드래그가 아닌 단순 클릭인 경우 - 스위치 토글 처리
                     // (dragging 클래스의 pointer-events:none으로 인해 click 이벤트가 차단되므로 여기서 처리)

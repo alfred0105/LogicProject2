@@ -156,18 +156,29 @@ Object.assign(CircuitSimulator.prototype, {
             return;
         }
 
-        // [중요] 깊은 복사로 독립 인스턴스 생성 (공유 버그 방지)
+        // [Factory Pattern] 깊은 복사로 완전히 독립된 인스턴스 생성
+        // 각 인스턴스가 자체 state와 internal_circuit를 가짐
         const circuitData = JSON.parse(JSON.stringify(pkg.circuit));
 
-        comp.internals = { components: [], wires: [] };
+        // [인스턴스 격리 타임스탬프] 같은 틱에서도 구분 가능
+        const instanceTimestamp = Date.now();
+        const instanceSuffix = Math.random().toString(36).substr(2, 8);
+
+        comp.internals = {
+            components: [],
+            wires: [],
+            instanceId: `${comp.id}_${instanceTimestamp}_${instanceSuffix}`,
+            createdAt: instanceTimestamp
+        };
         const idMap = {};
 
-        // 내부 컴포넌트 생성
+        // 내부 컴포넌트 생성 - 고유 ID 강화
         circuitData.components.forEach(part => {
             const el = document.createElement('div');
             el.classList.add('component');
-            // 고유 ID 생성 (부모 컴포넌트 ID + 내부 ID)
-            el.id = comp.id + '_internal_' + part.id + '_' + Math.random().toString(36).substr(2, 5);
+            // [Factory Pattern] 고유 ID = 부모ID + 인스턴스타임스탬프 + 파트ID + 랜덤
+            const uniquePartId = `${comp.id}_${instanceTimestamp}_${part.id}_${Math.random().toString(36).substr(2, 6)}`;
+            el.id = uniquePartId;
             el.setAttribute('data-type', part.type);
             el.setAttribute('data-value', part.value || '0');
             el.style.left = (part.x || 0) + 'px';
